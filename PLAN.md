@@ -31,12 +31,12 @@ Phase 0 ─▶ Phase 1 ─▶ Phase 2 ─┬─▶ Stream A: Phase 3 (discovery+
 - 12 specialist subagents (.claude/agents/\*), 4 skills, 2 slash commands (/verify-phase, /ship-phase), hooks (.claude/settings.json).
 - **Acceptance:** all artefacts exist; no app code yet. ✅
 
-## Phase 1 — Foundation — 🟡 IN PROGRESS
+## Phase 1 — Foundation — ✅ DONE (at Human Gate 1)
 
-Monorepo (pnpm + Turborepo), TS strict, packages (config/core/db/integrations/orchestration), Prisma unified schema (§10.2) + Postgres (Colima/Docker) + migrate + seed (incl. seed ICP), env validation (fail fast), lint/typecheck/test/build + CI + hooks, the empty adapter interfaces + the DRY_RUN send gate.
+Monorepo (pnpm + Turborepo), TS strict, packages (config/core/db/integrations/orchestration), Prisma unified schema (§10.2) + Postgres (Colima/Docker) + migrate + seed (incl. seed ICP), env validation (fail fast), lint/typecheck/test/build + CI + hooks, the adapter interfaces + the DRY_RUN send gate.
 
-- **Acceptance:** `pnpm verify` prints green from a clean state; `pnpm db:migrate` applies and `pnpm db:seed` runs printing the seeded ICP.
-- **Ends at Human Gate 1** (credentials checkpoint, §3.4): list present vs missing provider keys; do NOT block on missing keys.
+- **Acceptance MET:** `pnpm verify` exit 0 (20/20 turbo tasks, 41 tests pass); `init` migration applied (14 tables); `pnpm db:seed` printed the seeded ICP and is idempotent (1 row on re-run). verifier subagent returned PASS.
+- **Human Gate 1 reached (credentials checkpoint, §3.4).** `scripts/gate1-credentials.ts` reports: DRY_RUN=true; caps LLM $25/day, providers $50/day; **0/17 provider keys present, 17 missing**. Per §3.4 this does NOT block — Phase 2 (scoring, no keys needed) and keyless fixture-tested adapters proceed; live verification of each adapter is queued for when its key arrives.
 
 ## Phase 2 — ICP + scoring engine (pure core) — ⬜ TODO
 
@@ -73,4 +73,5 @@ Deploy (Vercel web + Inngest Cloud workers + Neon Postgres + Sentry); secrets va
 
 ## Progress log
 
-- 2026-06-14 — Phase 0 complete: bootstrap artefacts, specialist cast, scaffolding. Phase 1 underway.
+- 2026-06-14 — Phase 0 complete: bootstrap artefacts, specialist cast, scaffolding.
+- 2026-06-14 — Phase 1 complete: foundation green (verify exit 0, 41 tests), DB migrated + seeded, verifier PASS. Stopped at Human Gate 1 — awaiting provider credentials (.env) before live adapter verification. Next: Phase 2 scoring engine (needs no keys).
