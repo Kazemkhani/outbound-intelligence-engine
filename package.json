@@ -1,0 +1,38 @@
+{
+  "name": "oie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Outbound Intelligence Engine — prospecting, enrichment, signals, ICP scoring and gated multi-channel sequencing.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "verify": "turbo run typecheck lint test build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
+    "db:migrate": "pnpm --filter @oie/db migrate",
+    "db:seed": "pnpm --filter @oie/db seed",
+    "db:studio": "pnpm --filter @oie/db studio",
+    "db:generate": "pnpm --filter @oie/db generate",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^2.1.8"
+  }
+}

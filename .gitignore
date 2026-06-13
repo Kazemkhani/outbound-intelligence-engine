@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Env & secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Prisma
+packages/db/prisma/*.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code worktrees (addendum §3)
+.claude/worktrees/
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/

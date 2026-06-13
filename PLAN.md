@@ -1,0 +1,76 @@
+# OIE — Build plan & progress log
+
+> Decisions are locked in PROJECT_BRIEF.md (§13). This file tracks the phased plan, per-phase acceptance criteria, and what is done. Update after every slice so a fresh session resumes with zero re-explanation.
+
+## Run posture
+
+- Permission mode: auto (classifier is the safety layer). DRY_RUN defaults true; never auto-flipped.
+- Parallelism: native git worktrees for Streams A–D (Phases 3–6), cap ≤4 concurrent (10-core / 16 GB box).
+- Verify before claiming done; show evidence. Acceptance is phrased around printed evidence (addendum §4).
+- Human gates (§3.4): (1) credentials checkpoint after Phase 1; (2) live-send approval before DRY_RUN=false. Stop only there.
+
+## Dependency graph
+
+```
+Phase 0 ─▶ Phase 1 ─▶ Phase 2 ─┬─▶ Stream A: Phase 3 (discovery+enrichment)
+                                ├─▶ Stream B: Phase 4 (signals)
+                                ├─▶ Stream C: Phase 5 (CRM sync)
+                                └─▶ Stream D: Phase 6 (control plane)
+                       converge ─▶ Phase 7 (sequencing+email+send gate)
+                                ─▶ Phase 8 (LinkedIn+WhatsApp, gated)
+                                ─▶ Phase 9 (signal-triggered enrolment + hardening)
+                                ─▶ Phase 10 (productionisation + pilot) ─▶ Human Gate 2
+```
+
+---
+
+## Phase 0 — Autonomous bootstrap — ✅ DONE
+
+- SPEC.md (self-contained, names files/interfaces, seed ICP, e2e verification scenario).
+- Lean CLAUDE.md (§9.1); this PLAN.md; .env.example (§10.3).
+- 12 specialist subagents (.claude/agents/\*), 4 skills, 2 slash commands (/verify-phase, /ship-phase), hooks (.claude/settings.json).
+- **Acceptance:** all artefacts exist; no app code yet. ✅
+
+## Phase 1 — Foundation — 🟡 IN PROGRESS
+
+Monorepo (pnpm + Turborepo), TS strict, packages (config/core/db/integrations/orchestration), Prisma unified schema (§10.2) + Postgres (Colima/Docker) + migrate + seed (incl. seed ICP), env validation (fail fast), lint/typecheck/test/build + CI + hooks, the empty adapter interfaces + the DRY_RUN send gate.
+
+- **Acceptance:** `pnpm verify` prints green from a clean state; `pnpm db:migrate` applies and `pnpm db:seed` runs printing the seeded ICP.
+- **Ends at Human Gate 1** (credentials checkpoint, §3.4): list present vs missing provider keys; do NOT block on missing keys.
+
+## Phase 2 — ICP + scoring engine (pure core) — ⬜ TODO
+
+Deterministic scoring (fit, intent-with-decay, composite, tiers, rationale) + heavy unit tests/fixtures. "Code computes the number."
+
+- **Acceptance:** fixture leads + ICP score/rank correctly and reproducibly; edge cases tested. Opens parallel Streams A–D.
+
+## Phases 3–6 — parallel Streams A–D (worktrees) — ⬜ TODO
+
+- A (Phase 3): Places, Apollo, Clay webhook waterfall, Explorium; waterfall logic in core; LLM extraction + eval set.
+- B (Phase 4): TheirStack + PredictLeads + Exa on scheduler; signal scoring with decay → intent.
+- C (Phase 5): HubSpot find-or-create, two-way mapping, REST; MCP for reads.
+- D (Phase 6): control plane — leads view, ICP editor w/ live re-rank, signal feed, approval queue UI, analytics shell; `apps/web` (Next.js) created here.
+
+## Phase 7 — Sequencing + email + send gate — ⬜ TODO
+
+Inngest cadences (steps/delays/branch/stop-on-reply); wire DRY_RUN gate + approval queue FIRST; Smartlead adapter; limits/rotation/suppression/unsubscribe; LLM personalisation.
+
+- **Acceptance:** multi-step email sequence runs e2e in dry-run; respects limits/idempotency; nothing sends without approval.
+
+## Phase 8 — LinkedIn + WhatsApp (gated) — ⬜ TODO
+
+Unipile adapter; channels OFF by default; approval queue mandatory; conservative human-like limits; WhatsApp via Business Platform/consent; unified reply sync stops sequences on reply.
+
+## Phase 9 — Signal-triggered enrolment + hardening — ⬜ TODO
+
+Auto-enrol on qualifying fresh signals (through the gate); cost caps enforced; audit-log review; load/limit testing; RUNBOOK.md.
+
+## Phase 10 — Productionisation & pilot — ⬜ TODO
+
+Deploy (Vercel web + Inngest Cloud workers + Neon Postgres + Sentry); secrets vault; monitoring/alerts; backups; cost dashboards; pilot dry-run against seed ICP. **Then Human Gate 2** (live-send approval).
+
+---
+
+## Progress log
+
+- 2026-06-14 — Phase 0 complete: bootstrap artefacts, specialist cast, scaffolding. Phase 1 underway.
