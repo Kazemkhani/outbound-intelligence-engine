@@ -1,0 +1,300 @@
+// OIE unified data model (brief §10.2) — the single source of truth across all
+// providers. Vendor shapes are normalised into these entities by the adapters;
+// `sources` records which provider supplied which field. Dedupe on domain (+
+// placeId) for companies and email / linkedinUrl for contacts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Seniority {
+  c_level
+  vp
+  director
+  manager
+  ic
+}
+
+enum SignalType {
+  hiring
+  funding
+  tech_adoption
+  job_change
+  news
+  web_change
+}
+
+enum EmailStatus {
+  verified
+  risky
+  invalid
+  unknown
+}
+
+enum Channel {
+  email
+  linkedin
+  whatsapp
+}
+
+enum Tier {
+  A
+  B
+  C
+  D
+}
+
+enum EnrolmentStatus {
+  active
+  paused
+  completed
+  stopped
+}
+
+enum MessageDirection {
+  outbound
+  inbound
+}
+
+enum MessageStatus {
+  queued
+  awaiting_approval
+  sent
+  delivered
+  opened
+  replied
+  bounced
+  failed
+}
+
+enum SequenceStatus {
+  draft
+  active
+  archived
+}
+
+/// Versioned ICP configuration. The full ICPProfile (brief §10.1) is stored as
+/// validated JSON in `config`; (name, version) is unique.
+model IcpProfile {
+  id        String   @id @default(cuid())
+  name      String
+  version   Int      @default(1)
+  active    Boolean  @default(false)
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scores Score[]
+
+  @@unique([name, version])
+  @@index([active])
+}
+
+model Company {
+  id            String   @id @default(cuid())
+  domain        String?  @unique
+  name          String
+  website       String?
+  industry      String?
+  employeeCount Int?
+  revenueBand   String?
+  country       String?
+  region        String?
+  lat           Float?
+  lng           Float?
+  placeId       String?  @unique
+  localCategory String?
+  techStack     String[] @default([])
+  funding       Json?
+  socials       Json?
+  sources       Json?
+  raw           Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contacts Contact[]
+  signals  Signal[]
+
+  @@index([country, region])
+  @@index([industry])
+}
+
+model Contact {
+  id          String      @id @default(cuid())
+  companyId   String?
+  fullName    String
+  title       String?
+  seniority   Seniority?
+  department  String?
+  email       String?     @unique
+  emailStatus EmailStatus @default(unknown)
+  linkedinUrl String?     @unique
+  phone       String?
+  whatsapp    String?
+  sources     Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  company    Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  signals    Signal[]
+  scores     Score[]
+  enrolments Enrolment[]
+
+  @@index([companyId])
+  @@index([seniority])
+}
+
+model Signal {
+  id         String     @id @default(cuid())
+  companyId  String?
+  contactId  String?
+  type       SignalType
+  strength   Float // 0..1 raw provider strength, pre-decay
+  sourceUrl  String?
+  provider   String
+  evidence   Json?
+  detectedAt DateTime
+  expiresAt  DateTime?
+  createdAt  DateTime   @default(now())
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, type])
+  @@index([type, detectedAt])
+}
+
+model Score {
+  id           String   @id @default(cuid())
+  contactId    String
+  icpProfileId String
+  fit          Float
+  intent       Float
+  composite    Float
+  tier         Tier
+  rationale    Json
+  modelVersion String
+  computedAt   DateTime @default(now())
+
+  contact    Contact    @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  icpProfile IcpProfile @relation(fields: [icpProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, icpProfileId])
+  @@index([tier, composite])
+}
+
+model Sequence {
+  id        String         @id @default(cuid())
+  name      String
+  status    SequenceStatus @default(draft)
+  steps     Json // [{ channel, delayHours, templateId, conditions }]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  enrolments Enrolment[]
+}
+
+model Enrolment {
+  id           String          @id @default(cuid())
+  contactId    String
+  sequenceId   String
+  status       EnrolmentStatus @default(active)
+  currentStep  Int             @default(0)
+  nextActionAt DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  contact  Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  sequence Sequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([contactId, sequenceId])
+  @@index([status, nextActionAt])
+}
+
+/// Message / Activity — every channel action, including those awaiting approval.
+model Message {
+  id          String           @id @default(cuid())
+  enrolmentId String?
+  channel     Channel
+  direction   MessageDirection @default(outbound)
+  status      MessageStatus    @default(queued)
+  body        String?
+  templateId  String?
+  externalId  String? // provider id; also the idempotency anchor
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  enrolment Enrolment? @relation(fields: [enrolmentId], references: [id], onDelete: SetNull)
+
+  @@unique([channel, externalId])
+  @@index([status])
+  @@index([enrolmentId])
+}
+
+model Mailbox {
+  id           String   @id @default(cuid())
+  provider     String   @default("smartlead")
+  email        String   @unique
+  domain       String
+  dailyLimit   Int      @default(30)
+  warmupStatus String   @default("pending")
+  health       String   @default("unknown")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ChannelAccount {
+  id                 String   @id @default(cuid())
+  provider           String   @default("unipile")
+  type               Channel
+  handle             String
+  dailyLimit         Int      @default(20)
+  weeklyConnectLimit Int      @default(80) // conservative, within LinkedIn's ~100/week (§6.2)
+  health             String   @default("unknown")
+  enabled            Boolean  @default(false) // LinkedIn/WhatsApp OFF by default
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([provider, type, handle])
+}
+
+model Suppression {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  domain    String?
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([domain])
+}
+
+/// Append-only audit log for every send, enrolment, score change and data pull.
+model AuditLog {
+  id       String   @id @default(cuid())
+  actor    String
+  action   String
+  entity   String
+  entityId String?
+  payload  Json?
+  at       DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([at])
+}
+
+model ProviderCost {
+  id       String   @id @default(cuid())
+  provider String
+  task     String
+  units    Float
+  costUsd  Float
+  at       DateTime @default(now())
+
+  @@index([provider, at])
+}

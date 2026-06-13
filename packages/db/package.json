@@ -1,0 +1,28 @@
+{
+  "name": "@oie/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "seed": "dotenv -e ../../.env -- tsx src/seed.ts",
+    "studio": "dotenv -e ../../.env -- prisma studio",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "build": "prisma generate && tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@oie/core": "workspace:*",
+    "@prisma/client": "^6.2.1"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^8.0.0",
+    "prisma": "^6.2.1"
+  }
+}

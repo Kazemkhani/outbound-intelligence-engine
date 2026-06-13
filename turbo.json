@@ -5,13 +5,13 @@
   "tasks": {
     "typecheck": {
       "dependsOn": ["^typecheck"],
-      "outputs": ["*.tsbuildinfo"]
+      "outputs": []
     },
     "lint": {
       "dependsOn": []
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": [],
       "outputs": ["coverage/**"]
     },
     "build": {

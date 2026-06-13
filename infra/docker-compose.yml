@@ -1,0 +1,23 @@
+# Local Postgres for OIE development (Colima/Docker — addendum §8).
+# Production uses Neon managed Postgres; this is for local dev/test only.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: oie-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: oie
+      POSTGRES_PASSWORD: oie
+      POSTGRES_DB: oie
+    ports:
+      - "5432:5432"
+    volumes:
+      - oie-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oie -d oie"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  oie-pgdata:

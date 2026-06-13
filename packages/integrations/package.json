@@ -1,0 +1,20 @@
+{
+  "name": "@oie/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@oie/core": "workspace:*",
+    "zod": "^3.24.1"
+  }
+}

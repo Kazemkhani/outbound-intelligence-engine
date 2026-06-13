@@ -21,8 +21,16 @@
     "db:seed": "pnpm --filter @oie/db seed",
     "db:studio": "pnpm --filter @oie/db studio",
     "db:generate": "pnpm --filter @oie/db generate",
-    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
-    "infra:down": "docker compose -f infra/docker-compose.yml down"
+    "infra:up": "docker-compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker-compose -f infra/docker-compose.yml down"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
