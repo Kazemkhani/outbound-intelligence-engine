@@ -89,6 +89,18 @@ export class SmartleadAdapter implements EmailSender {
     // X-Idempotency-Key header and client_reference_id body field.
     const idempotencyKey = message.idempotencyKey;
 
+    // Inject the CAN-SPAM / GDPR opt-out footer and one-click unsubscribe headers.
+    const body = withComplianceFooter(message);
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Idempotency-Key": idempotencyKey,
+    };
+    if (message.listUnsubscribe) {
+      headers["List-Unsubscribe"] = `<${message.listUnsubscribe}>`;
+      headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+    }
+
     const raw = await withRetry(() =>
       httpJson<unknown>(
         this.transport,
@@ -96,16 +108,12 @@ export class SmartleadAdapter implements EmailSender {
         {
           url: this.url(`/campaigns/${encodeURIComponent(campaignId)}/leads/send-email`),
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "X-Idempotency-Key": idempotencyKey,
-          },
+          headers,
           body: JSON.stringify({
             lead_email: message.to,
             from_email: message.from,
             subject: message.subject,
-            body: message.body,
+            body,
             client_reference_id: idempotencyKey,
           }),
         },
@@ -221,4 +229,22 @@ export class SmartleadAdapter implements EmailSender {
     );
     return smartleadAddLeadsResponse.parse(raw);
   }
+}
+
+/**
+ * Append the legally-required opt-out footer (CAN-SPAM / GDPR / PECR, brief §6.1):
+ * the sender's legal identity, physical postal address, and a one-click
+ * unsubscribe link. Returns the body unchanged when no compliance data is
+ * supplied (the go-live gate requires it before any live email).
+ */
+export function withComplianceFooter(message: OutboundEmail): string {
+  const lines: string[] = [];
+  if (message.senderIdentity) {
+    lines.push(`${message.senderIdentity.name}, ${message.senderIdentity.physicalAddress}`);
+  }
+  if (message.listUnsubscribe) {
+    lines.push(`Unsubscribe: ${message.listUnsubscribe}`);
+  }
+  if (lines.length === 0) return message.body;
+  return `${message.body}\n\n--\n${lines.join("\n")}`;
 }

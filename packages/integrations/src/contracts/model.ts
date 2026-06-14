@@ -92,6 +92,14 @@ export interface OutboundEmail {
   campaignId?: string;
   /** Stable key so a re-run never sends twice. */
   idempotencyKey: string;
+  /**
+   * One-click unsubscribe URL (CAN-SPAM / GDPR / PECR). When present, the sender
+   * emits List-Unsubscribe + List-Unsubscribe-Post headers and an opt-out footer.
+   * Required before any live email send (enforced at the go-live gate).
+   */
+  listUnsubscribe?: string;
+  /** Legal sender identity + physical postal address, required in every message. */
+  senderIdentity?: { name: string; physicalAddress: string };
 }
 
 export interface OutboundMessage {

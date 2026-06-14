@@ -227,3 +227,27 @@ describe("SmartleadAdapter.addLeadsToCampaign", () => {
     expect(leadList[0]!["email"]).toBe("buyer@example.ae");
   });
 });
+
+describe("SmartleadAdapter compliance (CAN-SPAM / GDPR)", () => {
+  it("emits one-click unsubscribe headers and an opt-out footer on a live send", async () => {
+    const transport = stubTransport([{ body: sendEmailFixture }]);
+    const adapter = new SmartleadAdapter({ apiKey: "sl-key", transport });
+    const { ctx } = makeCtx({ dryRun: false });
+
+    await adapter.send(
+      {
+        ...baseMessage,
+        listUnsubscribe: "https://oie.ai/u/abc123",
+        senderIdentity: { name: "Huscribe FZ-LLC", physicalAddress: "Dubai, UAE" },
+      },
+      ctx,
+    );
+
+    const call = transport.calls[0]!;
+    expect(call.headers?.["List-Unsubscribe"]).toBe("<https://oie.ai/u/abc123>");
+    expect(call.headers?.["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
+    const sentBody = JSON.parse(call.body ?? "{}") as { body: string };
+    expect(sentBody.body).toContain("Huscribe FZ-LLC, Dubai, UAE");
+    expect(sentBody.body).toContain("Unsubscribe: https://oie.ai/u/abc123");
+  });
+});
