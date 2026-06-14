@@ -1,0 +1,18 @@
+{
+  "total": 1,
+  "results": [
+    {
+      "id": "7711223344",
+      "properties": {
+        "name": "Al Noor Trading FZE",
+        "domain": "alnoortrading.ae",
+        "industry": "WHOLESALE_DISTRIBUTION",
+        "numberofemployees": "145",
+        "country": "United Arab Emirates",
+        "website": "https://www.alnoortrading.ae"
+      },
+      "createdAt": "2024-03-01T09:00:00.000Z",
+      "updatedAt": "2024-11-15T14:22:00.000Z"
+    }
+  ]
+}

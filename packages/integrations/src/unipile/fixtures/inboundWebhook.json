@@ -1,0 +1,12 @@
+{
+  "event": "message.received",
+  "account_id": "acc_seed_linkedin_01",
+  "provider": "LINKEDIN",
+  "message": {
+    "id": "msg_inbound_seed_001",
+    "conversation_id": "conv_li_seed_001",
+    "sender_identifier": "layla-hassan-procurement",
+    "text": "Thanks for reaching out — I am interested in learning more about your solution.",
+    "received_at": "2026-06-14T10:15:00.000Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "1122334455",
+  "properties": {
+    "firstname": "Fatima",
+    "lastname": "Al Mansoori",
+    "email": "fatima@alnoortrading.ae",
+    "jobtitle": "Chief Procurement Officer",
+    "phone": "+971501234567",
+    "hs_linkedin_url": "https://www.linkedin.com/in/fatima-al-mansoori"
+  },
+  "createdAt": "2024-04-10T11:00:00.000Z",
+  "updatedAt": "2025-06-14T09:30:00.000Z"
+}

@@ -1,0 +1,10 @@
+{
+  "object": "MessageSent",
+  "account_id": "acc_seed_linkedin_01",
+  "tracking_id": "ext_li_seed_001",
+  "message_id": "msg_li_seed_001",
+  "conversation_id": "conv_li_seed_001",
+  "provider": "LINKEDIN",
+  "status": "SENT",
+  "sent_at": "2026-06-14T09:00:00.000Z"
+}
