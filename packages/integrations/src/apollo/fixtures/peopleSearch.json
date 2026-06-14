@@ -1,0 +1,30 @@
+{
+  "people": [
+    {
+      "id": "5f8a1c2d3e4b5a006c1d2e3f",
+      "name": "Fatima Al Mansoori",
+      "first_name": "Fatima",
+      "last_name": "Al Mansoori",
+      "title": "VP of Procurement",
+      "seniority": "vp",
+      "email": "fatima@alnoortrading.ae",
+      "email_status": "verified",
+      "linkedin_url": "https://www.linkedin.com/in/fatima-al-mansoori",
+      "departments": ["operations"],
+      "organization": {
+        "name": "Al Noor Trading FZE",
+        "primary_domain": "alnoortrading.ae"
+      }
+    },
+    {
+      "id": "5f8a1c2d3e4b5a006c1d2e40",
+      "name": "Omar Khalid",
+      "title": "Procurement Manager",
+      "seniority": "manager",
+      "email": "omar@alnoortrading.ae",
+      "email_status": "guessed",
+      "linkedin_url": "https://www.linkedin.com/in/omar-khalid",
+      "departments": ["operations", "finance"]
+    }
+  ]
+}

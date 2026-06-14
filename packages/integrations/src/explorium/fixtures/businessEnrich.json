@@ -1,0 +1,12 @@
+{
+  "data": {
+    "business_id": "expl_biz_alnoor_001",
+    "name": "Al Noor Jewellery LLC",
+    "domain": "https://www.alnoorjewellery.ae/",
+    "industry": "Luxury Goods & Jewelry",
+    "number_of_employees_range": "51-200",
+    "country": "United Arab Emirates",
+    "region": "Dubai",
+    "technologies": ["Shopify", "Cloudflare", "Google Analytics", "Klaviyo"]
+  }
+}

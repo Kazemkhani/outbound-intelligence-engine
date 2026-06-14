@@ -1,0 +1,23 @@
+{
+  "places": [
+    {
+      "id": "ChIJ_seed_jeweller_dubai",
+      "displayName": { "text": "Al Noor Jewellery LLC" },
+      "formattedAddress": "Gold Souk, Deira, Dubai, United Arab Emirates",
+      "location": { "latitude": 25.2697, "longitude": 55.2972 },
+      "types": ["jewelry_store", "store", "point_of_interest"],
+      "websiteUri": "https://www.alnoorjewellery.ae/",
+      "nationalPhoneNumber": "04 226 1234",
+      "rating": 4.6
+    },
+    {
+      "id": "ChIJ_seed_restaurant_dubai",
+      "displayName": { "text": "Bait Al Mandi Restaurant" },
+      "formattedAddress": "Al Karama, Dubai, United Arab Emirates",
+      "location": { "latitude": 25.2456, "longitude": 55.3047 },
+      "types": ["restaurant", "food"],
+      "websiteUri": "http://baitalmandi.ae",
+      "rating": 4.3
+    }
+  ]
+}
