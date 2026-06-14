@@ -38,15 +38,15 @@ Monorepo (pnpm + Turborepo), TS strict, packages (config/core/db/integrations/or
 - **Acceptance MET:** `pnpm verify` exit 0 (20/20 turbo tasks, 41 tests pass); `init` migration applied (14 tables); `pnpm db:seed` printed the seeded ICP and is idempotent (1 row on re-run). verifier subagent returned PASS.
 - **Human Gate 1 reached (credentials checkpoint, §3.4).** `scripts/gate1-credentials.ts` reports: DRY_RUN=true; caps LLM $25/day, providers $50/day; **0/17 provider keys present, 17 missing**. Per §3.4 this does NOT block — Phase 2 (scoring, no keys needed) and keyless fixture-tested adapters proceed; live verification of each adapter is queued for when its key arrives.
 
-## Phase 2 — ICP + scoring engine (pure core) — ⬜ TODO
+## Phase 2 — ICP + scoring engine (pure core) — ✅ DONE
 
-Deterministic scoring (fit, intent-with-decay, composite, tiers, rationale) + heavy unit tests/fixtures. "Code computes the number."
+Deterministic `scoreLead(subject, icp, now)` in @oie/core: fit (industry, employees, geography w/ haversine, local category, revenue, technographics, people, keywords), intent (signals with linear decay + diminishing-returns combine), composite blend, A/B/C/D tiering, explainable rationale + coverage; `rankByComposite`. `now` injected — never reads the clock.
 
-- **Acceptance:** fixture leads + ICP score/rank correctly and reproducibly; edge cases tested. Opens parallel Streams A–D.
+- **Acceptance MET:** 28 core tests incl. determinism, tier-A perfect lead, all-unknown=0 fit, expired-signal=0 intent, decay halves at mid-window, avoided-tech disqualify, deterministic ranking. `pnpm verify` exit 0.
 
-## Phases 3–6 — parallel Streams A–D (worktrees) — ⬜ TODO
+## Phases 3–6 — parallel Streams A–D — 🟡 Stream A substantially done; B/C/D TODO
 
-- A (Phase 3): Places, Apollo, Clay webhook waterfall, Explorium; waterfall logic in core; LLM extraction + eval set.
+- **A (Phase 3): 🟡 mostly done.** Places (discovery, reference adapter), Apollo, Clay (async webhook enqueue + inbound parser), Explorium (match→enrich) — all behind `EnrichmentProvider`, keyless + fixture-tested via an injectable HTTP transport seam (no live calls in CI). The **waterfall** (`enrichCompanyWaterfall`) lives in our core: priority order, fill-missing with per-field provider attribution, early-stop on completeness (cost ceiling), fall-through on error, skip unconfigured. Plus the scoring-bridge + an e2e pipeline test (discover→dedupe→enrich→score→rank). verifier PASS. **Remaining A:** LLM extraction step (structured output) + its eval set; live verification once keys land.
 - B (Phase 4): TheirStack + PredictLeads + Exa on scheduler; signal scoring with decay → intent.
 - C (Phase 5): HubSpot find-or-create, two-way mapping, REST; MCP for reads.
 - D (Phase 6): control plane — leads view, ICP editor w/ live re-rank, signal feed, approval queue UI, analytics shell; `apps/web` (Next.js) created here.
@@ -74,4 +74,5 @@ Deploy (Vercel web + Inngest Cloud workers + Neon Postgres + Sentry); secrets va
 ## Progress log
 
 - 2026-06-14 — Phase 0 complete: bootstrap artefacts, specialist cast, scaffolding.
-- 2026-06-14 — Phase 1 complete: foundation green (verify exit 0, 41 tests), DB migrated + seeded, verifier PASS. Stopped at Human Gate 1 — awaiting provider credentials (.env) before live adapter verification. Next: Phase 2 scoring engine (needs no keys).
+- 2026-06-14 — Phase 1 complete: foundation green (verify exit 0, 41 tests), DB migrated + seeded, verifier PASS. Stopped at Human Gate 1 — awaiting provider credentials (.env) before live adapter verification.
+- 2026-06-14 — Operator chose to proceed past Gate 1 (DRY_RUN stays true; no secrets). Phase 2 scoring engine complete (verifier PASS). Stream A enrichment adapters + waterfall + scoring-bridge + e2e pipeline complete, all fixture-tested keyless (verifier PASS). `pnpm verify` exit 0, 81 tests. Next: Stream A LLM extraction + eval set, then Streams B/C/D — or live-verify adapters once keys are in .env.
