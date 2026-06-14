@@ -93,8 +93,10 @@ export function mapJobsToSignals(
 ): NormalisedSignal[] {
   const signals: NormalisedSignal[] = [];
 
-  // Collect all tech slugs per domain for the aggregated tech_adoption signal.
-  const techByDomain = new Map<string, Set<string>>();
+  // Collect tech slugs + the latest posting date per domain for the aggregated
+  // tech_adoption signal. The date comes from the data (latest posting), never
+  // the wall clock, so re-pulls of the same postings are deterministic.
+  const techByDomain = new Map<string, { slugs: Set<string>; latest: Date; count: number }>();
 
   for (const job of jobs) {
     const detectedAt = new Date(job.date_posted);
@@ -115,33 +117,37 @@ export function mapJobsToSignals(
       detectedAt,
     });
 
-    // Accumulate tech slugs.
+    // Accumulate tech slugs + track the latest posting date for the domain.
     if (job.technology_slugs && job.technology_slugs.length > 0) {
       const key = companyDomain ?? job.company_domain;
       const existing = techByDomain.get(key);
       if (existing) {
-        for (const slug of job.technology_slugs) existing.add(slug);
+        for (const slug of job.technology_slugs) existing.slugs.add(slug);
+        if (detectedAt > existing.latest) existing.latest = detectedAt;
+        existing.count += 1;
       } else {
-        techByDomain.set(key, new Set(job.technology_slugs));
+        techByDomain.set(key, {
+          slugs: new Set(job.technology_slugs),
+          latest: detectedAt,
+          count: 1,
+        });
       }
     }
   }
 
   // Emit one aggregated tech_adoption signal per domain that had tech slugs.
-  for (const [domainKey, slugSet] of techByDomain.entries()) {
-    const slugs = Array.from(slugSet).sort();
+  for (const [domainKey, agg] of techByDomain.entries()) {
+    const slugs = Array.from(agg.slugs).sort();
     signals.push({
       companyDomain: domainKey,
       type: "tech_adoption",
       strength: techAdoptionStrength(slugs.length),
       provider,
-      evidence: {
-        technologies: slugs,
-        postingCount: jobs.filter(
-          (j) => (normaliseDomain(j.company_domain) ?? j.company_domain) === domainKey,
-        ).length,
-      },
-      detectedAt: now,
+      // Deterministic anchor so a re-pull of the same stack dedupes (no double-count).
+      sourceUrl: `theirstack:tech:${domainKey}:${slugs.join(",")}`,
+      evidence: { technologies: slugs, postingCount: agg.count },
+      // Latest posting date from the data — never the wall clock.
+      detectedAt: agg.latest,
     });
   }
 

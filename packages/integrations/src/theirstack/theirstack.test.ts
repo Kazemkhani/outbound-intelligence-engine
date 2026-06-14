@@ -114,6 +114,21 @@ describe("TheirStackAdapter", () => {
     expect(tech.evidence?.["technologies"]).toEqual(
       expect.arrayContaining(["react", "typescript", "aws", "kubernetes", "terraform"]),
     );
+    // Deterministic anchor (no wall clock) so re-pulls dedupe rather than double-count.
+    expect(tech.sourceUrl).toMatch(/^theirstack:tech:acme\.com:/);
+    expect(tech.expiresAt).toBeUndefined();
+
+    // Re-pulling the same fixture yields an identical tech_adoption signal —
+    // same sourceUrl and same data-derived detectedAt (not the wall clock).
+    const adapter2 = new TheirStackAdapter({
+      apiKey: "sk-test",
+      transport: stubTransport([{ body: fixture }]),
+    });
+    const again = (await adapter2.fetchSignals({ companyDomain: "acme.com" }, makeCtx().ctx)).find(
+      (s) => s.type === "tech_adoption",
+    )!;
+    expect(again.sourceUrl).toBe(tech.sourceUrl);
+    expect(again.detectedAt).toEqual(tech.detectedAt);
   });
 
   it("does NOT emit a tech_adoption signal when no postings carry technology_slugs", async () => {
