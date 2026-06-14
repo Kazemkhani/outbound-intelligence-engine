@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "id": "exa_seed_001",
+      "url": "https://techcrunch.com/2024/03/15/stripe-hiring-surge",
+      "title": "Stripe Expands Engineering Headcount Ahead of IPO Push",
+      "publishedDate": "2024-03-15T09:00:00.000Z",
+      "author": "Ingrid Lunden",
+      "score": 0.93,
+      "text": "Payments giant Stripe is on an aggressive hiring spree, adding over 500 engineers in Q1 2024 as the company prepares for a long-anticipated public offering. The expansion spans London, Dublin and San Francisco."
+    },
+    {
+      "id": "exa_seed_002",
+      "url": "https://www.reuters.com/business/stripe-raises-fresh-capital-2024-02-10",
+      "title": "Stripe Secures $694m Series I at $65bn Valuation",
+      "publishedDate": "2024-02-10T14:30:00.000Z",
+      "author": "Anna Irrera",
+      "score": 0.87,
+      "text": "Stripe has closed a $694 million funding round valuing the fintech at $65 billion, with proceeds earmarked for employee liquidity and product expansion into new markets including the Middle East."
+    },
+    {
+      "id": "exa_seed_003",
+      "url": "https://stripe.com/blog/2024-platform-update",
+      "title": "New Tools for Platforms and Marketplaces",
+      "publishedDate": "2024-01-22T08:00:00.000Z",
+      "author": null,
+      "score": 0.61,
+      "text": "Today we are announcing a suite of updates to Stripe Connect, making it easier for platforms to onboard sellers globally and manage compliance requirements automatically."
+    },
+    {
+      "id": "exa_seed_004",
+      "url": "https://www.bloomberg.com/news/articles/stripe-no-date",
+      "title": "Stripe Considers Dual-Class Share Structure",
+      "author": "Julie Verhage",
+      "score": 0.55,
+      "text": "Bloomberg reports that Stripe's founders are weighing a dual-class structure that would preserve voting control post-IPO."
+    }
+  ]
+}

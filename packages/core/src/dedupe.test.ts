@@ -5,6 +5,7 @@ import {
   normaliseLinkedinUrl,
   companyDedupeKey,
   contactDedupeKey,
+  signalDedupeKey,
 } from "./dedupe";
 
 describe("normaliseDomain", () => {
@@ -56,5 +57,37 @@ describe("dedupe keys", () => {
       "linkedin:linkedin.com/in/x",
     );
     expect(contactDedupeKey({})).toBeNull();
+  });
+});
+
+describe("signalDedupeKey", () => {
+  it("collapses the same event reported twice (URL variations)", () => {
+    const a = signalDedupeKey({
+      companyDomain: "acme.io",
+      type: "hiring",
+      sourceUrl: "https://jobs.acme.io/sdr?utm=x",
+    });
+    const b = signalDedupeKey({
+      companyDomain: "www.acme.io",
+      type: "hiring",
+      sourceUrl: "https://jobs.acme.io/sdr",
+    });
+    expect(a).toBe(b);
+  });
+
+  it("distinguishes different types and subjects", () => {
+    const base = { companyDomain: "acme.io", sourceUrl: "https://acme.io/x" };
+    expect(signalDedupeKey({ ...base, type: "hiring" })).not.toBe(
+      signalDedupeKey({ ...base, type: "funding" }),
+    );
+  });
+
+  it("falls back to detection day when there is no URL", () => {
+    const k = signalDedupeKey({
+      companyDomain: "acme.io",
+      type: "news",
+      detectedAt: new Date("2026-06-14T09:00:00Z"),
+    });
+    expect(k).toBe("acme.io|news|2026-06-14");
   });
 });

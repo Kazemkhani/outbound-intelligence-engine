@@ -10,3 +10,8 @@ export { PlacesAdapter } from "./places/index";
 export { ApolloAdapter } from "./apollo/index";
 export { ClayAdapter, parseClayWebhook } from "./clay/index";
 export { ExploriumAdapter } from "./explorium/index";
+
+// Signal / intent adapters (SignalProvider).
+export { TheirStackAdapter } from "./theirstack/index";
+export { PredictLeadsAdapter } from "./predictleads/index";
+export { ExaAdapter } from "./exa/index";

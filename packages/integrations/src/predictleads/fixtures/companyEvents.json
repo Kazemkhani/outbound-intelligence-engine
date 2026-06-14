@@ -1,0 +1,110 @@
+{
+  "data": [
+    {
+      "id": "evt_001",
+      "type": "event",
+      "attributes": {
+        "category": "funding_round",
+        "title": "Acme Corp raises Series B funding round",
+        "found_at": "2024-03-15T10:30:00Z",
+        "news_article_url": "https://techcrunch.com/2024/03/15/acme-series-b",
+        "additional_data": {
+          "amount": 25000000,
+          "currency": "USD",
+          "round": "Series B"
+        }
+      }
+    },
+    {
+      "id": "evt_002",
+      "type": "event",
+      "attributes": {
+        "category": "job_opening",
+        "title": "Acme Corp is hiring a Senior Software Engineer",
+        "found_at": "2024-03-18T08:00:00Z",
+        "news_article_url": null,
+        "additional_data": {
+          "job_title": "Senior Software Engineer",
+          "location": "San Francisco, CA"
+        }
+      }
+    },
+    {
+      "id": "evt_003",
+      "type": "event",
+      "attributes": {
+        "category": "executive_change",
+        "title": "Acme Corp appoints new Chief Technology Officer",
+        "found_at": "2024-03-20T14:00:00Z",
+        "news_article_url": "https://businesswire.com/2024/03/20/acme-cto",
+        "additional_data": {
+          "name": "Jane Smith",
+          "role": "Chief Technology Officer"
+        }
+      }
+    },
+    {
+      "id": "evt_004",
+      "type": "event",
+      "attributes": {
+        "category": "uses_technology",
+        "title": "Acme Corp adopts Kubernetes for container orchestration",
+        "found_at": "2024-03-22T09:15:00Z",
+        "news_article_url": null,
+        "additional_data": {
+          "technology": "Kubernetes"
+        }
+      }
+    },
+    {
+      "id": "evt_005",
+      "type": "event",
+      "attributes": {
+        "category": "news",
+        "title": "Acme Corp featured in industry report on AI adoption",
+        "found_at": "2024-03-25T12:00:00Z",
+        "news_article_url": "https://forbes.com/2024/03/25/acme-ai-report",
+        "additional_data": null
+      }
+    },
+    {
+      "id": "evt_006",
+      "type": "event",
+      "attributes": {
+        "category": "acquisition",
+        "title": "Acme Corp acquires DataStream Analytics",
+        "found_at": "2024-04-01T11:00:00Z",
+        "news_article_url": "https://techcrunch.com/2024/04/01/acme-acquires-datastream",
+        "additional_data": {
+          "acquired_company": "DataStream Analytics"
+        }
+      }
+    },
+    {
+      "id": "evt_007",
+      "type": "event",
+      "attributes": {
+        "category": "expansion",
+        "title": "Acme Corp expands operations into European market",
+        "found_at": "2024-04-05T09:00:00Z",
+        "news_article_url": "https://reuters.com/2024/04/05/acme-europe",
+        "additional_data": {
+          "region": "Europe"
+        }
+      }
+    },
+    {
+      "id": "evt_008",
+      "type": "event",
+      "attributes": {
+        "category": "customer_win",
+        "title": "Acme Corp wins Fortune 500 customer",
+        "found_at": "2024-04-08T16:00:00Z",
+        "news_article_url": null,
+        "additional_data": {
+          "customer_segment": "enterprise"
+        }
+      }
+    }
+  ]
+}

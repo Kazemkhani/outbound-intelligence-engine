@@ -65,3 +65,31 @@ export function contactDedupeKey(input: {
   if (li) return `linkedin:${li}`;
   return null;
 }
+
+/**
+ * Identity key for a signal — the same event reported by multiple providers (or
+ * the same pull run twice) must dedupe. Keyed on the subject + type + the source
+ * URL (or detection day when no URL), so re-pulls and cross-provider overlap do
+ * not double-count intent.
+ */
+export function signalDedupeKey(input: {
+  companyDomain?: string | null;
+  contactEmail?: string | null;
+  type: string;
+  sourceUrl?: string | null;
+  detectedAt?: Date | null;
+}): string {
+  const subject =
+    normaliseDomain(input.companyDomain) ?? normaliseEmail(input.contactEmail) ?? "unknown";
+  // Anchor on the source URL (scheme/query/trailing-slash stripped) or, when
+  // absent, the detection day — so re-pulls of the same event collapse.
+  const anchor = input.sourceUrl
+    ? input.sourceUrl
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//, "")
+        .replace(/[?#].*$/, "")
+        .replace(/\/$/, "")
+    : (input.detectedAt?.toISOString().slice(0, 10) ?? "nodate");
+  return `${subject}|${input.type}|${anchor}`;
+}
