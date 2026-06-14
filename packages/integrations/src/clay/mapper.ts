@@ -74,7 +74,10 @@ function seniorityFromTitle(title: string | null): Seniority | null {
   if (/\b(vp|vice president|svp|evp)\b/.test(t)) return "vp";
   if (/\bdirector\b/.test(t)) return "director";
   if (/\b(manager|head of|lead)\b/.test(t)) return "manager";
-  return "ic";
+  if (/\b(executive|specialist|associate|analyst|representative|coordinator|officer|ic)\b/.test(t))
+    return "ic";
+  // Unrecognised title — emit null rather than guess (brief §8).
+  return null;
 }
 
 /** Attribute every populated field on an entity to Clay in its `sources` map. */

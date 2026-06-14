@@ -51,6 +51,13 @@ export function firstBusinessId(raw: BusinessMatchResponse): string | null {
   return raw.matched_businesses[0]?.business_id ?? null;
 }
 
+/** Lower bound of a headcount range string like "51-200" → 51 (null if unparseable). */
+function lowerBoundOfRange(range: string | undefined): number | null {
+  if (!range) return null;
+  const match = range.match(/\d+/);
+  return match ? Number(match[0]) : null;
+}
+
 /** Translate Explorium firmographics into the unified NormalisedCompany shape. */
 export function businessToCompany(firmo: BusinessFirmographics): NormalisedCompany {
   const company: NormalisedCompany = {
@@ -58,8 +65,9 @@ export function businessToCompany(firmo: BusinessFirmographics): NormalisedCompa
     name: firmo.name ?? "unknown",
     website: firmo.domain ?? null,
     industry: firmo.industry ?? null,
-    employeeCount: firmo.employee_count ?? null,
-    revenueBand: firmo.number_of_employees_range ?? null,
+    // Prefer an exact count; otherwise derive an approximate floor from the band.
+    // The headcount band is NOT a revenue band — never mislabel it as revenue.
+    employeeCount: firmo.employee_count ?? lowerBoundOfRange(firmo.number_of_employees_range),
     country: firmo.country ?? null,
     region: firmo.region ?? null,
     techStack: firmo.technologies.length > 0 ? firmo.technologies : undefined,

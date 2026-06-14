@@ -70,7 +70,8 @@ export function mergeCompany(
   incoming: NormalisedCompany,
   provider: string,
 ): NormalisedCompany {
-  const base: NormalisedCompany = acc ?? { domain: null, name: incoming.name, sources: {} };
+  // Seed with an empty name so the first provider's name is attributed in the loop.
+  const base: NormalisedCompany = acc ?? { domain: null, name: "", sources: {} };
   const sources = { ...(base.sources ?? {}) };
   const merged: NormalisedCompany = { ...base, sources };
 
