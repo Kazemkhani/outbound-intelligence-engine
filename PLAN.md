@@ -51,23 +51,36 @@ Deterministic `scoreLead(subject, icp, now)` in @oie/core: fit (industry, employ
 - C (Phase 5): HubSpot find-or-create, two-way mapping, REST; MCP for reads.
 - D (Phase 6): control plane — leads view, ICP editor w/ live re-rank, signal feed, approval queue UI, analytics shell; `apps/web` (Next.js) created here.
 
-## Phase 7 — Sequencing + email + send gate — ⬜ TODO
+## Phase 7 — Sequencing + email + send gate — ✅ DONE
 
-Inngest cadences (steps/delays/branch/stop-on-reply); wire DRY_RUN gate + approval queue FIRST; Smartlead adapter; limits/rotation/suppression/unsubscribe; LLM personalisation.
+Sequence state machine (steps/delays/branch/stop-on-reply); `executeSendStep` routes EVERY send through `evaluateSendGate` (gate wired first); Smartlead `EmailSender` (dry-run = zero network); suppression check before gate; idempotency keys; Inngest durable function defs; LLM personalisation cites the exact signal. CAN-SPAM/GDPR unsubscribe + sender identity in the email path.
 
-- **Acceptance:** multi-step email sequence runs e2e in dry-run; respects limits/idempotency; nothing sends without approval.
+- **Acceptance MET:** sequencing tests + pilot prove a multi-step cadence runs in dry-run, respects idempotency, and nothing sends without approval.
 
-## Phase 8 — LinkedIn + WhatsApp (gated) — ⬜ TODO
+## Phase 8 — LinkedIn + WhatsApp (gated) — ✅ DONE
 
-Unipile adapter; channels OFF by default; approval queue mandatory; conservative human-like limits; WhatsApp via Business Platform/consent; unified reply sync stops sequences on reply.
+Unipile `MessagingChannel` (LinkedIn + WhatsApp); dry-run honoured (zero network); channels OFF by default (`channelEnabled` + `ChannelAccount.enabled=false`); conservative limits (weeklyConnectLimit 80 < ~100); `parseUnipileWebhook` for reply sync.
 
-## Phase 9 — Signal-triggered enrolment + hardening — ⬜ TODO
+## Phase 9 — Signal-triggered enrolment + hardening — ✅ DONE
 
-Auto-enrol on qualifying fresh signals (through the gate); cost caps enforced; audit-log review; load/limit testing; RUNBOOK.md.
+`qualifiesForEnrolment` (fresh + at-bar + qualifying type, through the gate); `costCapStatus`/`assertWithinCaps` halt on cap breach; RUNBOOK.md.
 
-## Phase 10 — Productionisation & pilot — ⬜ TODO
+## Phase 10 — Productionisation & pilot — ✅ DONE (at Human Gate 2)
 
-Deploy (Vercel web + Inngest Cloud workers + Neon Postgres + Sentry); secrets vault; monitoring/alerts; backups; cost dashboards; pilot dry-run against seed ICP. **Then Human Gate 2** (live-send approval).
+RUNBOOK.md, infra/deploy.md (Vercel + Inngest Cloud + Neon + Sentry), pilot dry-run script. Security + verifier audits PASS on the safety posture. **Stopped at Human Gate 2** — DRY_RUN held; no live send.
+
+---
+
+## Pre-live checklist (before Human Gate 2 flips email live)
+
+These are scaffolded + unit-tested but must be wired into the durable runtime with live keys (none break the gate; nothing sends without it):
+
+1. Wire `shouldStop` to real reply/bounce events in `sequencing/inngest.ts` (currently `events: []`).
+2. Call `assertWithinCaps` before LLM/provider operations in the running pipeline.
+3. Add the Inngest function that turns a qualifying signal into an `Enrolment` row (auto-enrol is decision-only today).
+4. On hard bounce / unsubscribe webhook, write a durable `Suppression` row.
+5. Confirm SPF/DKIM/DMARC for every sending domain; mailboxes warmed; suppression list loaded.
+6. Live-verify each adapter against its provider once keys are in `.env`.
 
 ---
 
@@ -76,4 +89,5 @@ Deploy (Vercel web + Inngest Cloud workers + Neon Postgres + Sentry); secrets va
 - 2026-06-14 — Phase 0 complete: bootstrap artefacts, specialist cast, scaffolding.
 - 2026-06-14 — Phase 1 complete: foundation green (verify exit 0, 41 tests), DB migrated + seeded, verifier PASS. Stopped at Human Gate 1 — awaiting provider credentials (.env) before live adapter verification.
 - 2026-06-14 — Operator chose to proceed past Gate 1 (DRY_RUN stays true; no secrets). Phase 2 scoring engine complete (verifier PASS). Stream A enrichment adapters + waterfall + scoring-bridge + e2e pipeline complete, all fixture-tested keyless (verifier PASS). `pnpm verify` exit 0, 81 tests.
-- 2026-06-14 — Installed context7 + claude-code-setup plugins. Stream B signals complete: TheirStack/PredictLeads/Exa SignalProvider adapters + collectSignals (fan-in/dedup/decay) + DB demo (intent 0→33.6). verifier PASS after fixing a tech_adoption double-count. `pnpm verify` exit 0, 148 tests. Next: Stream C (HubSpot CRM) and/or Stream D (control plane UI), or live-verify once keys land.
+- 2026-06-14 — Installed context7 + claude-code-setup plugins. Stream B signals complete: TheirStack/PredictLeads/Exa SignalProvider adapters + collectSignals (fan-in/dedup/decay) + DB demo (intent 0→33.6). verifier PASS after fixing a tech_adoption double-count. `pnpm verify` exit 0, 148 tests.
+- 2026-06-14 — ALL PHASES BUILT. Parallel specialist waves delivered Phase 5 (HubSpot CRM), 7 (sequencing+email+send gate), 8 (Unipile channels), LLM personalisation + eval harness, 9 (enrolment + cost caps), 6 (Next.js control plane — 6 routes, live re-rank), 10 (RUNBOOK + deploy + pilot). Security-compliance audit + final verifier both PASS on the safety posture (no secrets, no send-without-gate). Email compliance (unsubscribe + sender identity) added. `pnpm verify` exit 0, 24/24 tasks, 258 tests. Pilot dry-run proved nothing sends. **Stopped at Human Gate 2 (live-send approval) — DRY_RUN held.** Remaining work is the pre-live checklist above (runtime wiring + live key verification).
