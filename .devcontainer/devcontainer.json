@@ -1,0 +1,37 @@
+{
+  "name": "OIE",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers-extra/features/pnpm:2": {
+      "version": "10"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "OIE control plane",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "pnpm install",
+  "postAttachCommand": "echo 'OIE ready. Copy .env.example to .env, then: pnpm infra:up && pnpm db:migrate && pnpm db:seed && pnpm verify. Control plane: pnpm --filter web dev (port 3000). Or just: make setup && make dev.'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+  "remoteUser": "node"
+}

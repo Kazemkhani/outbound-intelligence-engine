@@ -47,6 +47,14 @@
 - Node 22+, pnpm 10. Internal packages are consumed as TS source (no JS emit) — `tsx`/Vitest transpile.
 - Postgres runs locally via Colima + Docker (`pnpm infra:up`). Free disk is tight (~17 GB) — keep deps lean; `apps/web` (Next.js) is deferred to Phase 6.
 
+## Docs (read when continuing or onboarding)
+
+- `docs/HANDOFF.md` — complete build history + current state + how to continue (read this first on a fresh session).
+- `docs/PRODUCTION-CHECKLIST.md` — the sequenced path to live (owners + status).
+- `docs/ARCHITECTURE.md` + `docs/adr/` — system design + locked decisions. `RUNBOOK.md` — operations.
+
 ## Gotchas
 
-- (fill in as discovered — keep short; prune ruthlessly)
+- `apps/web` typecheck excludes `.next` (Next rewrites the tsconfig include on build).
+- The guard hook is content-based: it refuses text containing the literal disable-flag token, even in docs. Reword, never bypass.
+- `@oie/db` has a `postinstall` that runs `prisma generate`, so a fresh clone/Codespace/Vercel build has the client.
