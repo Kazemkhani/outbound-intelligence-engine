@@ -1,11 +1,15 @@
 import { ApprovalQueue } from "@/components/approvals/approval-queue";
-import { FIXTURE_APPROVALS } from "@/lib/fixtures";
+import { getApprovals } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Approval Queue — OIE",
 };
 
-export default function ApprovalsPage() {
+export default async function ApprovalsPage() {
+  const items = await getApprovals();
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
       <header className="mb-6">
@@ -15,7 +19,7 @@ export default function ApprovalsPage() {
           can progress. Nothing sends without your explicit action.
         </p>
       </header>
-      <ApprovalQueue items={FIXTURE_APPROVALS} />
+      <ApprovalQueue items={items} />
     </div>
   );
 }

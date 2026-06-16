@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { round1 } from "@/lib/utils";
 import { scoreLead, rankByComposite } from "@oie/core";
 import type { IcpProfile, ScoringSubject } from "@oie/core";
-import { FIXTURE_LEADS, SEED_ICP } from "@/lib/fixtures";
+import { SEED_ICP, type ScoredLead } from "@/lib/fixtures";
 
-const NOW = new Date("2026-06-14T00:00:00Z");
+const NOW = new Date();
 
 const TIER_VARIANT = {
   A: "tier_a",
@@ -91,9 +91,9 @@ function NumberInput({
 
 // ── Live ranking panel ────────────────────────────────────────────────────────
 
-function LiveRanking({ icp }: { icp: IcpProfile }) {
+function LiveRanking({ icp, leads }: { icp: IcpProfile; leads: ScoredLead[] }) {
   const ranked = useMemo(() => {
-    const scored = FIXTURE_LEADS.map((lead) => {
+    const scored = leads.map((lead) => {
       const subject: ScoringSubject = {
         company: {
           industry: lead.company.industry,
@@ -121,13 +121,13 @@ function LiveRanking({ icp }: { icp: IcpProfile }) {
       return { lead, score: scoreLead(subject, icp, NOW) };
     });
     return rankByComposite(scored);
-  }, [icp]);
+  }, [icp, leads]);
 
   return (
     <div>
       <p className="mb-3 text-xs text-gray-400">
-        Re-ranked live against {ranked.length} fixture leads. Adjust weights on the left to see
-        changes instantly.
+        Re-ranked live against {ranked.length} leads. Adjust weights on the left to see changes
+        instantly.
       </p>
       <ol aria-label="Live-ranked leads" className="space-y-2">
         {ranked.map(({ lead, score }, i) => (
@@ -152,8 +152,14 @@ function LiveRanking({ icp }: { icp: IcpProfile }) {
 
 // ── ICP Editor ────────────────────────────────────────────────────────────────
 
-export function IcpEditor() {
-  const [icp, setIcp] = useState<IcpProfile>(SEED_ICP);
+export function IcpEditor({
+  initialIcp = SEED_ICP,
+  initialLeads = [],
+}: {
+  initialIcp?: IcpProfile;
+  initialLeads?: ScoredLead[];
+}) {
+  const [icp, setIcp] = useState<IcpProfile>(initialIcp);
 
   const set = (updater: (prev: IcpProfile) => IcpProfile) => setIcp(updater);
 
@@ -353,10 +359,10 @@ export function IcpEditor() {
 
         <button
           type="button"
-          onClick={() => setIcp(SEED_ICP)}
+          onClick={() => setIcp(initialIcp)}
           className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
-          Reset to seed ICP
+          Reset to active ICP
         </button>
       </div>
 
@@ -367,7 +373,7 @@ export function IcpEditor() {
             <CardTitle>Live re-rank</CardTitle>
           </CardHeader>
           <CardContent>
-            <LiveRanking icp={icp} />
+            <LiveRanking icp={icp} leads={initialLeads} />
           </CardContent>
         </Card>
       </div>

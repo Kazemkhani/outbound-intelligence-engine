@@ -1,13 +1,15 @@
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
-import { FIXTURE_SIGNAL_FEED } from "@/lib/fixtures";
+import { getSignals } from "@/lib/data";
 import { formatDate, formatRelative, signalTypeLabel } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Signal Feed — OIE",
 };
 
-const NOW = new Date("2026-06-14T00:00:00Z");
+const NOW = new Date();
 
 const SIGNAL_VARIANT = {
   hiring: "hiring",
@@ -18,8 +20,8 @@ const SIGNAL_VARIANT = {
   web_change: "web_change",
 } as const;
 
-export default function SignalsPage() {
-  const signals = FIXTURE_SIGNAL_FEED;
+export default async function SignalsPage() {
+  const signals = await getSignals();
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">

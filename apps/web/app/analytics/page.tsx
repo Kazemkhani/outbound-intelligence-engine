@@ -1,23 +1,25 @@
 import { BarChart3, Bell, Signal, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { SCORED_LEADS, getAnalyticsTiles } from "@/lib/fixtures";
+import { getAnalytics, getLeads } from "@/lib/data";
 import { round1 } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Analytics — OIE",
 };
 
-export default function AnalyticsPage() {
-  const tiles = getAnalyticsTiles();
+export default async function AnalyticsPage() {
+  const [tiles, scoredLeads] = await Promise.all([getAnalytics(), getLeads()]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
         <p className="mt-1 text-sm text-gray-500">
-          High-level overview of pipeline health. Data is derived from fixture leads and the active
-          ICP scoring run.
+          High-level overview of pipeline health. Data is derived from the live database and the
+          active ICP scoring run.
         </p>
       </header>
 
@@ -103,7 +105,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <ol aria-label="Top scored leads" className="space-y-3">
-              {SCORED_LEADS.slice(0, 5).map((lead, i) => {
+              {scoredLeads.slice(0, 5).map((lead, i) => {
                 const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[
                   lead.score.tier
                 ];
@@ -138,7 +140,7 @@ export default function AnalyticsPage() {
               aria-label="Score distribution chart"
               className="flex items-end gap-2 h-32"
             >
-              {SCORED_LEADS.map((lead) => {
+              {scoredLeads.map((lead) => {
                 const heightPct = Math.max(4, lead.score.composite);
                 const colour =
                   lead.score.tier === "A"

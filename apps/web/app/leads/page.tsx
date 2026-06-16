@@ -1,11 +1,15 @@
 import { LeadsView } from "@/components/leads/leads-view";
-import { SCORED_LEADS } from "@/lib/fixtures";
+import { getLeads } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Ranked Leads — OIE",
 };
 
-export default function LeadsPage() {
+export default async function LeadsPage() {
+  const leads = await getLeads();
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       <header className="mb-6">
@@ -15,7 +19,7 @@ export default function LeadsPage() {
           inspect enrichment, signal timeline, and score rationale.
         </p>
       </header>
-      <LeadsView initialLeads={SCORED_LEADS} />
+      <LeadsView initialLeads={leads} />
     </div>
   );
 }
