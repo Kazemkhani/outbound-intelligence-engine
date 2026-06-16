@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Home, Settings, Signal, Users } from "lucide-react";
+import { BarChart3, Bell, Home, LogOut, Settings, Signal, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signOutAction } from "@/lib/auth-actions";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
@@ -62,8 +63,17 @@ export function NavSidebar() {
         })}
       </ul>
 
-      {/* Footer note */}
+      {/* Footer: sign out + safety note */}
       <div className="mt-auto border-t border-gray-200 px-5 py-4">
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="mb-3 flex items-center gap-2 rounded-md px-1 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          >
+            <LogOut size={16} aria-hidden="true" />
+            Sign out
+          </button>
+        </form>
         <p className="text-xs text-gray-400">DRY_RUN active — nothing sends without approval.</p>
       </div>
     </nav>
