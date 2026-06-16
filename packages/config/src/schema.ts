@@ -63,6 +63,7 @@ export const envSchema = z.object({
 
   // ── Sending infrastructure ────────────────────────────────────────────────
   SMARTLEAD_API_KEY: optionalSecret,
+  RESEND_API_KEY: optionalSecret,
 
   // ── Multichannel messaging ────────────────────────────────────────────────
   UNIPILE_API_KEY: optionalSecret,
@@ -97,6 +98,7 @@ export const PROVIDER_KEYS = [
   "PREDICTLEADS_API_TOKEN",
   "EXA_API_KEY",
   "SMARTLEAD_API_KEY",
+  "RESEND_API_KEY",
   "UNIPILE_API_KEY",
   "UNIPILE_DSN",
   "HUBSPOT_ACCESS_TOKEN",

@@ -21,6 +21,7 @@ export { HubSpotAdapter } from "./hubspot/index";
 
 // Sending infrastructure (EmailSender) — honours ctx.dryRun.
 export { SmartleadAdapter } from "./smartlead/index";
+export { ResendAdapter } from "./resend/index";
 
 // Messaging rails (MessagingChannel) — gated, off by default, honours ctx.dryRun.
 export { UnipileAdapter, parseUnipileWebhook } from "./unipile/index";
