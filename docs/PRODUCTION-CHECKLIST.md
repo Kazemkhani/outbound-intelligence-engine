@@ -6,7 +6,7 @@
 
 Legend: ☐ todo · ◐ in progress · ☑ done.
 
-> **LIVE (2026-06-16):** Control plane deployed to Vercel production — **https://web-five-kappa-67.vercel.app** (HTTP 200, dry-run fixtures). Git-connected: every push to `main` auto-deploys. Root Directory `apps/web`, framework Next.js. No provider keys/DB yet (dashboard is static fixtures).
+> **LIVE (2026-06-16):** Production at **https://web-five-kappa-67.vercel.app** — now **login-protected** (Auth.js operator credentials; `/` redirects to `/signin`). Git-connected: every push to `main` auto-deploys (Root Directory `apps/web`, Next.js). Provisioned autonomously: **Neon Postgres** (migrated + seeded), **Inngest** durable workers (keys injected, `/api/inngest` serve route live), and env (`AUTH_SECRET`, operator login, `DRY_RUN=true`, cost caps). **Stage-4 runtime wired** (stop-on-reply, cost caps, auto-enrol, suppression). Remaining: **Sentry DSN** (paste it → I set the env + redeploy) and **provider API keys** (your accounts → I live-verify each adapter). Dashboard still serves fixtures until adapters run with keys; the send gate stays shut.
 
 ---
 
