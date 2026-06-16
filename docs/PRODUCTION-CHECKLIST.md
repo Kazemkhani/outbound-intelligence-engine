@@ -6,6 +6,8 @@
 
 Legend: ☐ todo · ◐ in progress · ☑ done.
 
+> **LIVE (2026-06-16):** Control plane deployed to Vercel production — **https://web-five-kappa-67.vercel.app** (HTTP 200, dry-run fixtures). Git-connected: every push to `main` auto-deploys. Root Directory `apps/web`, framework Next.js. No provider keys/DB yet (dashboard is static fixtures).
+
 ---
 
 ## Stage 0 — Source of truth on GitHub
