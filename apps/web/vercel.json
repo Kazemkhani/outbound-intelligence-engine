@@ -2,6 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm run build",
-  "comment": "Set the Vercel project Root Directory to apps/web. Vercel detects the pnpm/Turborepo workspace and links @oie/* packages; @oie/db postinstall generates the Prisma client. Environment: DATABASE_URL, AUTH_SECRET, DRY_RUN=true, cost caps, SENTRY_DSN."
+  "buildCommand": "pnpm run build"
 }

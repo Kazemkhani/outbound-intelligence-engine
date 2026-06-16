@@ -37,3 +37,8 @@ pnpm-debug.log*
 coverage/
 playwright-report/
 test-results/
+
+# Browser-automation artefacts (deploy session)
+.playwright-mcp/
+.scratch/
+/*.png
