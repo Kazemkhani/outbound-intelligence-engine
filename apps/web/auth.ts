@@ -33,8 +33,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // Dev fallback only — never in production.
-        if (process.env.NODE_ENV !== "production") {
+        // Dev fallback only. Requires a SECOND explicit opt-in (ALLOW_DEV_LOGIN)
+        // so a single NODE_ENV slip in a deployed environment cannot expose the
+        // hardcoded credential. Never set ALLOW_DEV_LOGIN in any deployment.
+        if (process.env.NODE_ENV !== "production" && process.env.ALLOW_DEV_LOGIN === "true") {
           if (email === "dev@oie.local" && password === "dev") {
             return { id: "dev", email, name: "Dev Operator" };
           }

@@ -7,7 +7,11 @@ import type { NextAuthConfig } from "next-auth";
  */
 export const authConfig = {
   pages: { signIn: "/signin" },
-  session: { strategy: "jwt" },
+  // JWT sessions with an explicit lifetime. maxAge is the absolute cap; the
+  // rolling window re-extends on activity but never beyond 12h of inactivity,
+  // bounding the blast radius of an exfiltrated session token (vs Auth.js's
+  // 30-day default). Mirrors APEX's sliding idle timeout.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 12, updateAge: 60 * 60 },
   providers: [],
   callbacks: {
     authorized({ auth, request }) {
