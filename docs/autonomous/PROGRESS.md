@@ -46,6 +46,19 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 12) — signin page rebrand + remove dev creds from production
+- app/signin/page.tsx is the first screen any demo viewer sees and was stale + leaky: it showed an "OIE
+  / Outbound Intelligence Engine" brand and a public "Operator access" panel printing dev@oie.local / dev
+  with a "Fill & sign in" button that does not even work in prod (dev backdoor disabled). Fixes:
+  rebranded the mark + title to "Huscribe Revenue OS"; changed the email placeholder to a neutral
+  you@company.com; gated the entire dev-creds panel behind process.env.NODE_ENV !== "production" so it
+  renders only in local dev.
+- VERIFIED: web typecheck clean, lint 0 warnings, full build OK (/signin 3.79 kB, down from 4.16). Proved
+  the production build strips the dev creds: grep of .next/static served JS for "dev@oie.local" returns
+  nothing (the gated block + DEMO const are tree-shaken out under NODE_ENV=production). (Earlier "FOUND"
+  was a shell false positive: `head` always exits 0, so the `&&` fired regardless.)
+- Shipped via PR + redeploy (evidence below).
+
 ## UPG1 (cycle 11) — observability: capture caught LLM failures to Sentry
 - The AI server actions catch ask() failures and return a UI message, so rate limits / overloads / empty
   responses were invisible server-side. lib/llm.ts now calls Sentry.captureException on the upstream
@@ -53,7 +66,8 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   re-throwing. captureException/captureMessage are no-ops without SENTRY_DSN, so it is safe whether or not
   Sentry is connected, and never includes the API key. Server Sentry was already wired in
   instrumentation.ts (register + onRequestError); this fills the gap for swallowed exceptions.
-- VERIFIED: web typecheck clean, lint 0 warnings, test 45 pass, full build OK. Shipped via PR + redeploy.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 45 pass, full build OK. SHIP: PR #22 MERGED
+  (verify + gitleaks PASS); Fly v10 complete; /api/health -> 200. Branch in sync with main.
 
 ## P1/UPG1 (cycle 10) — copy-to-clipboard on generated AI outputs
 - The operator generates battlecards/outreach/answers/scorecards to paste into WhatsApp + email, so
