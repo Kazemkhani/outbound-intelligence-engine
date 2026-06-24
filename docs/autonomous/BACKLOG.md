@@ -92,6 +92,11 @@ above is clear, keep cycling these:
 >     routes (added Voice, Voice Dojo, Close, Knowledge cards). Shipped milestone (PR + Fly redeploy).
 >   - cycle 7: UPG1 = public /api/health liveness endpoint + Fly health check; verified live 200 on v8,
 >     auth still gates other routes.
+>   - cycle 8: UPG1 = tests for lib/canon grounding() (the shared prompt-grounding helper); +7 tests
+>     (header/cardinal-rule/<CONFIRM>, case-insensitivity, dedupe, multi-block, unknown-key). Web suite 45.
+>   - cycle 9: R1+STRAT1 = researched 2025-2026 lead-response-time stats and wrote
+>     docs/strategy/SPEED-TO-LEAD-PROOF.md (sourced proof pack for the pitch + ROI). Batched-merged cycle
+>     8+9 to main.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.

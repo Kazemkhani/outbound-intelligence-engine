@@ -46,6 +46,27 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## R1 + STRAT1 (cycle 9) — speed-to-lead proof pack (sourced sales asset)
+- Researched 2025-2026 lead-response-time data and wrote docs/strategy/SPEED-TO-LEAD-PROOF.md (~670
+  words): sourced stats table (917-min avg real-estate response, 62% after-hours inquiries, 78% first
+  responder, 21x at 5 min, ~90% decay after an hour, 47h cross-industry avg), how-to-use-in-the-pitch
+  (implication-first framings tied to the Close Room ROI math), the Huscribe wedge framed as mechanism
+  (no invented results, Huscribe figures stay <CONFIRM>), caveats, and 5 cited sources with URLs. Gives
+  the founder credible third-party numbers to attribute, backing the canon facts.
+- VERIFIED: 0 em dashes, all 3 cross-links resolve, sources cited.
+- SHIP: batched cycle 8 (canon tests) + cycle 9 (proof pack) and merged to main (PR + evidence below).
+
+## UPG1 (cycle 8) — tests for the shared canon grounding() helper
+- lib/canon.ts grounding() injects the canon + the cardinal "answer ONLY from this / treat Huscribe
+  specifics as <CONFIRM>" rule into every AI prompt (Close, Knowledge, Voice Dojo). It was untested, so a
+  regression could silently strip the canon or the rule. Added lib/__tests__/canon.test.ts (7):
+  empty-keys -> "", unknown-key -> "", header + cardinal rule + <CONFIRM> + block content present,
+  case-insensitive keys, multi-block inclusion, alias dedupe (block appears once), unknown keys ignored
+  while known ones stay.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 45 pass (was 38, +7). Test-only change: no route
+  or behaviour change, so no deploy needed; committed to branch (batch into the next milestone PR).
+- NEXT: keep cycling P1/UPG1 + research; merge the test-only commits at the next coherent milestone.
+
 ## UPG1 (cycle 7) — public /api/health liveness endpoint + Fly health check
 - apps/web/app/api/health/route.ts: no-auth, no-DB liveness probe returning 200 JSON
   {status:"ok", service, time}. Pure liveness (not readiness) so a DB/provider blip cannot flap health
