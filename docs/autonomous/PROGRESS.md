@@ -46,6 +46,16 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 2) — Voice Dojo accessibility + UX polish
+- components/dojo/dojo-workspace.tsx: conversation is now role="log" aria-live="polite" aria-busy so
+  screen readers announce each new prospect line; textarea got an explicit aria-label +
+  aria-keyshortcuts; scenario cards got descriptive aria-labels (name + difficulty + blurb) and a
+  visible focus ring; the "Prospect is thinking…" indicator is role="status"; focus moves to the input
+  when a scenario starts and after each reply (keyboard/SR users never hunt for where to type).
+- VERIFIED: web typecheck clean, lint 0 warnings, test 27 pass, full build OK (/dojo 5.95 kB).
+- NEXT: cycle 3 -> apply the same a11y pattern to /knowledge (live-region answers) as the next P1, or a
+  fresh UPG1; keep cycling. Not redeployed yet (batch the polish into the next milestone deploy).
+
 ## UPG1 (cycle 1) — Voice Dojo boundary tests; explicit backlog now clear
 - Extracted the dojo boundary guard out of the "use server" actions into a pure module
   apps/web/app/dojo/sanitize.ts (sanitizeHistory + transcript + MAX_TURNS/MAX_TURN_CHARS); actions.ts
