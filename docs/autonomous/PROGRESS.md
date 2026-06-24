@@ -46,14 +46,52 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 6) — home/dashboard rebrand + surface all routes; ship milestone
+- app/page.tsx: rebranded eyebrow to "Huscribe Revenue OS"; headline "Find who buys. Qualify by
+  conversation. Then close."; subcopy reflects the end-to-end flywheel (discover, enrich, voice-qualify
+  with NOVA, score, close) under the human approval gate. Fixed a real gap: the home page only linked 5
+  of 9 surfaces; added Voice, Voice Dojo, Close Room, and Knowledge cards, ordered along the flywheel.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 38 pass, full build OK (home still static, all
+  routes present).
+- SHIP: this is the milestone-ship firing for the accumulated branch (PRICING.md + markdown parser +
+  this P1). PR + Fly redeploy evidence appended below.
+
+## UPG1 (cycle 5) — test the shared markdown renderer (used by 3 surfaces)
+- The markdown renderer underpins Close, Knowledge, and Voice Dojo but its parser was untested, so a
+  regression would silently break all three. Extracted the pure parsing (stripInline + parseBlocks +
+  Block type + regexes) into components/ui/markdown-parse.ts (no React); markdown.tsx imports parseBlocks
+  and re-exports stripInline (so existing importers are unchanged).
+- Added components/ui/markdown-parse.test.ts (11): empty input, h2/h3/#### folding, single-# as h2,
+  ul/ol, table (header+rows), fenced code (verbatim body), paragraph line-join, paragraph stops at a
+  structural line, CRLF normalisation, and stripInline.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 38 pass (was 27, +11), full build OK (/close,
+  /dojo, /knowledge all compile).
+- NEXT: docs/code on branch (now ahead of main by 3); batch into the next milestone PR + redeploy. Keep
+  cycling P1/UPG1 + research-backed strategy.
+
+## R1 + STRAT1 (cycle 4) — pricing research + docs/strategy/PRICING.md
+- Honors the creative/research mandate and the operator's "you priced it so low" feedback. WebSearch on
+  2025-2026 pricing: enterprise AI-SDR (11x/Qualified ~$40k-$68k/yr, category up to $100k-$147k/yr),
+  per-seat AI-SDR (Regie $180-$499/user/mo, realistic $3.4k-$13k+/mo), claygency/managed-outbound
+  retainers ($3k-$15k/mo, ColdIQ ~$5k/mo), AI voice tooling ($0.05-$0.35/min all-in + $299-$499/mo).
+- Wrote docs/strategy/PRICING.md (~1000 words): market-bands table (sourced), positioning (anchor to
+  the claygency retainer + per-seat tax, NOT to voice minutes), recommended high-ticket packaging
+  (Pilot / Activate $3.5-6k/mo / Scale $7-12k/mo / Enterprise custom, no per-agent tax, minutes as
+  transparent pass-through), pilot-to-paid conversion playbook for the 2 free pilots, pricing guardrails,
+  and <CONFIRM> items (HumAI COGS/margin, AED conversion) so nothing about the founder's cost basis is
+  fabricated. Cross-links GTM/DATA-MOAT/VOICE-ACTIVATION.
+- VERIFIED: 0 em dashes, all 3 cross-links resolve to real files, sources cited with URLs.
+- NEXT: docs-only (no deploy needed); batch into the next milestone PR. Future cycles: more P1/UPG1
+  and research-backed strategy refreshes.
+
 ## P1 (cycle 3) — Knowledge a11y + ship accumulated milestone
 - components/knowledge/knowledge-workspace.tsx: answers list is now role="feed" aria-busy; an sr-only
   role="status" announces "Generating answer…"; focus moves to the newest answer (tabIndex -1 + ref)
   when it arrives, with a visible focus ring. Mirrors the dojo a11y pattern for consistency.
 - VERIFIED: web typecheck clean, lint 0 warnings, test 27 pass (Fly remote build is the build gate).
-- SHIP: branch was 3 commits ahead of main (milestone log + UPG1 tests + dojo a11y); with this P1 it is
-  4 ahead. Opening a PR to main + redeploying so the a11y + tests reach prod (see deploy/PR evidence
-  appended below).
+- SHIP: PR #17 (a11y + dojo boundary tests, cycles 1-3) MERGED to main; verify PASS (2m59s) + gitleaks
+  PASS (both); branch fast-forwarded to main (82d9583). Fly redeploy: v6 complete. VERIFIED live: /dojo
+  + /knowledge -> 307 (auth-gated, healthy), /signin -> 200, CSP + HSTS still present on v6.
 
 ## P1 (cycle 2) — Voice Dojo accessibility + UX polish
 - components/dojo/dojo-workspace.tsx: conversation is now role="log" aria-live="polite" aria-busy so
