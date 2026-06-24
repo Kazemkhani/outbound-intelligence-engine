@@ -103,6 +103,10 @@ The control plane deploys to Vercel, durable workers to Inngest Cloud, Postgres 
 
 ## Documentation
 
+Start with the map: [`docs/README.md`](docs/README.md) indexes everything below, plus the Huscribe
+Revenue OS product docs ([`docs/revenue-os/`](docs/revenue-os/)) and the strategy + sales kit
+([`docs/strategy/`](docs/strategy/): pricing, the speed-to-lead proof pack, and the pilot playbook).
+
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design at depth
 - [`docs/adr/`](docs/adr/) — architecture decision records
 - [`docs/HANDOFF.md`](docs/HANDOFF.md) — complete build history + how to continue

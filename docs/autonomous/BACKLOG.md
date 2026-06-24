@@ -111,6 +111,8 @@ above is clear, keep cycling these:
 >     (day-by-day) that sequences the strategy into actions and converts a pilot to paid.
 >   - cycle 16: UPG1 = docs/README.md — a master documentation index (start-here, product docs, strategy
 >     kit, ADRs, engine foundation, build log). All links verified to resolve.
+>   - cycle 17: UPG1 = root README Documentation section now points to docs/README.md (the map) + the
+>     revenue-os product docs + the strategy/sales kit. Links verified.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.

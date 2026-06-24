@@ -46,6 +46,13 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 17) — root README points to the docs map + Revenue OS + strategy
+- The root README's Documentation section did not reference the new docs/README.md index, the
+  revenue-os/ product docs, or the strategy/ sales kit. Added a "Start with the map" pointer at the top
+  of that section linking all three (no em dashes in the addition, per the standing rule).
+- VERIFIED: the three added links resolve (docs/README.md, docs/revenue-os/, docs/strategy/); 0 em dashes
+  in the added paragraph. Docs-only; merging to main. ~37 min left in the window.
+
 ## UPG1 (cycle 16) — master documentation index (docs/README.md)
 - 35+ docs existed with no single entry point. Wrote docs/README.md: a start-here reading order, then
   sections for product/system docs (revenue-os/), the strategy + sales kit (strategy/), decisions (adr/),
