@@ -37,3 +37,12 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   what's useful/valuable, grow prompt-engineered md coverage in EVERY subfolder (AGENTS.md + README),
   turn research into `docs/strategy/` plans, execute substantial work via specialist sub-agents
   (Workflow + adversarial verify), and never stop while time remains. Next firings cycle this.
+
+## IN PROGRESS (active session) — do NOT duplicate
+- A Workflow of specialist sub-agents is running NOW (run wf_adc1ec04-018): R1 research (4 topics),
+  DOC1-DOC10 (docs/revenue-os/*), MD1 (AGENTS.md + README in packages/{core,db,integrations,
+  orchestration,config}, apps/web, scripts), STRAT1 (docs/strategy/{GTM-EXPERIMENTS,DATA-MOAT,
+  VOICE-ACTIVATION}.md). Results get committed by the active session on completion.
+- If a cron firing happens while this marker is here, SKIP R1/DOC1-10/MD1/STRAT1 and instead take
+  OTHER items: D2 (harden headers/cookies), D3 (trustHost in code), PORT1/PORT2, QA1/QA2/PR1, or
+  P1/UPG1. This marker is removed once the workflow's output is committed.
