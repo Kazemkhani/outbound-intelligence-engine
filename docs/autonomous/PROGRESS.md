@@ -46,6 +46,50 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 3) — Knowledge a11y + ship accumulated milestone
+- components/knowledge/knowledge-workspace.tsx: answers list is now role="feed" aria-busy; an sr-only
+  role="status" announces "Generating answer…"; focus moves to the newest answer (tabIndex -1 + ref)
+  when it arrives, with a visible focus ring. Mirrors the dojo a11y pattern for consistency.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 27 pass (Fly remote build is the build gate).
+- SHIP: branch was 3 commits ahead of main (milestone log + UPG1 tests + dojo a11y); with this P1 it is
+  4 ahead. Opening a PR to main + redeploying so the a11y + tests reach prod (see deploy/PR evidence
+  appended below).
+
+## P1 (cycle 2) — Voice Dojo accessibility + UX polish
+- components/dojo/dojo-workspace.tsx: conversation is now role="log" aria-live="polite" aria-busy so
+  screen readers announce each new prospect line; textarea got an explicit aria-label +
+  aria-keyshortcuts; scenario cards got descriptive aria-labels (name + difficulty + blurb) and a
+  visible focus ring; the "Prospect is thinking…" indicator is role="status"; focus moves to the input
+  when a scenario starts and after each reply (keyboard/SR users never hunt for where to type).
+- VERIFIED: web typecheck clean, lint 0 warnings, test 27 pass, full build OK (/dojo 5.95 kB).
+- NEXT: cycle 3 -> apply the same a11y pattern to /knowledge (live-region answers) as the next P1, or a
+  fresh UPG1; keep cycling. Not redeployed yet (batch the polish into the next milestone deploy).
+
+## UPG1 (cycle 1) — Voice Dojo boundary tests; explicit backlog now clear
+- Extracted the dojo boundary guard out of the "use server" actions into a pure module
+  apps/web/app/dojo/sanitize.ts (sanitizeHistory + transcript + MAX_TURNS/MAX_TURN_CHARS); actions.ts
+  imports it. This is the client-supplied conversation validator, so it is security-relevant.
+- Added tests: app/dojo/sanitize.test.ts (9) covering valid/trim/clamp, non-array, empty, over-length,
+  exactly MAX_TURNS, unknown role, blank text, malformed turn, and transcript formatting;
+  app/dojo/scenarios.test.ts (4) covering findScenario + SCENARIOS integrity (unique ids, real personas).
+- VERIFIED: web typecheck clean, lint 0 warnings, web test 27 pass (was 14, +13).
+- LOOP NOTE: all one-time backlog items (D/DOC/PORT/QA/PR + R1/MD1/STRAT1/SUB1) are done. P1 and UPG1
+  are perpetual and are intentionally LEFT UNCHECKED (see BACKLOG note) so the loop keeps cycling until
+  STOP_AFTER_EPOCH (~6h left) per the operator's "do not stop" directive. Each cycle's instance is
+  logged here + in the BACKLOG cycle log.
+- NEXT: P1 (polish a screen, e.g. /knowledge or /dojo a11y + copy) next cycle; keep cycling P1/UPG1
+  and the research/strategy/md-coverage mandate; redeploy at milestones.
+
+## MILESTONE SHIPPED — ports live in production (PR #16 merged + Fly v5)
+- PR #16 (Voice Dojo + Knowledge Q&A) MERGED to main at 2026-06-24 17:08 UTC; verify PASS (2m46s) +
+  gitleaks PASS (both events). Only legacy Vercel preview checks failed (commit-email). Branch
+  fast-forwarded to main (d39a2b0).
+- Fly redeploy: v5 complete. VERIFIED live (--resolve to 109.105.222.142): /dojo -> 307 redirect to
+  /signin?callbackUrl=...%2Fdojo, /knowledge -> 307 -> /signin (both auth-gated routes exist + the gate
+  works), /signin -> 200. Production now serves the full control plane incl. both ported APEX modes.
+- Note: an old release v3 still shows "running" (the earlier buildkit-stalled deploy); v4 and v5 are
+  complete and v5 is current. Harmless cosmetic noise, not worth a forced cleanup.
+
 ## PORT1 DONE — Voice Dojo at /dojo (interactive roleplay + scoring)
 - New route /dojo (nav link "Voice Dojo" with a Dumbbell icon, after Voice). Last big port done.
 - app/dojo/scenarios.ts (plain shared module, NOT "use server", so client + server can import): 3

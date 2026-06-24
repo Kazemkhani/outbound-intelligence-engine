@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { AlertCircle, Award, Dumbbell, Loader2, RotateCcw, Send, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Markdown } from "@/components/ui/markdown";
@@ -22,8 +22,16 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
   const [isReplying, startReply] = useTransition();
   const [isScoring, startScoring] = useTransition();
   const threadRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const busy = isReplying || isScoring;
+
+  // Keep the keyboard in the conversation: focus the input when a scenario starts
+  // and again each time the prospect finishes replying, so a keyboard or screen
+  // reader user never has to hunt for where to type next.
+  useEffect(() => {
+    if (scenario && !isReplying) inputRef.current?.focus();
+  }, [scenario, isReplying]);
 
   const start = (s: DojoScenario) => {
     setScenario(s);
@@ -89,7 +97,8 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
             key={s.id}
             type="button"
             onClick={() => start(s)}
-            className="surface group flex flex-col gap-3 p-5 text-left transition-colors hover:border-gold-500/40"
+            aria-label={`Start roleplay: ${s.name}. Difficulty ${s.difficulty}. ${s.blurb}`}
+            className="surface group flex flex-col gap-3 p-5 text-left transition-colors hover:border-gold-500/40 focus-visible:border-gold-500/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500/40"
           >
             <div className="flex items-start justify-between gap-3">
               <span className="font-display text-base font-bold text-ink-50">{s.name}</span>
@@ -145,7 +154,13 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
       </div>
 
       {/* Conversation */}
-      <div className="surface space-y-4 p-5">
+      <div
+        className="surface space-y-4 p-5"
+        role="log"
+        aria-label="Roleplay conversation"
+        aria-live="polite"
+        aria-busy={isReplying}
+      >
         {turns.map((t, i) => (
           <div
             key={i}
@@ -166,10 +181,10 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
           </div>
         ))}
         {isReplying && (
-          <div className="flex justify-start">
+          <div className="flex justify-start" role="status">
             <div className="inline-flex items-center gap-2 rounded-2xl rounded-bl-sm bg-ink-800 px-4 py-2.5 text-sm text-ink-400">
               <Loader2 size={14} className="animate-spin" aria-hidden="true" />
-              Prospect is thinking
+              Prospect is thinking…
             </div>
           </div>
         )}
@@ -179,6 +194,7 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
       <div className="surface p-4">
         <div className="flex items-end gap-3">
           <textarea
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -188,6 +204,8 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
               }
             }}
             rows={2}
+            aria-label="Your line to the prospect"
+            aria-keyshortcuts="Meta+Enter Control+Enter"
             placeholder="Your line. Lead with an implication tied to their numbers, or a sharp discovery question."
             className="input-field w-full resize-y"
             disabled={busy}

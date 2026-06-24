@@ -15,6 +15,7 @@
 import { ask } from "@/lib/llm";
 import { grounding } from "@/lib/canon";
 import { findScenario, type DojoTurn } from "./scenarios";
+import { sanitizeHistory, transcript } from "./sanitize";
 
 export interface ProspectResult {
   ok: boolean;
@@ -26,29 +27,6 @@ export interface ScoreResult {
   ok: boolean;
   body: string;
   error?: string;
-}
-
-const MAX_TURNS = 60;
-const MAX_TURN_CHARS = 1500;
-
-/** Validate + clamp the conversation coming from the client (boundary guard). */
-function sanitizeHistory(history: DojoTurn[]): DojoTurn[] | null {
-  if (!Array.isArray(history) || history.length === 0 || history.length > MAX_TURNS) return null;
-  const out: DojoTurn[] = [];
-  for (const t of history) {
-    if (!t || (t.role !== "operator" && t.role !== "prospect")) return null;
-    const text = String(t.text ?? "").trim();
-    if (!text) return null;
-    out.push({ role: t.role, text: text.slice(0, MAX_TURN_CHARS) });
-  }
-  return out;
-}
-
-/** Render the running conversation for the model. */
-function transcript(history: DojoTurn[]): string {
-  return history
-    .map((t) => `${t.role === "operator" ? "OPERATOR (selling Huscribe)" : "PROSPECT"}: ${t.text}`)
-    .join("\n");
 }
 
 const PROSPECT_SYSTEM = (persona: string, canon: string): string =>
