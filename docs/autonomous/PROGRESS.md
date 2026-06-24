@@ -46,6 +46,16 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 6) — home/dashboard rebrand + surface all routes; ship milestone
+- app/page.tsx: rebranded eyebrow to "Huscribe Revenue OS"; headline "Find who buys. Qualify by
+  conversation. Then close."; subcopy reflects the end-to-end flywheel (discover, enrich, voice-qualify
+  with NOVA, score, close) under the human approval gate. Fixed a real gap: the home page only linked 5
+  of 9 surfaces; added Voice, Voice Dojo, Close Room, and Knowledge cards, ordered along the flywheel.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 38 pass, full build OK (home still static, all
+  routes present).
+- SHIP: this is the milestone-ship firing for the accumulated branch (PRICING.md + markdown parser +
+  this P1). PR + Fly redeploy evidence appended below.
+
 ## UPG1 (cycle 5) — test the shared markdown renderer (used by 3 surfaces)
 - The markdown renderer underpins Close, Knowledge, and Voice Dojo but its parser was untested, so a
   regression would silently break all three. Extracted the pure parsing (stripInline + parseBlocks +

@@ -1,7 +1,20 @@
 import Link from "next/link";
-import { BarChart3, Bell, Settings, Signal, Users, ArrowUpRight } from "lucide-react";
+import {
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  BookOpen,
+  Dumbbell,
+  PhoneCall,
+  Settings,
+  Signal,
+  Swords,
+  Users,
+} from "lucide-react";
 import { getAnalyticsTiles } from "@/lib/fixtures";
 
+// Ordered along the revenue flywheel: discover -> tune -> read signals -> qualify by
+// voice -> practise -> close -> learn -> govern -> measure. Every surface reachable from home.
 const SECTIONS = [
   {
     href: "/leads",
@@ -25,6 +38,34 @@ const SECTIONS = [
     icon: Signal,
   },
   {
+    href: "/voice",
+    label: "Voice Calls",
+    description:
+      "Every NOVA voice call: status, consent, and the structured findings captured on the call and written back to the master database.",
+    icon: PhoneCall,
+  },
+  {
+    href: "/dojo",
+    label: "Voice Dojo",
+    description:
+      "Practise selling against a realistic AI prospect, then get scored on your technique against the sales frameworks. A drill: nothing leaves the room.",
+    icon: Dumbbell,
+  },
+  {
+    href: "/close",
+    label: "Close Room",
+    description:
+      "The closing cockpit: battlecards, multi-channel outreach, post-call coaching, and a deterministic ROI case. Drafted for your review, never sent from here.",
+    icon: Swords,
+  },
+  {
+    href: "/knowledge",
+    label: "Knowledge",
+    description:
+      "Ask the sales canon: frameworks, objection handling, the UAE playbook, and the Huscribe product facts. Grounded answers, never generic AI advice.",
+    icon: BookOpen,
+  },
+  {
     href: "/approvals",
     label: "Approval Queue",
     description:
@@ -46,13 +87,14 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-8 py-12">
       <header className="mb-10">
-        <p className="label-mono mb-3">Outbound Intelligence Engine</p>
+        <p className="label-mono mb-3">Huscribe Revenue OS</p>
         <h1 className="text-3xl font-bold tracking-tight text-ink-50 sm:text-4xl">
-          Find who buys. Score them. <span className="text-gold-400">Then sell.</span>
+          Find who buys. Qualify by conversation. <span className="text-gold-400">Then close.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-base text-ink-400">
-          Autonomous prospecting, enrichment, and signal-driven outbound, governed by a mandatory
-          human approval gate. Nothing sends without your review.
+          One control plane for the whole motion: discover and enrich, qualify by voice with NOVA,
+          score deterministically, then close. Governed end to end by a mandatory human approval gate,
+          nothing sends or dials without your review.
         </p>
       </header>
 
