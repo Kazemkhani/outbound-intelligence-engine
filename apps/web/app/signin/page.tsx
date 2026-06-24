@@ -48,10 +48,10 @@ export default function SignInPage() {
         {/* Brand mark */}
         <div className="mb-7 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500 font-display text-sm font-bold text-ink-950">
-            OIE
+            H
           </span>
           <div className="leading-tight">
-            <div className="font-display text-base font-bold text-ink-50">Outbound Intelligence Engine</div>
+            <div className="font-display text-base font-bold text-ink-50">Huscribe Revenue OS</div>
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-500">
               Control plane · by HumAI
             </div>
@@ -72,7 +72,7 @@ export default function SignInPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                placeholder="dev@oie.local"
+                placeholder="you@company.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -106,34 +106,38 @@ export default function SignInPage() {
             </button>
           </form>
 
-          {/* Operator access hint — answers "what do I put here?" */}
-          <div className="mt-6 rounded-lg border border-ink-700 bg-ink-900/60 p-4">
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={14} className="text-teal-400" aria-hidden />
-              <span className="label-mono text-teal-400">Operator access</span>
+          {/* Local-dev convenience only. Gated on NODE_ENV so the production build
+              never renders the dev credentials or a fill button (the dev backdoor is
+              disabled in production anyway). In prod this whole block is removed. */}
+          {process.env.NODE_ENV !== "production" && (
+            <div className="mt-6 rounded-lg border border-ink-700 bg-ink-900/60 p-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} className="text-teal-400" aria-hidden />
+                <span className="label-mono text-teal-400">Dev access (local only)</span>
+              </div>
+              <dl className="mt-3 space-y-1.5 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-ink-400">Email</dt>
+                  <dd className="font-mono text-ink-100">{DEMO.email}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-ink-400">Password</dt>
+                  <dd className="font-mono text-ink-100">{DEMO.password}</dd>
+                </div>
+              </dl>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail(DEMO.email);
+                  setPassword(DEMO.password);
+                  setTimeout(() => submit(), 0);
+                }}
+                className="btn-ghost mt-3 w-full"
+              >
+                Fill &amp; sign in
+              </button>
             </div>
-            <dl className="mt-3 space-y-1.5 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-400">Email</dt>
-                <dd className="font-mono text-ink-100">{DEMO.email}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-400">Password</dt>
-                <dd className="font-mono text-ink-100">{DEMO.password}</dd>
-              </div>
-            </dl>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail(DEMO.email);
-                setPassword(DEMO.password);
-                setTimeout(() => submit(), 0);
-              }}
-              className="btn-ghost mt-3 w-full"
-            >
-              Fill &amp; sign in
-            </button>
-          </div>
+          )}
         </div>
 
         <p className="mt-5 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-ink-600">

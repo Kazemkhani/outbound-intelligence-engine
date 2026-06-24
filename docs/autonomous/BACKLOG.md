@@ -101,6 +101,8 @@ above is clear, keep cycling these:
 >     Knowledge answers, Dojo scorecard) so the operator can paste into WhatsApp/email. Shipped (PR + deploy).
 >   - cycle 11: UPG1 = observability — capture caught LLM failures (rate limit/overload/empty) to Sentry in
 >     lib/llm (no-op without DSN) so AI errors are visible, not just swallowed into a UI message. Shipped.
+>   - cycle 12: P1 = signin page rebrand to Huscribe Revenue OS + neutral placeholder; gated the dev-creds
+>     panel to non-production (verified the prod build strips dev@oie.local from all served JS). Shipped.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
