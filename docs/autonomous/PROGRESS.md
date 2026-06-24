@@ -364,3 +364,47 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   (task wi0afejdq) had NOT finished when I checked right after compaction; it completed ~10.7 min later
   and DID write all files. I had launched a duplicate hardened run (w22734vw6); on seeing the original
   complete I stopped the duplicate (TaskStop) to avoid overwrite races and token waste.
+
+---
+
+## FINAL SUMMARY — 8-hour autonomous run complete (loop terminated)
+
+The autonomous build loop reached its window (STARTED 2026-06-24 19:17 +04, STOP 2026-06-25 03:17 +04)
+and self-terminated: cron job `7e46fd64` deleted (no further firings). Final state: main == branch,
+full repo green (typecheck 6/6, lint 6/6 clean, 347 tests pass), production live and healthy.
+
+### Shipped to production
+- Huscribe Revenue OS unified control plane LIVE at https://huscribe-revenue-os.fly.dev (Fly.io fra),
+  currently release v12. Scale-to-zero, dedicated IPv4, /api/health 200.
+- 9 surfaces: Leads, ICP, Signals, Voice, Voice Dojo, Close Room, Knowledge, Approvals, Analytics, all
+  behind a hardened operator login and consistently branded "Huscribe Revenue OS".
+
+### What was built (18 verified cycles, ~15 PRs merged to main)
+- DEPLOY + SECURITY: prod deploy; Auth.js v5 operator login (bcrypt) with dev backdoor disabled +
+  tree-shaken out of the prod bundle; trustHost; CSP + HSTS + nosniff + frame-deny + Referrer/Permissions
+  headers; gitleaks secret-scan CI fixed (token + pull-requests:read); /api/health liveness + Fly check;
+  Sentry capture of caught LLM failures. Secrets only in Fly/env, never committed.
+- VOICE: NOVA integration (scripts/nova-call.ts, CallSession/CallFinding), demo-mode only.
+- FEATURES: ported APEX's Voice Dojo (/dojo, roleplay + scoring) and Knowledge Q&A (/knowledge) into the
+  control plane (APEX retired); copy-to-clipboard on all generated outputs; home + signin + nav rebrand.
+- TESTS: 347 total (web 50 incl. auth route-gate, canon grounding, markdown parser, dojo sanitizer, ROI
+  math, NOVA findings; + engine integration/core/scoring suites).
+- DOCS: docs/revenue-os/ product docs + ADRs, per-module AGENTS.md + README, a 6-doc strategy/sales kit
+  (GTM-EXPERIMENTS, PRICING, SPEED-TO-LEAD-PROOF, DATA-MOAT, VOICE-ACTIVATION, PILOT-PLAYBOOK), and a
+  master docs/README.md index linked from the root README.
+
+### Invariants held all run
+DRY_RUN stayed true; NOVA stayed in DEMO_MODE (zero live PSTN dials); the LLM never computed a score or
+ROI number; no secret was ever committed or echoed; the Anthropic key remained protected in Fly secrets.
+
+### BLOCKED / needs operator sign-off (carried, not a code task)
+- Live PSTN calling for marketing in the UAE is hard-gated by law and requires explicit owner sign-off:
+  TDRA approval, licence-registered caller ID, DNCR screening, 09:00-18:00 Asia/Dubai calling window,
+  consent + recording/AI disclosure. Keep DEMO_MODE + DRY_RUN on until all are confirmed
+  (see docs/strategy/VOICE-ACTIVATION.md).
+- Sentry is wired but inert until SENTRY_DSN is set in Fly secrets (optional).
+
+### To resume / use it
+Operator login at https://huscribe-revenue-os.fly.dev (gp@humai.ae). Run locally + daily playbook in
+docs/revenue-os/RUNBOOK.md. Start any doc dive at docs/README.md. Loop is stopped; re-arm by scheduling
+a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session is wanted.
