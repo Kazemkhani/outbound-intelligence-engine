@@ -18,3 +18,22 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
 - Deploy attempt 1 FAILED: `next build` errored on `apps/web/.env.local` (a symlink to ../../.env that
   .dockerignore excludes -> dangling link in the image). FIX: .dockerignore now excludes `**/.env*` +
   `**/.env.local`. Redeploying (remote builder). Verify login once live.
+
+## D1 DONE — deploy live + auth verified
+- Redeploy (remote builder) succeeded: DEPLOY_EXIT=0. App serves HTTP 200.
+- DNS: hostname only had AAAA → no IPv4 route from this Mac. Allocated dedicated IPv4
+  `109.105.222.142`; `flyctl` now reports "DNS configuration verified".
+- Auth 500 root cause (from Fly logs): NextAuth v5 `UntrustedHost` — self-hosted (non-Vercel)
+  deploys must trust the host. FIX: set Fly env `AUTH_TRUST_HOST=true` + `AUTH_URL=https://huscribe-revenue-os.fly.dev`
+  (machine restart, no rebuild). Logged a backlog item (D3) to also bake `trustHost:true` into auth.config.
+- VERIFIED on prod (`--resolve` to the app IP):
+  - operator login gp@humai.ae / Huscribe1234 → HTTP 302, session `{"email":"gp@humai.ae"}`. ✓
+  - dev backdoor dev@oie.local/dev → no session created (dead in prod). ✓
+- Secrets remain only in Fly (never in image/repo); Anthropic key protected. DRY_RUN on, NOVA demo.
+- Live: https://huscribe-revenue-os.fly.dev  (operator: gp@humai.ae / Huscribe1234)
+
+## Mandate expanded (operator directive)
+- Folded the operator's latest directive into LOOP.md + BACKLOG.md: be creative, keep researching
+  what's useful/valuable, grow prompt-engineered md coverage in EVERY subfolder (AGENTS.md + README),
+  turn research into `docs/strategy/` plans, execute substantial work via specialist sub-agents
+  (Workflow + adversarial verify), and never stop while time remains. Next firings cycle this.
