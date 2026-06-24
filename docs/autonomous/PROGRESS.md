@@ -46,6 +46,15 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 14) — tests for the auth route-gate allowlist
+- The authorized callback in auth.config.ts decides public vs gated routes; a regression could expose a
+  protected route or make /api/health private (uptime). Added auth.config.test.ts (5): public paths
+  (/signin, /api/health, /api/auth/*, /api/inngest) allowed without a session; all 10 app routes blocked
+  without a session and allowed with one; trustHost === true (prevents NextAuth UntrustedHost); JWT
+  session maxAge bounded <= 12h (vs the 30-day default). Lint-safe mocks via Parameters<typeof ...>.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 50 pass (was 45, +5). Test-only: no deploy needed.
+- SHIP: batched cycle 13 ship-log + cycle 14 tests; merging to main to keep it current.
+
 ## P1 (cycle 13) — brand consistency sweep (nav + titles + layout)
 - Completed the rebrand across the app chrome (home + signin were already done): nav-sidebar badge
   "OIE" -> "H" and "Control Plane" -> "Huscribe Revenue OS"; all 9 page <title>s rebranded to

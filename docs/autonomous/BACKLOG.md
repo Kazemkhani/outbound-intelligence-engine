@@ -105,6 +105,8 @@ above is clear, keep cycling these:
 >     panel to non-production (verified the prod build strips dev@oie.local from all served JS). Shipped.
 >   - cycle 13: P1 = brand sweep — nav sidebar badge + all 9 page <title>s + root layout title/description
 >     rebranded OIE -> Huscribe Revenue OS (middot separator, removed em dashes from titles). Shipped.
+>   - cycle 14: UPG1 = tests for the auth public-path allowlist (authorized callback) + trustHost + bounded
+>     session; +5 tests. Web suite now 50. Guards a route-gate regression (security/uptime).
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
