@@ -83,6 +83,9 @@ above is clear, keep cycling these:
 >     scenario-card labels + focus ring, focus management, status role on the thinking indicator).
 >   - cycle 3: P1 = Knowledge a11y (role=feed answers, sr-only status, focus-to-latest-answer) + shipped
 >     the accumulated milestone (PR + Fly redeploy).
+>   - cycle 4: R1+STRAT1 = researched 2025-2026 pricing bands (AI-SDR, claygency, voice) and wrote
+>     docs/strategy/PRICING.md (high-ticket packaging + pilot-to-paid), addressing the "priced too low"
+>     feedback.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.

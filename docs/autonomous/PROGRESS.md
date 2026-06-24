@@ -46,6 +46,21 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## R1 + STRAT1 (cycle 4) — pricing research + docs/strategy/PRICING.md
+- Honors the creative/research mandate and the operator's "you priced it so low" feedback. WebSearch on
+  2025-2026 pricing: enterprise AI-SDR (11x/Qualified ~$40k-$68k/yr, category up to $100k-$147k/yr),
+  per-seat AI-SDR (Regie $180-$499/user/mo, realistic $3.4k-$13k+/mo), claygency/managed-outbound
+  retainers ($3k-$15k/mo, ColdIQ ~$5k/mo), AI voice tooling ($0.05-$0.35/min all-in + $299-$499/mo).
+- Wrote docs/strategy/PRICING.md (~1000 words): market-bands table (sourced), positioning (anchor to
+  the claygency retainer + per-seat tax, NOT to voice minutes), recommended high-ticket packaging
+  (Pilot / Activate $3.5-6k/mo / Scale $7-12k/mo / Enterprise custom, no per-agent tax, minutes as
+  transparent pass-through), pilot-to-paid conversion playbook for the 2 free pilots, pricing guardrails,
+  and <CONFIRM> items (HumAI COGS/margin, AED conversion) so nothing about the founder's cost basis is
+  fabricated. Cross-links GTM/DATA-MOAT/VOICE-ACTIVATION.
+- VERIFIED: 0 em dashes, all 3 cross-links resolve to real files, sources cited with URLs.
+- NEXT: docs-only (no deploy needed); batch into the next milestone PR. Future cycles: more P1/UPG1
+  and research-backed strategy refreshes.
+
 ## P1 (cycle 3) — Knowledge a11y + ship accumulated milestone
 - components/knowledge/knowledge-workspace.tsx: answers list is now role="feed" aria-busy; an sr-only
   role="status" announces "Generating answer…"; focus moves to the newest answer (tabIndex -1 + ref)
