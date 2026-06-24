@@ -11,3 +11,10 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   never enter the image, `next start`), fly.toml (app huscribe-revenue-os, region fra, https, scale-to-zero).
 - Scheduled the AUTONOMOUS BUILD LOOP cron (~every 25 min) to execute the backlog until 8h elapse.
 - Next: D1 (create Fly app + stage secrets + deploy + verify login), then the docs + ports.
+
+## D1 in progress (deploy)
+- Created Fly app `huscribe-revenue-os` (region fra), staged 10 secrets (DB/AUTH/ANTHROPIC/provider
+  keys + AUTH_OPERATOR_EMAIL=gp@humai.ae + bcrypt(Huscribe1234) hash). NODE_ENV=production, no ALLOW_DEV_LOGIN.
+- Deploy attempt 1 FAILED: `next build` errored on `apps/web/.env.local` (a symlink to ../../.env that
+  .dockerignore excludes -> dangling link in the image). FIX: .dockerignore now excludes `**/.env*` +
+  `**/.env.local`. Redeploying (remote builder). Verify login once live.
