@@ -54,7 +54,8 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
 - Left close/actions.ts internal "OIE" prompt labels untouched (not UI chrome; changing prompt wording
   risks output drift). No user-facing OIE/Outbound Intelligence Engine string remains in chrome.
 - VERIFIED: web typecheck clean, lint 0 warnings, full build OK; grep confirms no OIE in
-  layout/nav/page-titles. Shipped via PR + redeploy (evidence below).
+  layout/nav/page-titles. SHIP: PR #24 MERGED (verify + gitleaks PASS); Fly v12 complete; live served
+  /signin <title> is "Huscribe Revenue OS", /api/health -> 200. Branch in sync with main.
 
 ## P1 (cycle 12) — signin page rebrand + remove dev creds from production
 - app/signin/page.tsx is the first screen any demo viewer sees and was stale + leaky: it showed an "OIE
