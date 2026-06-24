@@ -24,6 +24,15 @@ primary_region = "fra"
     soft_limit = 180
     hard_limit = 220
 
+  # Liveness check. Runs only while a machine is up (does not defeat scale-to-zero);
+  # on deploy, Fly waits for /api/health to pass before marking the release healthy.
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/api/health"
+
 [[vm]]
   size = "shared-cpu-1x"
   memory = "1024mb"

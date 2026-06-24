@@ -46,6 +46,17 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 7) — public /api/health liveness endpoint + Fly health check
+- apps/web/app/api/health/route.ts: no-auth, no-DB liveness probe returning 200 JSON
+  {status:"ok", service, time}. Pure liveness (not readiness) so a DB/provider blip cannot flap health
+  and trigger restarts. auth.config.ts: added /api/health to the public allowlist. fly.toml: wired an
+  http_service health check (GET /api/health, 30s) that runs only while a machine is up, preserving
+  scale-to-zero, and gates the deploy (Fly waits for it to pass before marking the release healthy).
+- VERIFIED: web typecheck + lint (0 warnings) + build (/api/health compiled); flyctl config validate
+  passes; deployed v8; live GET /api/health -> 200 with the JSON body and NO auth redirect; /leads still
+  -> 307 (auth allowlist did not over-expose). Fly health check passed during the v8 deploy.
+- NEXT: keep cycling P1/UPG1 + research. Branch now ahead of main (health + evidence log); merging.
+
 ## P1 (cycle 6) — home/dashboard rebrand + surface all routes; ship milestone
 - app/page.tsx: rebranded eyebrow to "Huscribe Revenue OS"; headline "Find who buys. Qualify by
   conversation. Then close."; subcopy reflects the end-to-end flywheel (discover, enrich, voice-qualify
@@ -53,8 +64,9 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   of 9 surfaces; added Voice, Voice Dojo, Close Room, and Knowledge cards, ordered along the flywheel.
 - VERIFIED: web typecheck clean, lint 0 warnings, test 38 pass, full build OK (home still static, all
   routes present).
-- SHIP: this is the milestone-ship firing for the accumulated branch (PRICING.md + markdown parser +
-  this P1). PR + Fly redeploy evidence appended below.
+- SHIP: PR #18 (home P1 + markdown parser tests + PRICING.md) MERGED to main; verify PASS + gitleaks
+  PASS (both); branch fast-forwarded to main (189225a). Fly redeploy: v7 complete. VERIFIED live:
+  / -> 307 (auth-gated home, healthy), /signin -> 200. Only legacy Vercel preview checks failed.
 
 ## UPG1 (cycle 5) — test the shared markdown renderer (used by 3 surfaces)
 - The markdown renderer underpins Close, Knowledge, and Voice Dojo but its parser was untested, so a
