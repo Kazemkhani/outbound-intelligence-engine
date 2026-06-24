@@ -46,6 +46,25 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## PORT1 DONE — Voice Dojo at /dojo (interactive roleplay + scoring)
+- New route /dojo (nav link "Voice Dojo" with a Dumbbell icon, after Voice). Last big port done.
+- app/dojo/scenarios.ts (plain shared module, NOT "use server", so client + server can import): 3
+  canon-grounded UAE prospects with persona/opener/blurb/difficulty (brokerage-owner-has-team Tough,
+  offplan-developer-price Brutal, propertyfinder-advertiser-afterhours Warm).
+- app/dojo/actions.ts ("use server"): prospectReply(scenarioId, history) plays the prospect IN
+  CHARACTER, grounded in OBJECTIONS/VOSS/DUBAI/HUSCRIBE canon, 1-4 sentence replies, rewards good
+  technique and punishes weak moves, never coaches/breaks character. scoreRoleplay(scenarioId,
+  history) grades the OPERATOR vs FRAMEWORKS/OBJECTIONS/VOSS/DISCOVERY/CLOSING (deep/Opus tier),
+  JSON scorecard + '## What to do next'. History sanitised at the boundary (<=60 turns, <=1500
+  chars/turn, role whitelist); scoring requires >=2 operator turns. LLM never computes the ICP score.
+- components/dojo/dojo-workspace.tsx ("use client"): scenario picker cards (difficulty badges + tags),
+  chat thread (operator vs prospect bubbles), Cmd/Ctrl+Enter to send, "Prospect is thinking" state,
+  "End & score" -> Markdown scorecard (shared renderer), "New scenario" reset, error states.
+- VERIFIED: web typecheck clean, lint 0 warnings, full `next build` OK; build lists /dojo (5.75 kB)
+  and /knowledge (2.14 kB) as dynamic routes.
+- NEXT: both ports done -> a Fly redeploy + PR-to-main milestone ships /dojo + /knowledge (and the
+  earlier docs) to production. Then P1/UPG1 polish. APEX can now retire (knowledge + dojo folded in).
+
 ## PORT2 DONE — Knowledge Q&A at /knowledge (APEX knowledge mode folded in)
 - New route /knowledge (nav link added with a BookOpen icon, between Close and Analytics).
 - apps/web/app/knowledge/actions.ts ("use server"): askKnowledge(question) grounds on the FULL canon
