@@ -107,6 +107,8 @@ above is clear, keep cycling these:
 >     rebranded OIE -> Huscribe Revenue OS (middot separator, removed em dashes from titles). Shipped.
 >   - cycle 14: UPG1 = tests for the auth public-path allowlist (authorized callback) + trustHost + bounded
 >     session; +5 tests. Web suite now 50. Guards a route-gate regression (security/uptime).
+>   - cycle 15: STRAT1 = docs/strategy/PILOT-PLAYBOOK.md — a 14-day demo-mode pilot operating playbook
+>     (day-by-day) that sequences the strategy into actions and converts a pilot to paid.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
