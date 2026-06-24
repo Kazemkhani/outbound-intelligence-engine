@@ -46,6 +46,15 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 11) — observability: capture caught LLM failures to Sentry
+- The AI server actions catch ask() failures and return a UI message, so rate limits / overloads / empty
+  responses were invisible server-side. lib/llm.ts now calls Sentry.captureException on the upstream
+  failure and Sentry.captureMessage (warning) on the empty-text case, tagged {area:"llm", tier}, BEFORE
+  re-throwing. captureException/captureMessage are no-ops without SENTRY_DSN, so it is safe whether or not
+  Sentry is connected, and never includes the API key. Server Sentry was already wired in
+  instrumentation.ts (register + onRequestError); this fills the gap for swallowed exceptions.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 45 pass, full build OK. Shipped via PR + redeploy.
+
 ## P1/UPG1 (cycle 10) — copy-to-clipboard on generated AI outputs
 - The operator generates battlecards/outreach/answers/scorecards to paste into WhatsApp + email, so
   one-click copy is a real workflow win. Added a shared, accessible components/ui/copy-button.tsx

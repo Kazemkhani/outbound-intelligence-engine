@@ -13,6 +13,7 @@
  * IMPORTANT: server-only. Never import this into a "use client" module.
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { LlmClient, MODEL_IDS } from "@oie/integrations";
 
 /**
@@ -72,6 +73,12 @@ export async function ask(opts: AskOptions): Promise<string> {
       maxTokens: opts.maxTokens ?? 2000,
     });
   } catch (err) {
+    // Capture the failure for observability before the caller swallows it into a
+    // UI message. captureException is a no-op when no SENTRY_DSN is configured, so
+    // this is safe with or without Sentry connected. Never includes the API key.
+    Sentry.captureException(err, {
+      tags: { area: "llm", tier: opts.deep ? "deep" : "default" },
+    });
     // Surface the upstream message (rate limit, overload, credit balance) so the
     // operator gets something actionable. The message never contains the key.
     const detail = err instanceof Error ? err.message : String(err);
@@ -80,6 +87,10 @@ export async function ask(opts: AskOptions): Promise<string> {
 
   const text = result.text?.trim();
   if (!text) {
+    Sentry.captureMessage("LLM returned no text", {
+      level: "warning",
+      tags: { area: "llm", tier: opts.deep ? "deep" : "default" },
+    });
     throw new Error("The model returned no text. Try again, or simplify the request.");
   }
   return text;
