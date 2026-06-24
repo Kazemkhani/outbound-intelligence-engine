@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Home, LogOut, PhoneCall, Settings, Signal, Swords, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Home, LogOut, PhoneCall, Settings, Signal, Swords, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/auth-actions";
 
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/approvals", label: "Approvals", icon: Bell },
   { href: "/voice", label: "Voice", icon: PhoneCall },
   { href: "/close", label: "Close", icon: Swords },
+  { href: "/knowledge", label: "Knowledge", icon: BookOpen },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ] as const;
 

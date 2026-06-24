@@ -34,7 +34,12 @@ verifies, commits + pushes, ticks the box, and logs to PROGRESS.md. Never commit
 
 ## Finish the single app
 - [ ] PORT1 Port Voice Dojo (interactive roleplay + scoring) into the control plane at /dojo.
-- [ ] PORT2 Port Knowledge Q&A (grounded over the canon) at /knowledge. Then APEX can retire.
+- [x] PORT2 DONE — Knowledge Q&A live at /knowledge (nav link added). Server action askKnowledge grounds
+        over the full canon (lib/canon) and answers ONLY from it, names the framework, emits <CONFIRM> for
+        unknown Huscribe specifics; LLM never scores. Client workspace: ask box (Cmd/Ctrl+Enter),
+        suggestion chips, Q&A thread. Extracted the markdown renderer to components/ui/markdown.tsx (shared
+        with Close, DRY). Verified: web typecheck + lint (0 warnings) + test (14) green, full build OK,
+        /knowledge route compiled.
 
 ## Quality + ship
 - [x] QA1  DONE — typecheck 6/6 clean, lint 6/6 clean (removed 2 stale eslint-disable directives in

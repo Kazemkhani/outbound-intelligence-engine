@@ -46,6 +46,24 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## PORT2 DONE — Knowledge Q&A at /knowledge (APEX knowledge mode folded in)
+- New route /knowledge (nav link added with a BookOpen icon, between Close and Analytics).
+- apps/web/app/knowledge/actions.ts ("use server"): askKnowledge(question) grounds on the FULL canon
+  (frameworks, objections, voss, personalization, dubai, discovery, closing, huscribe) via
+  grounding(); system prompt answers ONLY from canon, names the framework, refuses to invent Huscribe
+  specifics (emits <CONFIRM>), says when the canon does not cover something. Input validated at the
+  boundary (3..2000 chars). LLM never computes scores. Reuses lib/llm ask() (one Anthropic client).
+- apps/web/app/knowledge/page.tsx: server page + header explaining grounding + <CONFIRM>.
+- apps/web/components/knowledge/knowledge-workspace.tsx ("use client"): ask box (Cmd/Ctrl+Enter to
+  send), 5 suggestion chips, a newest-first Q&A thread, loading + error + empty states.
+- DRY: extracted the dependency-free markdown renderer out of close-workspace into
+  components/ui/markdown.tsx (exports Markdown + stripInline); close-workspace now imports it. Removed
+  ~278 duplicated lines; dropped the now-unused Fragment import.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 14 pass (markdown extraction did not break
+  Close), full `next build` OK, build output lists `/knowledge` as a dynamic route (2.13 kB).
+- NEXT: PORT1 (Voice Dojo at /dojo) is the last big port; then P1/UPG1 polish. Not yet redeployed to
+  Fly (docs/UI changes ship on the next deploy; main + branch carry the code).
+
 ## PR1 DONE — PR #14 merged to main (deploy + hardening + docs + tests milestone)
 - MERGED at 2026-06-24 16:17 UTC, merge commit ec9612c. verify PASS (2m27s) + gitleaks PASS (both
   push + pull_request events). Branch fast-forwarded to main; kept for continued autonomous work.
