@@ -22,6 +22,11 @@ import { ask } from "@/lib/llm";
 import { grounding } from "@/lib/canon";
 import { getLeads } from "@/lib/data";
 import type { ScoredLead } from "@/lib/fixtures";
+import { computeRoiMath, type RoiInput } from "./roi-math";
+
+// Re-exported so existing importers of the ROI input type keep working; the math
+// itself now lives in the pure, unit-tested ./roi-math module.
+export type { RoiInput };
 
 // ── Shared result contract ─────────────────────────────────────────────────────
 
@@ -305,34 +310,7 @@ export async function coachTranscript(transcript: string): Promise<CloseResult> 
 }
 
 // ── 4. ROI: deterministic math + Gap Selling narrative (port of roi_narrative.md) ─
-
-export interface RoiInput {
-  leadsPerMonth: number;
-  pctUnanswered: number;
-  avgCommissionAed: number;
-  closeRatePct: number;
-}
-
-interface RoiMath {
-  recoveredLeadsPerMonth: number;
-  recoveredDealsPerMonth: number;
-  recoveredAedPerMonth: number;
-  recoveredAedPerYear: number;
-}
-
-/** Pure, checkable arithmetic. The buyer must be able to reproduce every step. */
-function computeRoiMath(input: RoiInput): RoiMath {
-  const recoveredLeadsPerMonth = (input.leadsPerMonth * input.pctUnanswered) / 100;
-  const recoveredDealsPerMonth = (recoveredLeadsPerMonth * input.closeRatePct) / 100;
-  const recoveredAedPerMonth = recoveredDealsPerMonth * input.avgCommissionAed;
-  const recoveredAedPerYear = recoveredAedPerMonth * 12;
-  return {
-    recoveredLeadsPerMonth,
-    recoveredDealsPerMonth,
-    recoveredAedPerMonth,
-    recoveredAedPerYear,
-  };
-}
+// The arithmetic lives in ./roi-math (pure + unit-tested); this section only frames it.
 
 const AED = (n: number): string =>
   `AED ${n.toLocaleString("en-AE", { maximumFractionDigits: 0 })}`;

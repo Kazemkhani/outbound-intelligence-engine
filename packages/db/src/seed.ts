@@ -45,7 +45,7 @@ async function main(): Promise<void> {
     },
   });
 
-  // eslint-disable-next-line no-console -- seed scripts report to the operator's console.
+  // seed scripts report to the operator's console.
   console.log(
     `Seeded ICP "${profile.name}" v${profile.version} (id=${profile.id}, active=${profile.active}).`,
   );
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
 
 main()
   .catch((err) => {
-    // eslint-disable-next-line no-console -- surface the failure to the operator.
+    // surface the failure to the operator.
     console.error("Seed failed:", err);
     process.exitCode = 1;
   })

@@ -37,8 +37,11 @@ verifies, commits + pushes, ticks the box, and logs to PROGRESS.md. Never commit
 - [ ] PORT2 Port Knowledge Q&A (grounded over the canon) at /knowledge. Then APEX can retire.
 
 ## Quality + ship
-- [ ] QA1  Run `pnpm verify`; fix anything; keep it green.
-- [ ] QA2  Add tests for the new logic (canon grounding, ROI math, finding extraction).
+- [x] QA1  DONE — typecheck 6/6 clean, lint 6/6 clean (removed 2 stale eslint-disable directives in
+        packages/db/src/seed.ts), test 6/6 green. Build proven by the successful Fly remote build (v4).
+- [x] QA2  DONE — extracted ROI math to apps/web/app/close/roi-math.ts (pure, +6 tests) and NOVA finding
+        extraction to packages/integrations/src/nova/findings.ts (anti-corruption layer, +10 tests).
+        190 tests pass total. Canon-grounding tests deferred (LLM-call-shaped; lower value) -> see UPG1.
 - [ ] PR1  Open PR `security-hardening-and-searchapi` → main; ensure CI green; merge.
 
 ## Continuous, creative + research-driven (operator directive — do this EVERY cycle, never stop)

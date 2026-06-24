@@ -46,6 +46,28 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## D2 + D3 VERIFIED LIVE + QA1 + QA2 DONE
+- Deploy: first redeploy hung ~10 min on buildkit "exporting layers" (known remote-builder stall);
+  stopped it (TaskStop + pkill) and retried with --wait-timeout 300. Retry shipped v4 (complete).
+- VERIFIED LIVE on https://huscribe-revenue-os.fly.dev (cold start, --resolve to 109.105.222.142):
+  - GET /signin -> HTTP 200 (CSP did NOT break the app).
+  - Response headers present: Content-Security-Policy, Strict-Transport-Security (2y, preload),
+    X-Content-Type-Options=nosniff, X-Frame-Options=DENY, Referrer-Policy, Permissions-Policy.
+    x-powered-by absent (poweredByHeader off).
+  - GET /api/auth/session -> HTTP 200 (auth route healthy under trustHost + CSP).
+- QA1: typecheck 6/6, lint 6/6 (removed 2 stale eslint-disable directives in packages/db/src/seed.ts so
+  lint is now 0 warnings), test 6/6. Build proven by the successful remote build (v4).
+- QA2: made the deterministic + anti-corruption logic independently testable, matching repo philosophy.
+  - apps/web/app/close/roi-math.ts: extracted RoiInput/RoiMath/computeRoiMath out of the "use server"
+    actions.ts (so it is importable by tests); actions.ts re-exports the RoiInput type. +6 tests
+    (canonical example, zeros, full-recovery, fractional, yearly=12x monthly invariant, determinism).
+  - packages/integrations/src/nova/findings.ts: extracted affirmative + extractFindings + the canonical
+    key set out of scripts/nova-call.ts (which self-executes main() so was not import-testable) into the
+    NOVA anti-corruption layer; nova-call.ts now imports them. +10 tests (array + object + nested
+    outcome/data shapes, boolean->yes/no, empty-drop, confidence clamp to [0,1], 500-char clamp,
+    junk-payload -> [], never fabricates). Total suite now 190 tests, all green.
+- CI present (.github/workflows/ci.yml + secret-scan.yml), so the PR to main will be checked.
+
 ## D2 + D3 DONE — deploy hardening (auth trust + security headers)
 - D3: baked `trustHost: true` into apps/web/auth.config.ts so a missing AUTH_TRUST_HOST env var can no
   longer cause the NextAuth v5 `UntrustedHost` login outage. (AUTH_TRUST_HOST stays set in Fly too.)

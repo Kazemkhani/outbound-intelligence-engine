@@ -16,6 +16,7 @@
  *       pnpm exec tsx --env-file=.env scripts/nova-call.ts --phone +971501234567 --name "Ahmed"
  */
 import { prisma } from "../packages/db/src/index";
+import { affirmative, extractFindings } from "../packages/integrations/src/nova/findings";
 
 /* eslint-disable no-console -- operator voice script */
 const NOVA_BASE = (process.env.NOVA_API_BASE ?? "https://api.novalabs.ae").replace(/\/$/, "");
@@ -67,55 +68,9 @@ function arg(flag: string): string | undefined {
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
 
-/** Loosely affirmative short answer (yes / true / confirmed / opted in). */
-function affirmative(v: string): boolean {
-  return /^(yes|true|confirmed|granted|opted[\s_-]?in|agreed|interested)$/i.test(v.trim());
-}
-
-/**
- * Defensively extract structured findings from a NOVA get_call payload. NOVA's
- * exact shape isn't guaranteed, so we read several plausible locations and only
- * keep keys we recognise. We never fabricate: a missing field yields no finding.
- */
-function extractFindings(
-  payload: Record<string, unknown>,
-): Array<{ key: string; value: string; confidence: number | null }> {
-  const CANONICAL = new Set([
-    "identity_confirmed",
-    "after_hours_handling",
-    "tools",
-    "monthly_volume",
-    "mobile",
-    "demo_interest",
-    "opt_in",
-  ]);
-  const src =
-    (payload.findings as unknown) ??
-    (payload.outcome as Record<string, unknown> | undefined)?.findings ??
-    (payload.data as Record<string, unknown> | undefined)?.findings ??
-    (payload.outcome as unknown) ??
-    null;
-  const out: Array<{ key: string; value: string; confidence: number | null }> = [];
-  const push = (key: string, value: unknown, confidence?: unknown) => {
-    if (!CANONICAL.has(key)) return;
-    if (value === null || value === undefined || value === "") return;
-    const v = typeof value === "boolean" ? (value ? "yes" : "no") : String(value);
-    const c = typeof confidence === "number" && confidence >= 0 && confidence <= 1 ? confidence : null;
-    out.push({ key, value: v.slice(0, 500), confidence: c });
-  };
-  if (Array.isArray(src)) {
-    for (const f of src) {
-      if (f && typeof f === "object") {
-        const o = f as Record<string, unknown>;
-        const key = typeof o.key === "string" ? o.key : "";
-        push(key, o.value, o.confidence);
-      }
-    }
-  } else if (src && typeof src === "object") {
-    for (const [key, value] of Object.entries(src as Record<string, unknown>)) push(key, value);
-  }
-  return out;
-}
+// `affirmative` and `extractFindings` now live in the NOVA anti-corruption layer
+// (packages/integrations/src/nova/findings.ts) so the parsing is unit-tested and
+// the vendor payload shape never leaks past that boundary.
 
 /**
  * Ingest a completed get_call payload: update the CallSession (status, transcript,
