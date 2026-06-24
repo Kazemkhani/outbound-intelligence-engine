@@ -1,6 +1,8 @@
 # @oie/orchestration
 
-The orchestration brain: the enrichment waterfall, signal collection, the scoring bridge, the sequencing state machine, the durable Inngest functions, signal-triggered enrolment, cost caps — and the **send gate**, the code-level rail that nothing sends without.
+The orchestration brain: the enrichment waterfall, signal collection, the scoring bridge, the sequencing state machine, the durable Inngest functions, signal-triggered enrolment, cost caps, and the **send gate**, the code-level rail that nothing sends without.
+
+> Working in this package with an AI agent? Read [AGENTS.md](./AGENTS.md) first. It documents the invariants (DRY_RUN defaults true, mandatory approval, gate-first send path), the public contracts, and how to change things safely.
 
 ## Purpose
 
@@ -8,12 +10,12 @@ Own the cascade and the control that sit between the bought rails and the data m
 
 ## What it owns
 
-- **The send gate** (`send-gate.ts`) — `evaluateSendGate` requires `DRY_RUN` off **and** explicit human approval for a real send; LinkedIn/WhatsApp need a third channel-enabled gate. Pure and total. See [ADR-0009](../../docs/adr/0009-send-gate-and-dry-run.md).
-- **The enrichment waterfall** (`waterfall.ts`) — `enrichCompanyWaterfall`: priority order, fill-missing with per-field attribution, early-stop on completeness (cost ceiling), fall-through on error, skip unconfigured.
-- **Signal collection** (`collect-signals.ts`) — `collectSignals`: cross-provider and re-pull dedup (keep-stronger), central decay-window assignment, continue past errors.
-- **The scoring bridge** (`scoring-bridge.ts`) — maps normalised DTOs to a `ScoringSubject` for `@oie/core`.
-- **Sequencing** (`sequencing/`) — the state machine (`advance`, `nextDueAt`, `shouldStop`, `applyBranch`), `executeSendStep` (routes every send through the gate, checks suppression first, builds idempotency keys), and the durable Inngest functions.
-- **Enrolment** (`enrolment/`) — `qualifiesForEnrolment` (fresh + at-bar + qualifying type, through the gate) and the cost caps (`costCapStatus`, `assertWithinCaps`).
+- **The send gate** (`send-gate.ts`), `evaluateSendGate` requires `DRY_RUN` off **and** explicit human approval for a real send; LinkedIn/WhatsApp need a third channel-enabled gate. Pure and total. See [ADR-0009](../../docs/adr/0009-send-gate-and-dry-run.md).
+- **The enrichment waterfall** (`waterfall.ts`), `enrichCompanyWaterfall`: priority order, fill-missing with per-field attribution, early-stop on completeness (cost ceiling), fall-through on error, skip unconfigured.
+- **Signal collection** (`collect-signals.ts`), `collectSignals`: cross-provider and re-pull dedup (keep-stronger), central decay-window assignment, continue past errors.
+- **The scoring bridge** (`scoring-bridge.ts`), maps normalised DTOs to a `ScoringSubject` for `@oie/core`.
+- **Sequencing** (`sequencing/`), the state machine (`advance`, `nextDueAt`, `shouldStop`, `applyBranch`), `executeSendStep` (routes every send through the gate, checks suppression first, builds idempotency keys), and the durable Inngest functions.
+- **Enrolment** (`enrolment/`), `qualifiesForEnrolment` (fresh + at-bar + qualifying type, through the gate) and the cost caps (`costCapStatus`, `assertWithinCaps`).
 
 ## Key exports
 
@@ -40,4 +42,4 @@ Sequencing and send tests prove a multi-step cadence runs in dry-run, respects i
 
 ## How it fits
 
-This is the conductor. It calls the `@oie/integrations` adapters in priority order, scores via `@oie/core`, persists through `@oie/db`, and exposes durable functions that Inngest Cloud runs in production. The send gate is wired first on every send path — never weaken it.
+OIE (Outbound Intelligence Engine) is the data layer of Huscribe Revenue OS, the control plane for Huscribe.com (Voice-AI inbound lead-qualification for UAE/MENA real estate; HumAI, Dubai). This package is the conductor inside OIE: it calls the `@oie/integrations` adapters in priority order, scores via the deterministic engine in `@oie/core` (the LLM never scores), persists through `@oie/db`, and exposes durable functions that Inngest runs in production. The send gate is wired first on every send path; never weaken it. See [AGENTS.md](./AGENTS.md) for the full operating contract.

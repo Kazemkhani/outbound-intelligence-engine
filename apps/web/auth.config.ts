@@ -7,6 +7,11 @@ import type { NextAuthConfig } from "next-auth";
  */
 export const authConfig = {
   pages: { signIn: "/signin" },
+  // Self-hosted (non-Vercel) deploys must trust the host or Auth.js v5 throws
+  // `UntrustedHost` on every /api/auth call. We set the AUTH_TRUST_HOST env var
+  // in production too; baking it here is belt-and-suspenders so the app is never
+  // one missing env var away from a login outage.
+  trustHost: true,
   // JWT sessions with an explicit lifetime. maxAge is the absolute cap; the
   // rolling window re-extends on activity but never beyond 12h of inactivity,
   // bounding the blast radius of an exfiltrated session token (vs Auth.js's
