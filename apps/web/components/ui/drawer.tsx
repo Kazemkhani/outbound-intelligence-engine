@@ -55,7 +55,7 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
     <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -64,19 +64,19 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
       <div
         ref={panelRef}
         className={cn(
-          "relative ml-auto flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl",
+          "relative ml-auto flex h-full w-full max-w-2xl flex-col border-l border-ink-700 bg-ink-850 shadow-2xl",
           className,
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <div className="flex items-center justify-between border-b border-ink-800 px-6 py-4">
+          <h2 className="font-display text-lg font-bold text-ink-50">{title}</h2>
           <button
             ref={closeBtnRef}
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
           >
             <X size={20} aria-hidden="true" />
           </button>

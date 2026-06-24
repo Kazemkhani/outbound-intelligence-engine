@@ -8,8 +8,13 @@ export type {
   ToolDefinition,
 } from "./client";
 
-export { personaliseOpener, buildPersonalisationPrompt } from "./personalise";
-export type { PersonalisationInput, PersonalisedOpener } from "./personalise";
+export { personaliseOpener, personaliseColdOpener, buildPersonalisationPrompt } from "./personalise";
+export type {
+  PersonalisationInput,
+  PersonalisedOpener,
+  ColdOpenerInput,
+  ColdOpener,
+} from "./personalise";
 
 export { extractCompanyFacts } from "./extract";
 export type { CompanyFacts } from "./extract";

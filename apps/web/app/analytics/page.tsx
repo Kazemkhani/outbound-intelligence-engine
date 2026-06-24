@@ -16,40 +16,22 @@ export default async function AnalyticsPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          High-level overview of pipeline health. Data is derived from the live database and the
-          active ICP scoring run.
+        <h1 className="font-display text-2xl font-bold text-ink-50">Analytics</h1>
+        <p className="mt-1.5 text-sm text-ink-400">
+          Pipeline health at a glance. Derived from the live database and the active ICP scoring run.
         </p>
       </header>
 
       {/* KPI tiles */}
-      <section aria-label="Key metrics" className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiTile
-          label="Total leads"
-          value={tiles.totalLeads}
-          icon={<Users size={18} aria-hidden="true" />}
-        />
-        <KpiTile
-          label="Signals this week"
-          value={tiles.signalsThisWeek}
-          icon={<Signal size={18} aria-hidden="true" />}
-        />
-        <KpiTile
-          label="Pending approvals"
-          value={tiles.pendingApprovals}
-          icon={<Bell size={18} aria-hidden="true" />}
-          accent={tiles.pendingApprovals > 0}
-        />
-        <KpiTile
-          label="Est. cost (USD)"
-          value={`$${tiles.estimatedCostUsd.toFixed(2)}`}
-          icon={<TrendingUp size={18} aria-hidden="true" />}
-        />
+      <section aria-label="Key metrics" className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <KpiTile label="Total leads" value={tiles.totalLeads} icon={<Users size={16} aria-hidden="true" />} />
+        <KpiTile label="Signals this week" value={tiles.signalsThisWeek} icon={<Signal size={16} aria-hidden="true" />} />
+        <KpiTile label="Pending approvals" value={tiles.pendingApprovals} icon={<Bell size={16} aria-hidden="true" />} accent={tiles.pendingApprovals > 0} />
+        <KpiTile label="Est. cost (USD)" value={`$${tiles.estimatedCostUsd.toFixed(2)}`} icon={<TrendingUp size={16} aria-hidden="true" />} />
       </section>
 
-      {/* Leads by tier */}
       <div className="grid gap-6 sm:grid-cols-2">
+        {/* Leads by tier */}
         <Card>
           <CardHeader>
             <CardTitle>Leads by tier</CardTitle>
@@ -59,9 +41,7 @@ export default async function AnalyticsPage() {
               {(["A", "B", "C", "D"] as const).map((tier) => {
                 const count = tiles.byTier[tier];
                 const pct = tiles.totalLeads > 0 ? (count / tiles.totalLeads) * 100 : 0;
-                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[
-                  tier
-                ];
+                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[tier];
                 return (
                   <li key={tier} className="flex items-center gap-3">
                     <Badge variant={variant} className="w-14 justify-center">
@@ -73,22 +53,22 @@ export default async function AnalyticsPage() {
                       aria-valuenow={count}
                       aria-valuemin={0}
                       aria-valuemax={tiles.totalLeads}
-                      className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100"
+                      className="h-2 flex-1 overflow-hidden rounded-full bg-ink-800"
                     >
                       <div
                         className={`h-full rounded-full ${
                           tier === "A"
-                            ? "bg-emerald-500"
+                            ? "bg-emerald-400"
                             : tier === "B"
-                              ? "bg-blue-500"
+                              ? "bg-teal-400"
                               : tier === "C"
-                                ? "bg-amber-500"
-                                : "bg-gray-300"
+                                ? "bg-amber-400"
+                                : "bg-ink-600"
                         }`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="w-6 text-right text-sm font-semibold text-gray-700">
+                    <span className="w-6 text-right font-mono text-sm font-semibold text-ink-100">
                       {count}
                     </span>
                   </li>
@@ -106,15 +86,13 @@ export default async function AnalyticsPage() {
           <CardContent>
             <ol aria-label="Top scored leads" className="space-y-3">
               {scoredLeads.slice(0, 5).map((lead, i) => {
-                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[
-                  lead.score.tier
-                ];
+                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[lead.score.tier];
                 return (
                   <li key={lead.id} className="flex items-center gap-3 text-sm">
-                    <span className="w-5 text-center text-xs font-bold text-gray-400">{i + 1}</span>
-                    <span className="flex-1 font-medium text-gray-800">{lead.company.name}</span>
+                    <span className="w-5 text-center font-mono text-xs font-bold text-ink-500">{i + 1}</span>
+                    <span className="flex-1 font-medium text-ink-100">{lead.company.name}</span>
                     <Badge variant={variant}>Tier {lead.score.tier}</Badge>
-                    <span className="w-10 text-right font-mono text-xs text-gray-500">
+                    <span className="w-10 text-right font-mono text-xs text-gold-300">
                       {round1(lead.score.composite)}
                     </span>
                   </li>
@@ -129,42 +107,37 @@ export default async function AnalyticsPage() {
           <CardHeader>
             <CardTitle>
               <span className="flex items-center gap-2">
-                <BarChart3 size={16} aria-hidden="true" />
+                <BarChart3 size={16} aria-hidden="true" className="text-gold-400" />
                 Score distribution
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              role="list"
-              aria-label="Score distribution chart"
-              className="flex items-end gap-2 h-32"
-            >
+            <div role="list" aria-label="Score distribution chart" className="flex h-32 items-end gap-2">
               {scoredLeads.map((lead) => {
                 const heightPct = Math.max(4, lead.score.composite);
                 const colour =
                   lead.score.tier === "A"
                     ? "bg-emerald-400"
                     : lead.score.tier === "B"
-                      ? "bg-blue-400"
+                      ? "bg-teal-400"
                       : lead.score.tier === "C"
                         ? "bg-amber-400"
-                        : "bg-gray-200";
+                        : "bg-ink-700";
                 return (
                   <div
                     key={lead.id}
                     role="listitem"
                     title={`${lead.company.name}: ${round1(lead.score.composite)}`}
                     aria-label={`${lead.company.name} — composite score ${round1(lead.score.composite)}`}
-                    className={`flex-1 rounded-t ${colour} min-w-0`}
+                    className={`min-w-0 flex-1 rounded-t ${colour}`}
                     style={{ height: `${heightPct}%` }}
                   />
                 );
               })}
             </div>
-            <p className="mt-2 text-xs text-gray-400">
-              Each bar represents one lead, coloured by tier, height proportional to composite
-              score.
+            <p className="mt-2 text-xs text-ink-500">
+              Each bar is one lead, coloured by tier, height proportional to composite score.
             </p>
           </CardContent>
         </Card>
@@ -185,12 +158,12 @@ function KpiTile({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-5 py-4 shadow-sm">
-      <div className="flex items-center gap-2 text-gray-400">
+    <div className="surface px-5 py-4">
+      <div className="flex items-center gap-2 text-ink-400">
         {icon}
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+        <span className="label-mono">{label}</span>
       </div>
-      <p className={`mt-2 text-3xl font-bold ${accent ? "text-amber-600" : "text-gray-900"}`}>
+      <p className={`mt-2 font-display text-3xl font-bold ${accent ? "text-gold-400" : "text-ink-50"}`}>
         {value}
       </p>
     </div>

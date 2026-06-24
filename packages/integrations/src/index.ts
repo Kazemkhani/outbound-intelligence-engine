@@ -32,6 +32,7 @@ export {
   LlmClient,
   MODEL_IDS,
   personaliseOpener,
+  personaliseColdOpener,
   buildPersonalisationPrompt,
   extractCompanyFacts,
 } from "./llm/index";
