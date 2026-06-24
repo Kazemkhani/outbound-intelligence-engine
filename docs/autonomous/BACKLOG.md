@@ -97,6 +97,8 @@ above is clear, keep cycling these:
 >   - cycle 9: R1+STRAT1 = researched 2025-2026 lead-response-time stats and wrote
 >     docs/strategy/SPEED-TO-LEAD-PROOF.md (sourced proof pack for the pitch + ROI). Batched-merged cycle
 >     8+9 to main.
+>   - cycle 10: P1/UPG1 = shared accessible CopyButton on generated AI outputs (Close battlecards/outreach,
+>     Knowledge answers, Dojo scorecard) so the operator can paste into WhatsApp/email. Shipped (PR + deploy).
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
