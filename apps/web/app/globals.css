@@ -4,26 +4,88 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   * {
     box-sizing: border-box;
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-ink-950 text-ink-100;
+    background-image:
+      radial-gradient(120% 90% at 100% 0%, rgba(245, 181, 68, 0.05), transparent 55%),
+      radial-gradient(80% 60% at 0% 100%, rgba(47, 224, 198, 0.04), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-ink-50;
   }
 
   /* Visible focus ring for keyboard navigation (WCAG 2.4.7) */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-brand-500;
+    @apply outline-none ring-2 ring-gold-500/60 ring-offset-2 ring-offset-ink-950;
   }
+
+  ::selection {
+    background: rgba(245, 181, 68, 0.25);
+    color: #fff;
+  }
+
+  /* Dark scrollbars */
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0b0d10;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #262b33;
+    border: 3px solid #0b0d10;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #353b45;
+  }
+}
+
+@layer components {
+  /* Reusable control-plane primitives. Pages compose these. */
+  .surface {
+    @apply rounded-xl border border-ink-700 bg-ink-850 shadow-card;
+  }
+  .surface-2 {
+    @apply rounded-lg border border-ink-700 bg-ink-800;
+  }
+  .label-mono {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-ink-400;
+  }
+  .input-field {
+    @apply block w-full rounded-lg border border-ink-700 bg-ink-900 px-3.5 py-2.5 text-sm text-ink-50
+           placeholder:text-ink-500 transition-colors focus:border-gold-500 focus:outline-none
+           focus:ring-2 focus:ring-gold-500/25;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gold-500 px-4 py-2.5 text-sm
+           font-semibold text-ink-950 transition-all hover:bg-gold-400 hover:shadow-glow
+           disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-ink-700 bg-transparent
+           px-4 py-2.5 text-sm font-medium text-ink-200 transition-colors hover:border-ink-600
+           hover:bg-ink-800 hover:text-ink-50;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px]
+           uppercase tracking-[0.1em];
+  }
+  .pill-gold { @apply bg-gold-500/10 text-gold-400 ring-1 ring-inset ring-gold-500/25; }
+  .pill-teal { @apply bg-teal-400/10 text-teal-400 ring-1 ring-inset ring-teal-400/25; }
+  .pill-muted { @apply bg-ink-700/50 text-ink-300 ring-1 ring-inset ring-ink-600; }
 }

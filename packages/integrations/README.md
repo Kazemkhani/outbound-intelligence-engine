@@ -18,13 +18,14 @@ Defined in `src/contracts/interfaces.ts`. Every adapter implements one, exposes 
 | `MessagingChannel`   | LinkedIn / WhatsApp rails (honours `ctx.dryRun`)    |
 | `CrmStore`           | CRM system of record, find-or-create                |
 
-The waterfall and provider-fallback logic do **not** live here — they live in `@oie/orchestration`. An adapter only ever knows its own vendor.
+The waterfall and provider-fallback logic do **not** live here, they live in `@oie/orchestration`. An adapter only ever knows its own vendor.
 
 ## The adapters
 
 | Adapter         | Export                                                                                             | Interface            | Notes                                                            |
 | --------------- | -------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------- |
 | Google Places   | `PlacesAdapter`                                                                                    | `EnrichmentProvider` | local-business discovery; the reference adapter                  |
+| SearchApi       | `SearchApiAdapter`                                                                                 | `EnrichmentProvider` | Google Maps discovery; no people data                           |
 | Apollo          | `ApolloAdapter`                                                                                    | `EnrichmentProvider` | people/company DB; REST                                          |
 | Clay            | `ClayAdapter`, `parseClayWebhook`                                                                  | `EnrichmentProvider` | async webhook waterfall; inbound parser                          |
 | Explorium       | `ExploriumAdapter`                                                                                 | `EnrichmentProvider` | match → enrich; runtime/MCP                                      |
@@ -32,15 +33,16 @@ The waterfall and provider-fallback logic do **not** live here — they live in 
 | PredictLeads    | `PredictLeadsAdapter`                                                                              | `SignalProvider`     | funding/hiring/job_change/tech/news                              |
 | Exa             | `ExaAdapter`                                                                                       | `SignalProvider`     | news/research; drops undated results                             |
 | HubSpot         | `HubSpotAdapter`                                                                                   | `CrmStore`           | find-or-create, two-way mapping                                  |
-| Smartlead       | `SmartleadAdapter`                                                                                 | `EmailSender`        | dry-run = zero network                                           |
+| Smartlead       | `SmartleadAdapter`                                                                                 | `EmailSender`        | campaign-based; dry-run = zero network                          |
+| Resend          | `ResendAdapter`                                                                                    | `EmailSender`        | transactional send; dry-run = zero network                      |
 | Unipile         | `UnipileAdapter`, `parseUnipileWebhook`                                                            | `MessagingChannel`   | LinkedIn + WhatsApp; off by default; reply sync                  |
-| LLM (Anthropic) | `LlmClient`, `personaliseOpener`, `extractCompanyFacts`, `buildPersonalisationPrompt`, `MODEL_IDS` | —                    | reasoning/personalisation/extraction; **never computes a score** |
+| LLM (Anthropic) | `LlmClient`, `personaliseOpener`, `extractCompanyFacts`, `buildPersonalisationPrompt`, `MODEL_IDS` |,                    | reasoning/personalisation/extraction; **never computes a score** |
 
 The LLM client is deliberately not one of the five interfaces and never sits on the production send path.
 
 ## Shared base utilities
 
-`src/base/` provides the injectable HTTP transport (the fixture seam), retry with backoff, idempotency helpers, and the error taxonomy — re-exported from the package root.
+`src/base/` provides the injectable HTTP transport (the fixture seam), retry with backoff, idempotency helpers, and the error taxonomy, re-exported from the package root.
 
 ## How to test
 
@@ -54,3 +56,7 @@ Every adapter is tested against recorded fixtures via the injectable HTTP transp
 ## How it fits
 
 The orchestration layer composes these adapters: it runs the enrichment waterfall over the `EnrichmentProvider`s, fans signals in over the `SignalProvider`s, syncs the `CrmStore`, and routes every send through the gate before calling an `EmailSender` or `MessagingChannel`.
+
+## Working in this package
+
+If you are an AI agent (or onboarding) and about to edit this package, read [AGENTS.md](./AGENTS.md) first. It is the operating guide: the invariants (dry-run guard, Zod-at-the-boundary, provenance, no vendor shapes past the adapter, no scoring in the LLM), the file map, the step-by-step for adding an adapter, and worked examples.

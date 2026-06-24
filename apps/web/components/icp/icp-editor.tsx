@@ -31,7 +31,7 @@ function WeightSlider({
   const id = `slider-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
     <div className="flex items-center gap-3">
-      <label htmlFor={id} className="w-48 shrink-0 text-sm text-gray-700">
+      <label htmlFor={id} className="w-48 shrink-0 text-sm text-ink-200">
         {label}
       </label>
       <input
@@ -46,9 +46,9 @@ function WeightSlider({
         aria-valuemax={1}
         aria-valuenow={value}
         aria-valuetext={value.toFixed(2)}
-        className="h-1.5 w-full cursor-pointer accent-brand-600"
+        className="h-1.5 w-full cursor-pointer accent-gold-500"
       />
-      <span className="w-10 shrink-0 text-right text-sm font-mono text-gray-600">
+      <span className="w-10 shrink-0 text-right font-mono text-sm text-ink-300">
         {value.toFixed(2)}
       </span>
     </div>
@@ -73,7 +73,7 @@ function NumberInput({
   const id = `num-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
     <div className="flex items-center gap-3">
-      <label htmlFor={id} className="w-48 shrink-0 text-sm text-gray-700">
+      <label htmlFor={id} className="w-48 shrink-0 text-sm text-ink-200">
         {label}
       </label>
       <input
@@ -83,7 +83,7 @@ function NumberInput({
         min={min}
         max={max}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        className="w-24 rounded-lg border border-ink-700 bg-ink-900 px-2.5 py-1.5 text-sm text-ink-50 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/25"
       />
     </div>
   );
@@ -125,7 +125,7 @@ function LiveRanking({ icp, leads }: { icp: IcpProfile; leads: ScoredLead[] }) {
 
   return (
     <div>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-ink-500">
         Re-ranked live against {ranked.length} leads. Adjust weights on the left to see changes
         instantly.
       </p>
@@ -133,14 +133,14 @@ function LiveRanking({ icp, leads }: { icp: IcpProfile; leads: ScoredLead[] }) {
         {ranked.map(({ lead, score }, i) => (
           <li
             key={lead.id}
-            className="flex items-center gap-3 rounded-md border border-gray-100 bg-gray-50 px-3 py-2 text-sm"
+            className="flex items-center gap-3 rounded-lg border border-ink-800 bg-ink-900/60 px-3 py-2 text-sm"
           >
-            <span className="w-5 shrink-0 text-center text-xs font-bold text-gray-400">
+            <span className="w-5 shrink-0 text-center font-mono text-xs font-bold text-ink-500">
               {i + 1}
             </span>
-            <span className="flex-1 font-medium text-gray-800">{lead.company.name}</span>
+            <span className="flex-1 font-medium text-ink-100">{lead.company.name}</span>
             <Badge variant={TIER_VARIANT[score.tier]}>Tier {score.tier}</Badge>
-            <span className="w-12 text-right font-mono text-xs text-gray-500">
+            <span className="w-12 text-right font-mono text-xs text-gold-300">
               {round1(score.composite)}
             </span>
           </li>
@@ -194,7 +194,7 @@ export function IcpEditor({
                   }))
                 }
               />
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-ink-500">
                 Fit + Intent must sum to 1. Adjusting one auto-corrects the other.
               </p>
             </div>
@@ -360,7 +360,7 @@ export function IcpEditor({
         <button
           type="button"
           onClick={() => setIcp(initialIcp)}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          className="btn-ghost"
         >
           Reset to active ICP
         </button>

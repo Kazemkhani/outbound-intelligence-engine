@@ -57,23 +57,23 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
     <>
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-gray-600">Filter by tier:</span>
+        <span className="label-mono mr-1">Filter</span>
         {TIER_OPTIONS.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTierFilter(t)}
             aria-pressed={tierFilter === t}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
               tierFilter === t
-                ? "bg-brand-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-gold-500 text-ink-950"
+                : "bg-ink-800 text-ink-300 ring-1 ring-inset ring-ink-700 hover:bg-ink-700 hover:text-ink-100"
             }`}
           >
             {t === "all" ? "All tiers" : `Tier ${t}`}
           </button>
         ))}
-        <span className="ml-auto text-xs text-gray-400">
+        <span className="ml-auto font-mono text-xs text-ink-500">
           {sorted.length} lead{sorted.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -85,99 +85,59 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
           description="Try selecting a different tier filter above."
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850 shadow-card">
+          <table className="min-w-full divide-y divide-ink-800 text-sm">
+            <thead className="bg-ink-900">
               <tr>
-                <SortTh
-                  label="Company"
-                  sortKey="company"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={handleSort}
-                />
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
-                >
+                <SortTh label="Company" sortKey="company" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th scope="col" className="px-4 py-3 text-left label-mono">
                   Contact
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
-                >
+                <th scope="col" className="px-4 py-3 text-left label-mono">
                   Tier
                 </th>
-                <SortTh
-                  label="Composite"
-                  sortKey="composite"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={handleSort}
-                />
-                <SortTh
-                  label="Fit"
-                  sortKey="fit"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={handleSort}
-                />
-                <SortTh
-                  label="Intent"
-                  sortKey="intent"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={handleSort}
-                />
-                <SortTh
-                  label="Signals"
-                  sortKey="signals"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={handleSort}
-                />
+                <SortTh label="Composite" sortKey="composite" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortTh label="Fit" sortKey="fit" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortTh label="Intent" sortKey="intent" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortTh label="Signals" sortKey="signals" current={sortKey} dir={sortDir} onSort={handleSort} />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-ink-800">
               {sorted.map((lead) => (
                 <tr
                   key={lead.id}
-                  className="cursor-pointer transition-colors hover:bg-brand-50 focus-within:bg-brand-50"
+                  className="cursor-pointer transition-colors hover:bg-ink-800/60 focus-within:bg-ink-800/60"
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                  <td className="px-4 py-3 font-medium text-ink-50">
                     <button
                       type="button"
                       onClick={() => setSelectedLead(lead)}
-                      className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                      className="text-left"
                     >
                       {lead.company.name}
-                      <span className="block text-xs font-normal text-gray-400">
+                      <span className="block text-xs font-normal text-ink-500">
                         {lead.company.industry}
                       </span>
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedLead(lead)}
-                      className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-                    >
+                  <td className="px-4 py-3 text-ink-200">
+                    <button type="button" onClick={() => setSelectedLead(lead)} className="text-left">
                       {lead.contact.fullName}
-                      <span className="block text-xs text-gray-400">{lead.contact.title}</span>
+                      <span className="block text-xs text-ink-500">{lead.contact.title}</span>
                     </button>
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={TIER_VARIANT[lead.score.tier]}>{lead.score.tier}</Badge>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-gray-900">
+                  <td className="px-4 py-3 font-mono font-semibold text-gold-300">
                     {round1(lead.score.composite)}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{round1(lead.score.fit)}</td>
-                  <td className="px-4 py-3 text-gray-600">{round1(lead.score.intent)}</td>
+                  <td className="px-4 py-3 font-mono text-ink-300">{round1(lead.score.fit)}</td>
+                  <td className="px-4 py-3 font-mono text-ink-300">{round1(lead.score.intent)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {lead.signals.length === 0 ? (
-                        <span className="text-xs text-gray-300">None</span>
+                        <span className="text-xs text-ink-600">None</span>
                       ) : (
                         lead.signals.slice(0, 2).map((s) => {
                           const sv = (
@@ -198,7 +158,7 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
                         })
                       )}
                       {lead.signals.length > 2 && (
-                        <span className="text-xs text-gray-400">+{lead.signals.length - 2}</span>
+                        <span className="text-xs text-ink-500">+{lead.signals.length - 2}</span>
                       )}
                     </div>
                   </td>
@@ -229,17 +189,16 @@ function SortTh({
 }) {
   const isActive = current === sortKey;
   const Icon = isActive ? (dir === "desc" ? ChevronDown : ChevronUp) : ChevronsUpDown;
-  // aria-sort belongs on the <th> (columnheader role), not on the <button> inside it.
   return (
     <th
       scope="col"
       aria-sort={isActive ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+      className="px-4 py-3 text-left label-mono"
     >
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="flex items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        className={`flex items-center gap-1 transition-colors hover:text-ink-100 ${isActive ? "text-gold-400" : ""}`}
       >
         {label}
         <Icon size={12} aria-hidden="true" />

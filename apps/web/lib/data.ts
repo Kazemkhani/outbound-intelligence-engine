@@ -10,8 +10,6 @@
  * actions. Never import it into a "use client" module.
  */
 
-import "server-only";
-
 import { prisma } from "@oie/db";
 import { icpProfile } from "@oie/core";
 import { scoreLead } from "@oie/core";
@@ -442,4 +440,121 @@ export async function getAnalytics(): Promise<AnalyticsTiles> {
       pendingCount ?? FIXTURE_APPROVALS.filter((a) => a.status === "awaiting_approval").length,
     estimatedCostUsd: costRows?._sum?.costUsd ?? 4.32,
   };
+}
+
+// ── Call sessions (NOVA voice) ──────────────────────────────────────────────────
+
+/**
+ * A single structured finding captured by NOVA during a call, flattened for the
+ * UI. Mirrors the CallFinding master-DB model.
+ */
+export type CallFindingView = {
+  id: string;
+  key: string;
+  value: string;
+  confidence: number | null;
+  source: string;
+  capturedAt: Date;
+};
+
+/**
+ * UI-facing shape for a voice call session: the CallSession row plus its
+ * findings and flattened company/contact attribution (name + phone). This is the
+ * only type the call-session UI should consume — it never sees raw Prisma rows.
+ */
+export type CallSessionView = {
+  id: string;
+  novaCallId: string;
+  novaContextId: string | null;
+  status: string;
+  goal: string;
+  language: string;
+  demoMode: boolean;
+  outcome: string | null;
+  summary: string | null;
+  transcript: string | null;
+  costUsd: number | null;
+  consent: boolean;
+  consentBasis: string | null;
+  optOut: boolean;
+  contactId: string | null;
+  companyId: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+  companyName: string | null;
+  placedAt: Date;
+  completedAt: Date | null;
+  createdAt: Date;
+  findings: CallFindingView[];
+};
+
+/**
+ * Returns recent voice call sessions, newest first, each with its structured
+ * findings and the related contact (name + phone) and company (name).
+ *
+ * Unlike leads/signals/approvals there is no fixture fallback for calls: voice
+ * outcomes are facts produced by NOVA, so on a DB error or empty table we return
+ * an empty list rather than fabricating call data.
+ *
+ * @param limit Maximum number of sessions to return (default 50).
+ */
+export async function getCallSessions(limit = 50): Promise<CallSessionView[]> {
+  const rows = await tryDb(() =>
+    prisma.callSession.findMany({
+      orderBy: { placedAt: "desc" },
+      take: limit,
+      include: {
+        contact: { select: { fullName: true, phone: true, whatsapp: true } },
+        company: { select: { name: true } },
+        findings: {
+          orderBy: { capturedAt: "asc" },
+          select: {
+            id: true,
+            key: true,
+            value: true,
+            confidence: true,
+            source: true,
+            capturedAt: true,
+          },
+        },
+      },
+    }),
+  );
+
+  if (!rows || rows.length === 0) {
+    return [];
+  }
+
+  return rows.map((row) => ({
+    id: row.id,
+    novaCallId: row.novaCallId,
+    novaContextId: row.novaContextId ?? null,
+    status: row.status,
+    goal: row.goal,
+    language: row.language,
+    demoMode: row.demoMode,
+    outcome: row.outcome ?? null,
+    summary: row.summary ?? null,
+    transcript: row.transcript ?? null,
+    costUsd: row.costUsd ?? null,
+    consent: row.consent,
+    consentBasis: row.consentBasis ?? null,
+    optOut: row.optOut,
+    contactId: row.contactId ?? null,
+    companyId: row.companyId ?? null,
+    contactName: row.contact?.fullName ?? null,
+    contactPhone: row.contact?.phone ?? row.contact?.whatsapp ?? null,
+    companyName: row.company?.name ?? null,
+    placedAt: row.placedAt,
+    completedAt: row.completedAt ?? null,
+    createdAt: row.createdAt,
+    findings: row.findings.map((f) => ({
+      id: f.id,
+      key: f.key,
+      value: f.value,
+      confidence: f.confidence ?? null,
+      source: f.source,
+      capturedAt: f.capturedAt,
+    })),
+  }));
 }

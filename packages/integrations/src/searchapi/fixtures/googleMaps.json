@@ -1,0 +1,30 @@
+{
+  "search_metadata": { "status": "Success" },
+  "search_parameters": { "engine": "google_maps", "q": "real estate developers in Dubai" },
+  "local_results": [
+    {
+      "position": 1,
+      "title": "Al Noor Real Estate Developers",
+      "address": "Sheikh Zayed Road, Business Bay, Dubai, United Arab Emirates",
+      "phone": "800 4573",
+      "website": "https://www.alnoordev.ae/",
+      "type": "Real estate developer",
+      "types": ["Real estate developer", "Property management company"],
+      "rating": 4.8,
+      "reviews": 312,
+      "gps_coordinates": { "latitude": 25.1867, "longitude": 55.2769 },
+      "place_id": "ChIJ_searchapi_dev_dubai"
+    },
+    {
+      "position": 2,
+      "title": "Gulf Land Property Developers",
+      "address": "Umniyati Street, Al Barsha, Dubai, United Arab Emirates",
+      "phone": "04 368 3355",
+      "website": "https://gulflandproperty.com/",
+      "type": "Real estate developer",
+      "rating": 4.6,
+      "gps_coordinates": { "latitude": 25.1967, "longitude": 55.2848 },
+      "place_id": "ChIJ_searchapi_dev_2"
+    }
+  ]
+}

@@ -17,7 +17,7 @@ We aim to acknowledge within a few business days, agree a remediation timeline, 
 - Every key is documented — name only, no value — in `.env.example`. Adding a key means updating `.env.example`.
 - The environment is validated at startup by `@oie/config` (fail fast). `providerKeyStatus` and `scripts/gate1-credentials.ts` report present-versus-missing keys **without printing values**.
 - Provider tokens use least-privilege OAuth scopes and are rotated on the provider side. They are encrypted at rest by the platform secret stores.
-- An automated secret scan runs in CI; a pre-bash guard and the `security-compliance-engineer` agent review diffs for accidental secret exposure.
+- A pre-bash guard hook (`.claude/hooks/guard.sh`) denies writes to `.env` files at authoring time, and the `security-compliance-engineer` agent reviews diffs for accidental secret exposure. An automated CI secret-scanning job (gitleaks on every push/PR plus a weekly full-history sweep) runs via `.github/workflows/secret-scan.yml`.
 
 ## The send-gate guarantee
 

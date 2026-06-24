@@ -44,6 +44,9 @@ importers:
       '@oie/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@oie/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@oie/orchestration':
         specifier: workspace:*
         version: link:../../packages/orchestration

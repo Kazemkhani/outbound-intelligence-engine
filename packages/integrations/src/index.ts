@@ -7,6 +7,7 @@ export * from "./base/http";
 // Enrichment / discovery adapters (anti-corruption layer). Only the public
 // adapter classes are surfaced; vendor mappers stay internal to their folder.
 export { PlacesAdapter } from "./places/index";
+export { SearchApiAdapter } from "./searchapi/index";
 export { ApolloAdapter } from "./apollo/index";
 export { ClayAdapter, parseClayWebhook } from "./clay/index";
 export { ExploriumAdapter } from "./explorium/index";
@@ -31,6 +32,7 @@ export {
   LlmClient,
   MODEL_IDS,
   personaliseOpener,
+  personaliseColdOpener,
   buildPersonalisationPrompt,
   extractCompanyFacts,
 } from "./llm/index";
