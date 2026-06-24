@@ -46,6 +46,15 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 16) — master documentation index (docs/README.md)
+- 35+ docs existed with no single entry point. Wrote docs/README.md: a start-here reading order, then
+  sections for product/system docs (revenue-os/), the strategy + sales kit (strategy/), decisions (adr/),
+  the engine-foundation docs, and the autonomous build log, each with a one-line purpose. Notes that
+  per-module guides (AGENTS.md + README) live next to the code.
+- VERIFIED: 0 em dashes; a link checker confirms every relative link resolves to a real file/dir (fixed
+  one muddled adr link to point at revenue-os/adr/README.md).
+- SHIP: docs-only; merging to main. ~60 min left in the window.
+
 ## STRAT1 (cycle 15) — 14-day pilot operating playbook
 - Wrote docs/strategy/PILOT-PLAYBOOK.md (~790 words): the day-by-day execution layer the founder needs
   for his 2 live pilots. Day 0 qualify + capture the four ROI inputs; Week 1 run demo-mode NOVA + instrument
