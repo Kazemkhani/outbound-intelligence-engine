@@ -46,6 +46,25 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## PR1 DONE — PR #14 merged to main (deploy + hardening + docs + tests milestone)
+- MERGED at 2026-06-24 16:17 UTC, merge commit ec9612c. verify PASS (2m27s) + gitleaks PASS (both
+  push + pull_request events). Branch fast-forwarded to main; kept for continued autonomous work.
+- main is unprotected (no required checks). Only the two legacy Vercel preview checks failed
+  (commit-author-email / "deployment blocked"); production is Fly, so these are non-blocking noise.
+
+## PR1 setup — PR #14 updated + secret-scan CI fixed (twice)
+- PR #14 (security-hardening-and-searchapi -> main) retitled + rebodied to the full milestone
+  (deploy live, security headers, docs A-Z, tests). mergeable=MERGEABLE, state=UNSTABLE.
+- gitleaks was failing for INFRA reasons, not a finding. Two-part fix, both pushed:
+  1. (d499fcb) pass `GITHUB_TOKEN` to the gitleaks step (v2 requires it for PR scans).
+  2. (35160a7) add `pull-requests: read` permission — with only contents:read the PR scan got
+     403 "Resource not accessible by integration" on GET /pulls/14/commits.
+  Local secret scan: no secret patterns in tracked files; the push-event gitleaks run already passes.
+- Vercel preview checks fail on commit-author-email / "deployment blocked" = legacy (prod is Fly now),
+  not a code issue. Will not block the merge decision on those.
+- NEXT: when `verify` + PR-event `gitleaks` are green, merge PR #14 to main (admin-merge only if the
+  sole remaining red checks are the legacy Vercel ones and branch protection would otherwise allow it).
+
 ## D2 + D3 VERIFIED LIVE + QA1 + QA2 DONE
 - Deploy: first redeploy hung ~10 min on buildkit "exporting layers" (known remote-builder stall);
   stopped it (TaskStop + pkill) and retried with --wait-timeout 300. Retry shipped v4 (complete).
