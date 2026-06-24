@@ -113,6 +113,8 @@ above is clear, keep cycling these:
 >     kit, ADRs, engine foundation, build log). All links verified to resolve.
 >   - cycle 17: UPG1 = root README Documentation section now points to docs/README.md (the map) + the
 >     revenue-os product docs + the strategy/sales kit. Links verified.
+>   - cycle 18: QA = end-of-run full-repo green check — typecheck 6/6, lint 6/6 (0 warnings), test 6/6
+>     (347 tests pass total). Prod healthy: /api/health 200 on v12.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
