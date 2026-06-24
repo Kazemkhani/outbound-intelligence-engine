@@ -46,6 +46,19 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 5) — test the shared markdown renderer (used by 3 surfaces)
+- The markdown renderer underpins Close, Knowledge, and Voice Dojo but its parser was untested, so a
+  regression would silently break all three. Extracted the pure parsing (stripInline + parseBlocks +
+  Block type + regexes) into components/ui/markdown-parse.ts (no React); markdown.tsx imports parseBlocks
+  and re-exports stripInline (so existing importers are unchanged).
+- Added components/ui/markdown-parse.test.ts (11): empty input, h2/h3/#### folding, single-# as h2,
+  ul/ol, table (header+rows), fenced code (verbatim body), paragraph line-join, paragraph stops at a
+  structural line, CRLF normalisation, and stripInline.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 38 pass (was 27, +11), full build OK (/close,
+  /dojo, /knowledge all compile).
+- NEXT: docs/code on branch (now ahead of main by 3); batch into the next milestone PR + redeploy. Keep
+  cycling P1/UPG1 + research-backed strategy.
+
 ## R1 + STRAT1 (cycle 4) — pricing research + docs/strategy/PRICING.md
 - Honors the creative/research mandate and the operator's "you priced it so low" feedback. WebSearch on
   2025-2026 pricing: enterprise AI-SDR (11x/Qualified ~$40k-$68k/yr, category up to $100k-$147k/yr),

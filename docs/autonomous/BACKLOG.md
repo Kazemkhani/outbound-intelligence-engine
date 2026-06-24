@@ -86,6 +86,8 @@ above is clear, keep cycling these:
 >   - cycle 4: R1+STRAT1 = researched 2025-2026 pricing bands (AI-SDR, claygency, voice) and wrote
 >     docs/strategy/PRICING.md (high-ticket packaging + pilot-to-paid), addressing the "priced too low"
 >     feedback.
+>   - cycle 5: UPG1 = extracted the shared markdown parser to components/ui/markdown-parse.ts and added
+>     11 tests (used by Close/Knowledge/Dojo). Web suite now 38 tests.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
