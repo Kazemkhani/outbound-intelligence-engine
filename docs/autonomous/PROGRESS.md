@@ -46,6 +46,13 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## QA (cycle 18) — end-of-run full-repo green check
+- With the window nearly closed, ran a final full-monorepo verification: typecheck 6/6 successful, lint
+  6/6 (No ESLint warnings or errors), test 6/6 (347 tests pass total across core/db/integrations/
+  orchestration/config/web). Production verified healthy: /api/health -> 200, current release Fly v12.
+- The 8-hour run ends with main == branch, everything green, and prod live. Next firing (after
+  STOP_AFTER_EPOCH) will CronDelete the loop and append the final summary.
+
 ## UPG1 (cycle 17) — root README points to the docs map + Revenue OS + strategy
 - The root README's Documentation section did not reference the new docs/README.md index, the
   revenue-os/ product docs, or the strategy/ sales kit. Added a "Start with the map" pointer at the top
