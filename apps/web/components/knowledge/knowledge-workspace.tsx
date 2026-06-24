@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { AlertCircle, BookOpen, Loader2, Send, Sparkles } from "lucide-react";
 import { Markdown } from "@/components/ui/markdown";
 import { EmptyState } from "@/components/ui/states";
@@ -26,6 +26,13 @@ export function KnowledgeWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [nextId, setNextId] = useState(1);
+  const latestAnswerRef = useRef<HTMLElement>(null);
+
+  // Move focus to the newest answer when it arrives so keyboard and screen-reader
+  // users land on the response instead of staying on the (now-cleared) input.
+  useEffect(() => {
+    if (thread.length > 0) latestAnswerRef.current?.focus();
+  }, [thread.length]);
 
   const submit = (q: string) => {
     const trimmed = q.trim();
@@ -126,6 +133,11 @@ export function KnowledgeWorkspace() {
         </div>
       )}
 
+      {/* Live status for screen readers while the model answers */}
+      <p className="sr-only" role="status">
+        {isPending ? "Generating answer…" : ""}
+      </p>
+
       {/* Thread */}
       {thread.length === 0 && !isPending ? (
         <div className="surface p-2">
@@ -136,9 +148,15 @@ export function KnowledgeWorkspace() {
           />
         </div>
       ) : (
-        <div className="space-y-4">
-          {thread.map((qa) => (
-            <article key={qa.id} className="surface overflow-hidden">
+        <div className="space-y-4" role="feed" aria-busy={isPending} aria-label="Answers">
+          {thread.map((qa, i) => (
+            <article
+              key={qa.id}
+              ref={i === 0 ? latestAnswerRef : undefined}
+              tabIndex={i === 0 ? -1 : undefined}
+              aria-label={`Answer to: ${qa.question}`}
+              className="surface overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500/40"
+            >
               <header className="border-b border-ink-800 bg-ink-900/60 px-6 py-4">
                 <p className="label-mono mb-1 text-gold-400">Question</p>
                 <p className="text-sm font-medium text-ink-100">{qa.question}</p>

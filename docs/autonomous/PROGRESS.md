@@ -46,6 +46,15 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 3) — Knowledge a11y + ship accumulated milestone
+- components/knowledge/knowledge-workspace.tsx: answers list is now role="feed" aria-busy; an sr-only
+  role="status" announces "Generating answer…"; focus moves to the newest answer (tabIndex -1 + ref)
+  when it arrives, with a visible focus ring. Mirrors the dojo a11y pattern for consistency.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 27 pass (Fly remote build is the build gate).
+- SHIP: branch was 3 commits ahead of main (milestone log + UPG1 tests + dojo a11y); with this P1 it is
+  4 ahead. Opening a PR to main + redeploying so the a11y + tests reach prod (see deploy/PR evidence
+  appended below).
+
 ## P1 (cycle 2) — Voice Dojo accessibility + UX polish
 - components/dojo/dojo-workspace.tsx: conversation is now role="log" aria-live="polite" aria-busy so
   screen readers announce each new prospect line; textarea got an explicit aria-label +

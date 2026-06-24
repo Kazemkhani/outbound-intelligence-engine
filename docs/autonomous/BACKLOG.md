@@ -81,6 +81,8 @@ above is clear, keep cycling these:
 >   - cycle 1: UPG1 = Voice Dojo boundary tests (sanitizeHistory + scenarios), +13 web tests.
 >   - cycle 2: P1 = Voice Dojo a11y/UX pass (live-region chat, labelled input + key hints, descriptive
 >     scenario-card labels + focus ring, focus management, status role on the thinking indicator).
+>   - cycle 3: P1 = Knowledge a11y (role=feed answers, sr-only status, focus-to-latest-answer) + shipped
+>     the accumulated milestone (PR + Fly redeploy).
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
