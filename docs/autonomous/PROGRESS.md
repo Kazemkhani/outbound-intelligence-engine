@@ -46,6 +46,17 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## STRAT1 (cycle 15) — 14-day pilot operating playbook
+- Wrote docs/strategy/PILOT-PLAYBOOK.md (~790 words): the day-by-day execution layer the founder needs
+  for his 2 live pilots. Day 0 qualify + capture the four ROI inputs; Week 1 run demo-mode NOVA + instrument
+  lead-arrival-to-first-ring on CallSession (917 min vs <60s); Week 2 readout via the Close Room ROI math,
+  rehearse in the Voice Dojo, build + send the results one-pager (CopyButton), then convert with Gap
+  Selling + JOLT + the quoted Activate tier. Includes a go/no-go gate table and guardrails (DRY_RUN +
+  DEMO_MODE for the whole pilot, no industry stat presented as a Huscribe result, consented enrichment only).
+- Ties together PRICING / SPEED-TO-LEAD-PROOF / GTM / VOICE-ACTIVATION / DATA-MOAT / RUNBOOK into one
+  executable plan. VERIFIED: 0 em dashes, all 6 cross-links resolve.
+- SHIP: docs-only; merging to main to keep the strategy library complete.
+
 ## UPG1 (cycle 14) — tests for the auth route-gate allowlist
 - The authorized callback in auth.config.ts decides public vs gated routes; a regression could expose a
   protected route or make /api/health private (uptime). Added auth.config.test.ts (5): public paths
