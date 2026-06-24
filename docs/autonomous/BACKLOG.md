@@ -75,6 +75,11 @@ above is clear, keep cycling these:
 - [ ] P1  Polish one screen (UI/UX, copy, accessibility) per cycle.
 - [ ] UPG1 Pick one upgrade that raises quality (tests, observability, a new module feature, perf) and ship it.
 
+> RECURRING: P1 and UPG1 are perpetual. Do one instance each cycle and LOG it in PROGRESS, but leave
+> these boxes UNCHECKED on purpose so "every BACKLOG item is checked" never trips and the loop keeps
+> running until STOP_AFTER_EPOCH (operator directive: do not stop while time remains). Cycle log:
+>   - cycle 1: UPG1 = Voice Dojo boundary tests (sanitizeHistory + scenarios), +13 web tests.
+
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
 

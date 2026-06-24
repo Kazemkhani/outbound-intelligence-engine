@@ -46,6 +46,21 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 1) — Voice Dojo boundary tests; explicit backlog now clear
+- Extracted the dojo boundary guard out of the "use server" actions into a pure module
+  apps/web/app/dojo/sanitize.ts (sanitizeHistory + transcript + MAX_TURNS/MAX_TURN_CHARS); actions.ts
+  imports it. This is the client-supplied conversation validator, so it is security-relevant.
+- Added tests: app/dojo/sanitize.test.ts (9) covering valid/trim/clamp, non-array, empty, over-length,
+  exactly MAX_TURNS, unknown role, blank text, malformed turn, and transcript formatting;
+  app/dojo/scenarios.test.ts (4) covering findScenario + SCENARIOS integrity (unique ids, real personas).
+- VERIFIED: web typecheck clean, lint 0 warnings, web test 27 pass (was 14, +13).
+- LOOP NOTE: all one-time backlog items (D/DOC/PORT/QA/PR + R1/MD1/STRAT1/SUB1) are done. P1 and UPG1
+  are perpetual and are intentionally LEFT UNCHECKED (see BACKLOG note) so the loop keeps cycling until
+  STOP_AFTER_EPOCH (~6h left) per the operator's "do not stop" directive. Each cycle's instance is
+  logged here + in the BACKLOG cycle log.
+- NEXT: P1 (polish a screen, e.g. /knowledge or /dojo a11y + copy) next cycle; keep cycling P1/UPG1
+  and the research/strategy/md-coverage mandate; redeploy at milestones.
+
 ## MILESTONE SHIPPED — ports live in production (PR #16 merged + Fly v5)
 - PR #16 (Voice Dojo + Knowledge Q&A) MERGED to main at 2026-06-24 17:08 UTC; verify PASS (2m46s) +
   gitleaks PASS (both events). Only legacy Vercel preview checks failed (commit-email). Branch
