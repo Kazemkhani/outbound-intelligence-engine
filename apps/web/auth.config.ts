@@ -25,6 +25,7 @@ export const authConfig = {
       // Public paths that must never require a session.
       const isPublic =
         pathname.startsWith("/signin") ||
+        pathname.startsWith("/api/health") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/inngest");
       if (isPublic) return true;
