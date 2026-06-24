@@ -57,7 +57,8 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   the production build strips the dev creds: grep of .next/static served JS for "dev@oie.local" returns
   nothing (the gated block + DEMO const are tree-shaken out under NODE_ENV=production). (Earlier "FOUND"
   was a shell false positive: `head` always exits 0, so the `&&` fired regardless.)
-- Shipped via PR + redeploy (evidence below).
+- SHIP: PR #23 MERGED (verify + gitleaks PASS); Fly v11 complete. Verified in PRODUCTION: the served
+  /signin HTML contains "Huscribe Revenue OS" and does NOT contain dev@oie.local. Branch in sync w/ main.
 
 ## UPG1 (cycle 11) — observability: capture caught LLM failures to Sentry
 - The AI server actions catch ask() failures and return a UI message, so rate limits / overloads / empty
