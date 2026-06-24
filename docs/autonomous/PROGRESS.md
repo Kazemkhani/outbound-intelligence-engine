@@ -53,7 +53,8 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   clipboard is blocked) and wired it into: Close Room result header (copies result.body), Knowledge each
   answer header (copies the answer), Voice Dojo scorecard header (copies the scorecard).
 - VERIFIED: web typecheck clean, lint 0 warnings, test 45 pass, full build OK (/close, /dojo, /knowledge
-  all compile). Shipped via PR + Fly redeploy (evidence below).
+  all compile). SHIP: PR #21 MERGED to main (verify + gitleaks PASS); Fly v9 complete; smoke /api/health
+  -> 200, /close -> 307 (auth-gated, healthy). Branch in sync with main.
 
 ## R1 + STRAT1 (cycle 9) — speed-to-lead proof pack (sourced sales asset)
 - Researched 2025-2026 lead-response-time data and wrote docs/strategy/SPEED-TO-LEAD-PROOF.md (~670
