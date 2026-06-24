@@ -109,6 +109,8 @@ above is clear, keep cycling these:
 >     session; +5 tests. Web suite now 50. Guards a route-gate regression (security/uptime).
 >   - cycle 15: STRAT1 = docs/strategy/PILOT-PLAYBOOK.md — a 14-day demo-mode pilot operating playbook
 >     (day-by-day) that sequences the strategy into actions and converts a pilot to paid.
+>   - cycle 16: UPG1 = docs/README.md — a master documentation index (start-here, product docs, strategy
+>     kit, ADRs, engine foundation, build log). All links verified to resolve.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.
