@@ -6,7 +6,7 @@ import { formatDate, formatRelative, signalTypeLabel } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Signal Feed — OIE",
+  title: "Signal Feed · Huscribe Revenue OS",
 };
 
 const NOW = new Date();

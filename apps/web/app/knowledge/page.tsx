@@ -3,7 +3,7 @@ import { KnowledgeWorkspace } from "@/components/knowledge/knowledge-workspace";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Knowledge - OIE",
+  title: "Knowledge · Huscribe Revenue OS",
 };
 
 export default function KnowledgePage() {

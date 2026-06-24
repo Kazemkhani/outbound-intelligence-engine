@@ -4,7 +4,7 @@ import { getLeads } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Close Room - OIE",
+  title: "Close Room · Huscribe Revenue OS",
 };
 
 export default async function ClosePage() {

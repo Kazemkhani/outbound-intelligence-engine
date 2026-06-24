@@ -4,7 +4,7 @@ import { getApprovals } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Approval Queue — OIE",
+  title: "Approval Queue · Huscribe Revenue OS",
 };
 
 export default async function ApprovalsPage() {

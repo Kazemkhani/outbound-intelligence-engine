@@ -4,7 +4,7 @@ import { getActiveIcp, getLeads } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "ICP Editor — OIE",
+  title: "ICP Editor · Huscribe Revenue OS",
 };
 
 export default async function IcpPage() {

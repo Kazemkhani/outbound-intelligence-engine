@@ -18,9 +18,9 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OIE — Outbound Intelligence Engine",
+  title: "Huscribe Revenue OS",
   description:
-    "Operator control plane for the Outbound Intelligence Engine. Ranked leads, signal feed, ICP editor, approval queue and analytics.",
+    "The Huscribe Revenue OS control plane: discover, enrich, qualify by voice, score, and close, governed end to end by a human approval gate.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
