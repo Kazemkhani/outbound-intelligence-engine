@@ -53,8 +53,9 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   of 9 surfaces; added Voice, Voice Dojo, Close Room, and Knowledge cards, ordered along the flywheel.
 - VERIFIED: web typecheck clean, lint 0 warnings, test 38 pass, full build OK (home still static, all
   routes present).
-- SHIP: this is the milestone-ship firing for the accumulated branch (PRICING.md + markdown parser +
-  this P1). PR + Fly redeploy evidence appended below.
+- SHIP: PR #18 (home P1 + markdown parser tests + PRICING.md) MERGED to main; verify PASS + gitleaks
+  PASS (both); branch fast-forwarded to main (189225a). Fly redeploy: v7 complete. VERIFIED live:
+  / -> 307 (auth-gated home, healthy), /signin -> 200. Only legacy Vercel preview checks failed.
 
 ## UPG1 (cycle 5) — test the shared markdown renderer (used by 3 surfaces)
 - The markdown renderer underpins Close, Knowledge, and Voice Dojo but its parser was untested, so a
