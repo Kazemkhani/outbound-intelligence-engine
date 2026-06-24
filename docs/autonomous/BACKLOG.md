@@ -33,8 +33,18 @@ verifies, commits + pushes, ticks the box, and logs to PROGRESS.md. Never commit
 - [x] DOC10 ADRs — NOVA as the voice layer; one-app consolidation; context-not-contacts; deterministic scoring.
 
 ## Finish the single app
-- [ ] PORT1 Port Voice Dojo (interactive roleplay + scoring) into the control plane at /dojo.
-- [ ] PORT2 Port Knowledge Q&A (grounded over the canon) at /knowledge. Then APEX can retire.
+- [x] PORT1 DONE — Voice Dojo live at /dojo (nav link added). Interactive roleplay: 3 canon-grounded
+        UAE scenarios (Warm/Tough/Brutal); prospectReply plays the prospect in character (objections from
+        OBJECTIONS/VOSS/DUBAI canon), scoreRoleplay grades the operator vs frameworks (SPIN/Challenger/
+        Voss/Gap Selling, deep tier) with a JSON scorecard + next-step coaching. LLM never computes the ICP
+        score (dojo score is coaching). Input sanitised at the boundary. Verified: typecheck + lint (0
+        warnings) + full build OK, /dojo compiled (5.75 kB).
+- [x] PORT2 DONE — Knowledge Q&A live at /knowledge (nav link added). Server action askKnowledge grounds
+        over the full canon (lib/canon) and answers ONLY from it, names the framework, emits <CONFIRM> for
+        unknown Huscribe specifics; LLM never scores. Client workspace: ask box (Cmd/Ctrl+Enter),
+        suggestion chips, Q&A thread. Extracted the markdown renderer to components/ui/markdown.tsx (shared
+        with Close, DRY). Verified: web typecheck + lint (0 warnings) + test (14) green, full build OK,
+        /knowledge route compiled.
 
 ## Quality + ship
 - [x] QA1  DONE — typecheck 6/6 clean, lint 6/6 clean (removed 2 stale eslint-disable directives in
@@ -42,7 +52,9 @@ verifies, commits + pushes, ticks the box, and logs to PROGRESS.md. Never commit
 - [x] QA2  DONE — extracted ROI math to apps/web/app/close/roi-math.ts (pure, +6 tests) and NOVA finding
         extraction to packages/integrations/src/nova/findings.ts (anti-corruption layer, +10 tests).
         190 tests pass total. Canon-grounding tests deferred (LLM-call-shaped; lower value) -> see UPG1.
-- [ ] PR1  Open PR `security-hardening-and-searchapi` → main; ensure CI green; merge.
+- [x] PR1  DONE — PR #14 MERGED to main (merge commit ec9612c) at 2026-06-24 16:17 UTC. verify PASS
+        (2m27s) + gitleaks PASS (both events, after the token + pull-requests:read CI fixes). Only the
+        legacy Vercel preview checks failed (commit-author-email; prod is Fly now). main is unprotected.
 
 ## Continuous, creative + research-driven (operator directive — do this EVERY cycle, never stop)
 Be creative. Keep dreaming up strategies and plans grounded in fresh research of what is genuinely
