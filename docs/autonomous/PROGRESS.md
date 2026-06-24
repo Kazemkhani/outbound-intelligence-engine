@@ -51,9 +51,9 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   role="status" announces "Generating answer…"; focus moves to the newest answer (tabIndex -1 + ref)
   when it arrives, with a visible focus ring. Mirrors the dojo a11y pattern for consistency.
 - VERIFIED: web typecheck clean, lint 0 warnings, test 27 pass (Fly remote build is the build gate).
-- SHIP: branch was 3 commits ahead of main (milestone log + UPG1 tests + dojo a11y); with this P1 it is
-  4 ahead. Opening a PR to main + redeploying so the a11y + tests reach prod (see deploy/PR evidence
-  appended below).
+- SHIP: PR #17 (a11y + dojo boundary tests, cycles 1-3) MERGED to main; verify PASS (2m59s) + gitleaks
+  PASS (both); branch fast-forwarded to main (82d9583). Fly redeploy: v6 complete. VERIFIED live: /dojo
+  + /knowledge -> 307 (auth-gated, healthy), /signin -> 200, CSP + HSTS still present on v6.
 
 ## P1 (cycle 2) — Voice Dojo accessibility + UX polish
 - components/dojo/dojo-workspace.tsx: conversation is now role="log" aria-live="polite" aria-busy so
