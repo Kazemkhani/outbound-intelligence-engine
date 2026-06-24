@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import type { ScoredLead } from "@/lib/fixtures";
 import { Markdown, stripInline } from "@/components/ui/markdown";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
   coachTranscript,
   computeRoi,
@@ -527,9 +528,12 @@ function ResultArea({
     <div className="surface overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-800 px-6 py-4">
         <h2 className="font-display text-base font-bold text-ink-50">{result.title}</h2>
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-500">
-          Draft · review before use
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-500">
+            Draft · review before use
+          </span>
+          <CopyButton text={result.body} />
+        </div>
       </div>
 
       {headline && (

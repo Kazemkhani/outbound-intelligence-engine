@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AlertCircle, BookOpen, Loader2, Send, Sparkles } from "lucide-react";
 import { Markdown } from "@/components/ui/markdown";
+import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState } from "@/components/ui/states";
 import { askKnowledge, type KnowledgeResult } from "@/app/knowledge/actions";
 
@@ -157,9 +158,12 @@ export function KnowledgeWorkspace() {
               aria-label={`Answer to: ${qa.question}`}
               className="surface overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500/40"
             >
-              <header className="border-b border-ink-800 bg-ink-900/60 px-6 py-4">
-                <p className="label-mono mb-1 text-gold-400">Question</p>
-                <p className="text-sm font-medium text-ink-100">{qa.question}</p>
+              <header className="flex items-start justify-between gap-3 border-b border-ink-800 bg-ink-900/60 px-6 py-4">
+                <div className="min-w-0">
+                  <p className="label-mono mb-1 text-gold-400">Question</p>
+                  <p className="text-sm font-medium text-ink-100">{qa.question}</p>
+                </div>
+                <CopyButton text={qa.answer} label="Copy answer" />
               </header>
               <div className="px-6 py-5">
                 <Markdown source={qa.answer} />

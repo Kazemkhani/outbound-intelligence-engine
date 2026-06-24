@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { AlertCircle, Award, Dumbbell, Loader2, RotateCcw, Send, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Markdown } from "@/components/ui/markdown";
+import { CopyButton } from "@/components/ui/copy-button";
 import { prospectReply, scoreRoleplay } from "@/app/dojo/actions";
 import type { DojoScenario, DojoTurn } from "@/app/dojo/scenarios";
 
@@ -240,9 +241,12 @@ export function DojoWorkspace({ scenarios }: { scenarios: DojoScenario[] }) {
       {/* Scorecard */}
       {score && (
         <article ref={threadRef} className="surface overflow-hidden">
-          <header className="flex items-center gap-2 border-b border-ink-800 bg-ink-900/60 px-6 py-4">
-            <Award size={16} className="text-gold-400" aria-hidden="true" />
-            <span className="font-display text-sm font-bold text-ink-50">Your scorecard</span>
+          <header className="flex items-center justify-between gap-2 border-b border-ink-800 bg-ink-900/60 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <Award size={16} className="text-gold-400" aria-hidden="true" />
+              <span className="font-display text-sm font-bold text-ink-50">Your scorecard</span>
+            </div>
+            <CopyButton text={score} label="Copy scorecard" />
           </header>
           <div className="px-6 py-5">
             <Markdown source={score} />

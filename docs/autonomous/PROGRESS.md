@@ -46,6 +46,15 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1/UPG1 (cycle 10) — copy-to-clipboard on generated AI outputs
+- The operator generates battlecards/outreach/answers/scorecards to paste into WhatsApp + email, so
+  one-click copy is a real workflow win. Added a shared, accessible components/ui/copy-button.tsx
+  (navigator.clipboard, "Copied" confirmation, aria-live + aria-label, focus ring, fails quietly when
+  clipboard is blocked) and wired it into: Close Room result header (copies result.body), Knowledge each
+  answer header (copies the answer), Voice Dojo scorecard header (copies the scorecard).
+- VERIFIED: web typecheck clean, lint 0 warnings, test 45 pass, full build OK (/close, /dojo, /knowledge
+  all compile). Shipped via PR + Fly redeploy (evidence below).
+
 ## R1 + STRAT1 (cycle 9) — speed-to-lead proof pack (sourced sales asset)
 - Researched 2025-2026 lead-response-time data and wrote docs/strategy/SPEED-TO-LEAD-PROOF.md (~670
   words): sourced stats table (917-min avg real-estate response, 62% after-hours inquiries, 78% first
