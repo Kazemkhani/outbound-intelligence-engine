@@ -46,6 +46,16 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## MILESTONE SHIPPED — ports live in production (PR #16 merged + Fly v5)
+- PR #16 (Voice Dojo + Knowledge Q&A) MERGED to main at 2026-06-24 17:08 UTC; verify PASS (2m46s) +
+  gitleaks PASS (both events). Only legacy Vercel preview checks failed (commit-email). Branch
+  fast-forwarded to main (d39a2b0).
+- Fly redeploy: v5 complete. VERIFIED live (--resolve to 109.105.222.142): /dojo -> 307 redirect to
+  /signin?callbackUrl=...%2Fdojo, /knowledge -> 307 -> /signin (both auth-gated routes exist + the gate
+  works), /signin -> 200. Production now serves the full control plane incl. both ported APEX modes.
+- Note: an old release v3 still shows "running" (the earlier buildkit-stalled deploy); v4 and v5 are
+  complete and v5 is current. Harmless cosmetic noise, not worth a forced cleanup.
+
 ## PORT1 DONE — Voice Dojo at /dojo (interactive roleplay + scoring)
 - New route /dojo (nav link "Voice Dojo" with a Dumbbell icon, after Voice). Last big port done.
 - app/dojo/scenarios.ts (plain shared module, NOT "use server", so client + server can import): 3
