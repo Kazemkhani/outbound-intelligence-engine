@@ -46,6 +46,16 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## P1 (cycle 13) — brand consistency sweep (nav + titles + layout)
+- Completed the rebrand across the app chrome (home + signin were already done): nav-sidebar badge
+  "OIE" -> "H" and "Control Plane" -> "Huscribe Revenue OS"; all 9 page <title>s rebranded to
+  "<Page> · Huscribe Revenue OS" (middot, which also removed the em dashes those titles used); root
+  layout.tsx title -> "Huscribe Revenue OS" + description rewritten to the end-to-end flywheel.
+- Left close/actions.ts internal "OIE" prompt labels untouched (not UI chrome; changing prompt wording
+  risks output drift). No user-facing OIE/Outbound Intelligence Engine string remains in chrome.
+- VERIFIED: web typecheck clean, lint 0 warnings, full build OK; grep confirms no OIE in
+  layout/nav/page-titles. Shipped via PR + redeploy (evidence below).
+
 ## P1 (cycle 12) — signin page rebrand + remove dev creds from production
 - app/signin/page.tsx is the first screen any demo viewer sees and was stale + leaky: it showed an "OIE
   / Outbound Intelligence Engine" brand and a public "Operator access" panel printing dev@oie.local / dev
@@ -57,7 +67,8 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   the production build strips the dev creds: grep of .next/static served JS for "dev@oie.local" returns
   nothing (the gated block + DEMO const are tree-shaken out under NODE_ENV=production). (Earlier "FOUND"
   was a shell false positive: `head` always exits 0, so the `&&` fired regardless.)
-- Shipped via PR + redeploy (evidence below).
+- SHIP: PR #23 MERGED (verify + gitleaks PASS); Fly v11 complete. Verified in PRODUCTION: the served
+  /signin HTML contains "Huscribe Revenue OS" and does NOT contain dev@oie.local. Branch in sync w/ main.
 
 ## UPG1 (cycle 11) — observability: capture caught LLM failures to Sentry
 - The AI server actions catch ask() failures and return a UI message, so rate limits / overloads / empty

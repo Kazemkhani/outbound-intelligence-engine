@@ -4,7 +4,7 @@ import { getLeads } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Ranked Leads — OIE",
+  title: "Ranked Leads · Huscribe Revenue OS",
 };
 
 export default async function LeadsPage() {

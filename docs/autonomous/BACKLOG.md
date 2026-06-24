@@ -103,6 +103,8 @@ above is clear, keep cycling these:
 >     lib/llm (no-op without DSN) so AI errors are visible, not just swallowed into a UI message. Shipped.
 >   - cycle 12: P1 = signin page rebrand to Huscribe Revenue OS + neutral placeholder; gated the dev-creds
 >     panel to non-production (verified the prod build strips dev@oie.local from all served JS). Shipped.
+>   - cycle 13: P1 = brand sweep — nav sidebar badge + all 9 page <title>s + root layout title/description
+>     rebranded OIE -> Huscribe Revenue OS (middot separator, removed em dashes from titles). Shipped.
 
 Rule: do not stop while time remains in the 8h window. Each firing = research + a concrete shipped
 increment + commit/push + PROGRESS log. Keep scheduling/continuing until STOP_AFTER_EPOCH.

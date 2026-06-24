@@ -4,7 +4,7 @@ import { SCENARIOS } from "./scenarios";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Voice Dojo - OIE",
+  title: "Voice Dojo · Huscribe Revenue OS",
 };
 
 export default function DojoPage() {
