@@ -46,6 +46,17 @@ Append-only. Newest entries at the bottom. Each firing adds: timestamp, items do
   path and we verify file existence on disk before ticking anything (agents cannot fabricate a file
   that the post-run `ls` will catch).
 
+## UPG1 (cycle 7) — public /api/health liveness endpoint + Fly health check
+- apps/web/app/api/health/route.ts: no-auth, no-DB liveness probe returning 200 JSON
+  {status:"ok", service, time}. Pure liveness (not readiness) so a DB/provider blip cannot flap health
+  and trigger restarts. auth.config.ts: added /api/health to the public allowlist. fly.toml: wired an
+  http_service health check (GET /api/health, 30s) that runs only while a machine is up, preserving
+  scale-to-zero, and gates the deploy (Fly waits for it to pass before marking the release healthy).
+- VERIFIED: web typecheck + lint (0 warnings) + build (/api/health compiled); flyctl config validate
+  passes; deployed v8; live GET /api/health -> 200 with the JSON body and NO auth redirect; /leads still
+  -> 307 (auth allowlist did not over-expose). Fly health check passed during the v8 deploy.
+- NEXT: keep cycling P1/UPG1 + research. Branch now ahead of main (health + evidence log); merging.
+
 ## P1 (cycle 6) — home/dashboard rebrand + surface all routes; ship milestone
 - app/page.tsx: rebranded eyebrow to "Huscribe Revenue OS"; headline "Find who buys. Qualify by
   conversation. Then close."; subcopy reflects the end-to-end flywheel (discover, enrich, voice-qualify
