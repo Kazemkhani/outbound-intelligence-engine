@@ -1,0 +1,29 @@
+# Fly.io config for the Huscribe Revenue OS control plane.
+# Secrets (DATABASE_URL, AUTH_SECRET, ANTHROPIC_API_KEY, AUTH_OPERATOR_*, provider keys)
+# are set via `flyctl secrets set` and injected at runtime — never in this file or the image.
+app = "huscribe-revenue-os"
+primary_region = "fra"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 180
+    hard_limit = 220
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1024mb"
