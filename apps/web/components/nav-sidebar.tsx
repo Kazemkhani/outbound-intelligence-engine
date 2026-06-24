@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Home, LogOut, Settings, Signal, Users } from "lucide-react";
+import { BarChart3, Bell, Home, LogOut, PhoneCall, Settings, Signal, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/auth-actions";
 
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/icp", label: "ICP Editor", icon: Settings },
   { href: "/signals", label: "Signals", icon: Signal },
   { href: "/approvals", label: "Approvals", icon: Bell },
+  { href: "/voice", label: "Voice", icon: PhoneCall },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ] as const;
 

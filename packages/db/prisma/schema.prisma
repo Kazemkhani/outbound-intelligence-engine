@@ -117,8 +117,9 @@ model Company {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  contacts Contact[]
-  signals  Signal[]
+  contacts     Contact[]
+  signals      Signal[]
+  callSessions CallSession[]
 
   @@index([country, region])
   @@index([industry])
@@ -140,10 +141,11 @@ model Contact {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  company    Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  signals    Signal[]
-  scores     Score[]
-  enrolments Enrolment[]
+  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  signals      Signal[]
+  scores       Score[]
+  enrolments   Enrolment[]
+  callSessions CallSession[]
 
   @@index([companyId])
   @@index([seniority])
@@ -297,4 +299,57 @@ model ProviderCost {
   at       DateTime @default(now())
 
   @@index([provider, at])
+}
+
+/// A single NOVA voice call (dogfooding Huscribe's own voice agent). One row per
+/// placed call; `novaCallId` is the provider's id and the idempotency anchor.
+/// `raw` stores the full get_call payload for provenance. demoMode mirrors the
+/// NOVA DEMO flag; only consented facts are ever persisted as findings.
+model CallSession {
+  id            String    @id @default(cuid())
+  contactId     String? // FK Contact (nullable: ad-hoc calls)
+  companyId     String? // FK Company
+  novaCallId    String    @unique
+  novaContextId String?
+  status        String    @default("pending") // pending|in_progress|completed|failed|no_answer
+  goal          String    @default("qualify_interest")
+  language      String    @default("en")
+  demoMode      Boolean   @default(true)
+  transcript    String? // long text
+  outcome       String? // NOVA outcome value
+  summary       String?
+  costUsd       Float?
+  consent       Boolean   @default(true)
+  consentBasis  String? // e.g. "operator_initiated_demo"
+  optOut        Boolean   @default(false)
+  raw           Json? // full get_call payload for provenance
+  placedAt      DateTime  @default(now())
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  contact  Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  company  Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  findings CallFinding[]
+
+  @@index([status])
+  @@index([companyId])
+}
+
+/// A structured fact captured on a call (canonical keys: identity_confirmed,
+/// after_hours_handling, tools, monthly_volume, mobile, demo_interest, opt_in).
+/// Only honest, consented facts are written; never fabricated.
+model CallFinding {
+  id            String   @id @default(cuid())
+  callSessionId String
+  key           String // identity_confirmed|after_hours_handling|tools|monthly_volume|mobile|demo_interest|opt_in
+  value         String
+  confidence    Float?
+  source        String   @default("nova")
+  capturedAt    DateTime @default(now())
+
+  callSession CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
+
+  @@index([callSessionId])
+  @@index([key])
 }
