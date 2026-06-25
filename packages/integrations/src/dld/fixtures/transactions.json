@@ -1,0 +1,39 @@
+{
+  "records": [
+    {
+      "area": "Business Bay",
+      "developer": "Acme Developments",
+      "periodEnd": "2026-06-20",
+      "transactionCount": 180,
+      "priorPeriodCount": 90,
+      "projectLaunch": false,
+      "sourceUrl": "https://www.dubaipulse.gov.ae/data/dld-transactions"
+    },
+    {
+      "area": "Dubai Marina",
+      "developer": "XYZ Estates",
+      "projectName": "Marina Heights",
+      "periodEnd": "2026-06-20",
+      "transactionCount": 40,
+      "priorPeriodCount": 38,
+      "projectLaunch": true,
+      "sourceUrl": "https://www.dubaipulse.gov.ae/data/dld-projects"
+    },
+    {
+      "area": "Jumeirah Village Circle",
+      "developer": "Quiet Co",
+      "periodEnd": "2026-06-20",
+      "transactionCount": 20,
+      "priorPeriodCount": 22,
+      "projectLaunch": false,
+      "sourceUrl": "https://www.dubaipulse.gov.ae/data/dld-transactions"
+    },
+    {
+      "area": "No Date Area",
+      "developer": "Broken Record",
+      "periodEnd": "not-a-date",
+      "transactionCount": 500,
+      "priorPeriodCount": 10
+    }
+  ]
+}

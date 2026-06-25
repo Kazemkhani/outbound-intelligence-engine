@@ -408,3 +408,19 @@ ROI number; no secret was ever committed or echoed; the Anthropic key remained p
 Operator login at https://huscribe-revenue-os.fly.dev (gp@humai.ae). Run locally + daily playbook in
 docs/revenue-os/RUNBOOK.md. Start any doc dive at docs/README.md. Loop is stopped; re-arm by scheduling
 a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session is wanted.
+
+---
+
+## Phase 2 loop restarted (operator: "keep going dont stop") + NX1 done
+- Re-established the autonomous loop for the researched Next phase: new window in STARTED_AT.md
+  (started 2026-06-25 13:33 +04, STOP_AFTER 16:33 +04, 3h), a "Next-phase build" NX1..NX10 backlog
+  section in BACKLOG.md with safe-first ordering + dep/key/owner BLOCKED rules, cron 34254406 (fires
+  :08/:33/:58), caffeinate refreshed (pid 8111). Phase 1 is fully shipped (Fly v13).
+- NX1 DONE: DLD / Dubai Pulse SignalProvider adapter (packages/integrations/src/dld: index.ts + mapper.ts
+  + fixtures/transactions.json + dld.test.ts). Emits transaction_spike (strength = (ratio-1)/2, saturating
+  at a 3x ratio) and off_plan_launch (0.8), companyDomain null (DLD is name-keyed; evidence carries
+  developer/area/project). Never fabricates a date (invalid periodEnd -> no signal). isConfigured gates on
+  an endpoint; returns [] when unconfigured (no live calls). NOT wired to live ingestion (gated on the DB
+  migration + a spike GO). Exported DLDAdapter. VERIFIED: typecheck 6/6, lint clean, test 368 total pass
+  (+10 DLD). NOVA stays DEMO_MODE; DRY_RUN on; scoring stays code; no secrets.
+- NEXT: NX2 (Suppression -> phone + channel, pure util + tests, DB migration deferred).

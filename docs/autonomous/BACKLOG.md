@@ -3,6 +3,41 @@
 Ordered. The loop picks the next 1–3 unchecked items per firing, does them at world-class quality,
 verifies, commits + pushes, ticks the box, and logs to PROGRESS.md. Never commit secrets.
 
+## Next-phase build (ACTIVE — Phase 2 from docs/architecture/TARGET-ARCHITECTURE.md + BUILD-PLAN.md)
+Work top-down. Offline/pure-TS items first so the build always stays green. Each firing: ONE item, verified
+(typecheck/lint/test/build), commit + push, and at a milestone open/merge a PR + deploy. Respect every
+invariant (deterministic scoring stays code; DRY_RUN + send-gate untouched; anti-corruption boundary; secrets
+only in env/Fly; NOVA stays DEMO_MODE).
+- [x] NX1  DONE — DLD / Dubai Pulse SignalProvider adapter (packages/integrations/src/dld): mapper +
+        adapter + fixture + 10 tests. Maps Dubai-Pulse rows to transaction_spike (ratio-scaled, saturates
+        at 3x) + off_plan_launch (0.8). Anti-corruption: vendor shapes confined to ./mapper. Not wired to
+        live ingestion (DB migration + spike GO still gated). Exported as DLDAdapter. typecheck + lint +
+        test green (194 integrations tests).
+- [ ] NX2  Suppression extended to phone + channel: core/db types + a pure suppression-check util + tests.
+        DB migration deferred + documented (no prod migration in the loop).
+- [ ] NX3  Durable send-gate: Inngest step.waitForEvent approval suspend before the send step, with a
+        regression test proving resume re-checks DRY_RUN (suspend -> approve -> resume with DRY_RUN on = simulate).
+- [ ] NX4  Enrichment waterfall hardening: wrap each provider in its own step.run + declarative
+        throttle/concurrency (channel caps + quiet hours) in @oie/orchestration. Verify by typecheck + test.
+- [ ] NX5  promptfoo eval harness + a canon-grounded eval set + a turbo task + CI gate on pass-rate.
+        (Adds a devDep: only land it if pnpm install succeeds AND the build stays green.)
+- [ ] NX6  Streaming AI UI: streamAsk() via Vercel AI SDK (@ai-sdk/anthropic) in Close/Knowledge/Dojo.
+        (Adds deps: land only if green. Keep the score path never reading model text.)
+- [ ] NX7  Observability spine: one OTel GenAI span at LlmClient.complete fanning to Sentry + Langfuse +
+        cost-per-lead metadata. (No-op without the DSN env; never logs the key.)
+- [ ] NX8  shadcn/ui + Tremor analytics dashboard + TanStack Table for /leads + /approvals. (Adds deps.)
+- [ ] NX9  AgentKit on Inngest: an agent layer over the existing adapters, code router calling the scorer +
+        evaluateSendGate as CODE steps (never an LLM). (Adds a dep.)
+- [ ] NX10 One read-only internal MCP server (TS SDK) for operator/Claude agents. Never the send-path.
+
+Next-phase guardrails (in addition to the Invariants below):
+- A new npm dependency may be added ONLY if `pnpm install` succeeds AND `pnpm verify` (or typecheck+lint+test+build)
+  stays green. If not, revert it and log BLOCKED.
+- Any item needing an external API key, a production DB migration, or owner sign-off (live UAE PSTN / TDRA)
+  is BLOCKED: log it under BLOCKED in PROGRESS.md and move to the next item. Do not fake or stub a secret.
+- NOVA stays DEMO_MODE and DRY_RUN stays true for the entire phase.
+
+
 ## Deploy (highest priority — finish what's in flight)
 - [x] D1  DONE — LIVE at https://huscribe-revenue-os.fly.dev (operator login gp@humai.ae verified, dev
         backdoor dead, dedicated IPv4 109.105.222.142, AUTH_TRUST_HOST+AUTH_URL set, secrets in Fly).
