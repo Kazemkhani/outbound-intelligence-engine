@@ -14,6 +14,8 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { streamText } from "ai";
 import { LlmClient, MODEL_IDS } from "@oie/integrations";
 
 /**
@@ -94,4 +96,33 @@ export async function ask(opts: AskOptions): Promise<string> {
     throw new Error("The model returned no text. Try again, or simplify the request.");
   }
   return text;
+}
+
+/**
+ * Streaming variant of ask() for the AI surfaces (NX6). Returns a plain-text
+ * streaming Response so the operator sees the answer build token by token. Same
+ * grounding contract as ask(): the caller supplies the canon-grounded system
+ * prompt; the LLM only reasons over text, it never computes a score. Uses the
+ * Vercel AI SDK over the Anthropic provider; the key is read lazily, never logged.
+ */
+export function streamAsk(opts: AskOptions): Response {
+  const key = apiKey();
+  if (!key) {
+    throw new Error(
+      "AI features need ANTHROPIC_API_KEY. Add it to apps/web/.env.local and restart the dev server.",
+    );
+  }
+  const anthropic = createAnthropic({ apiKey: key });
+  const result = streamText({
+    model: anthropic(opts.deep ? DEEP_MODEL : DEFAULT_MODEL),
+    system: opts.system,
+    prompt: opts.user,
+    maxOutputTokens: opts.maxTokens ?? 2000,
+    onError: ({ error }) => {
+      Sentry.captureException(error, {
+        tags: { area: "llm", tier: opts.deep ? "deep" : "default", mode: "stream" },
+      });
+    },
+  });
+  return result.toTextStreamResponse();
 }

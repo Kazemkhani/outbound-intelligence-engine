@@ -479,3 +479,16 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
 - VERIFIED: YAML + package.json valid; typecheck 6/6, test 6/6 (no source touched). The single em dash in
   the config is the not-contains assertion VALUE (must contain the char it tests for), not prose.
 - Also: NX1-4 redeploy succeeded (Fly v14). NEXT: NX6 (streaming AI UI; dep-gated, attempt pnpm install).
+
+## NX6 DONE (Knowledge streaming) — Vercel AI SDK
+- Added ai ^6.0 + @ai-sdk/anthropic ^3.0 to apps/web; pnpm install + the full Next build stayed green
+  (dep-gate satisfied). lib/llm.ts streamAsk(opts): Response via streamText over the Anthropic provider
+  (model tiers, key read lazily + never logged, Sentry onError capture). New auth-gated route
+  app/api/ask/route.ts (nodejs runtime, zod-validated { question }, canon-grounded system prompt mirroring
+  knowledge/actions, <CONFIRM> discipline). KnowledgeWorkspace.submit now POSTs to /api/ask and streams the
+  answer token-by-token via ReadableStream into the newest thread entry (Markdown renders progressively).
+  The score path is untouched (LLM still never scores).
+- The old askKnowledge server action remains as an unused fallback (harmless export). Close + Dojo streaming
+  is the follow-up NX6b.
+- VERIFIED: web typecheck 6/6, lint 0 warnings, test 392, full build OK (/api/ask compiled as dynamic).
+- NEXT: deploy NX5+NX6 milestone, then NX7 (observability spine; dep-gated).

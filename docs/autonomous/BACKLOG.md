@@ -35,8 +35,12 @@ only in env/Fly; NOVA stays DEMO_MODE).
         + UAE-specific, and a global no-em-dash assertion) + evals/README.md + `pnpm eval`/`eval:view`
         scripts via npx (NO devDep added, so the build stays 100% green). LIVE RUN + CI pass-rate gate are
         BLOCKED: promptfoo must call the model and CI has no ANTHROPIC_API_KEY (owner action to add it).
-- [ ] NX6  Streaming AI UI: streamAsk() via Vercel AI SDK (@ai-sdk/anthropic) in Close/Knowledge/Dojo.
-        (Adds deps: land only if green. Keep the score path never reading model text.)
+- [x] NX6  DONE (Knowledge) — Streaming AI UI via Vercel AI SDK. Added ai ^6 + @ai-sdk/anthropic ^3 to
+        apps/web (install + full build stayed green). lib/llm streamAsk() returns a text-stream Response
+        (Anthropic provider, model tiers, key lazy + never logged, Sentry onError). New auth-gated route
+        app/api/ask (zod-validated, canon-grounded) streams the answer. KnowledgeWorkspace now streams the
+        answer token-by-token via fetch + ReadableStream. Close/Dojo wiring is the follow-up (NX6b).
+        Verify: web typecheck + lint (0 warnings) + test (50) + full build OK (/api/ask compiled).
 - [ ] NX7  Observability spine: one OTel GenAI span at LlmClient.complete fanning to Sentry + Langfuse +
         cost-per-lead metadata. (No-op without the DSN env; never logs the key.)
 - [ ] NX8  shadcn/ui + Tremor analytics dashboard + TanStack Table for /leads + /approvals. (Adds deps.)
