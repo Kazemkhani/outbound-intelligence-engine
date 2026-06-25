@@ -436,3 +436,18 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   fields are optional so the live query/upsert path is unchanged and the build stays green.
 - VERIFIED: typecheck 6/6, lint clean, test 375 total pass (+7). Invariants intact (send-gate untouched,
   DRY_RUN on, scoring stays code). NEXT: NX3 (durable send-gate step.waitForEvent + resume re-checks DRY_RUN).
+
+## NX3 DONE — durable send-gate (step.waitForEvent) + resume re-checks DRY_RUN
+- packages/orchestration/src/sequencing/approval.ts (new, pure): SEND_APPROVED_EVENT ("oie/send.approved")
+  + approvalFromEvent(event, fallback) mapping the Close Room approval event to an ApprovalState; a timeout
+  (null event) falls back to "pending", so a suspended send can never auto-fire.
+- inngest.ts runEnrolment: before the send step it now suspends on step.waitForEvent(SEND_APPROVED_EVENT,
+  {match:"data.enrolmentId", timeout:"3d"}) ONLY when DRY_RUN is off and the action is not pre-approved. In
+  DRY_RUN (the default everywhere) the wait is skipped and behaviour is unchanged. On resume, executeSendStep
+  STILL re-evaluates evaluateSendGate, so DRY_RUN flipping back on yields a simulate, never a send.
+- +9 tests (approval.test.ts) prove the invariant: dryRun on + resumed-approved = simulate/allowSend false;
+  rejection event = blocked_rejected; timeout = blocked_awaiting_approval; real send only when dryRun off AND
+  approved. VERIFIED: typecheck 6/6, lint clean, test 384 total pass (+9). waitForEvent typechecks against
+  inngest ^3.27.
+- MILESTONE: NX1+NX2+NX3 (backend hardening) -> opening a PR to main, merging on green CI, deploying.
+- NEXT: NX4 (enrichment waterfall hardening: per-provider step.run + declarative throttle/concurrency).

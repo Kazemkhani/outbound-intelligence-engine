@@ -18,8 +18,11 @@ only in env/Fly; NOVA stays DEMO_MODE).
         util, matches email/domain/phone (digits-only), and honours channel scope (unscoped = global
         opt-out). executeSendStep takes recipientPhone. +7 tests. DB column migration deferred + documented
         (packages/db/PLAN.md). typecheck + lint + test green (87 orchestration).
-- [ ] NX3  Durable send-gate: Inngest step.waitForEvent approval suspend before the send step, with a
-        regression test proving resume re-checks DRY_RUN (suspend -> approve -> resume with DRY_RUN on = simulate).
+- [x] NX3  DONE — Durable send-gate. runEnrolment now step.waitForEvent on "oie/send.approved" (matched to
+        the enrolment, 3d timeout) before the send, BUT only when DRY_RUN is off and not pre-approved, so the
+        demo/dry-run path is unchanged. New pure approval.ts (SEND_APPROVED_EVENT + approvalFromEvent; timeout
+        falls back to pending = never sends). +9 tests prove resume re-checks DRY_RUN: dryRun on + approved =
+        simulate; reject = blocked; timeout = blocked. typecheck 6/6, lint clean, test 96 orchestration.
 - [ ] NX4  Enrichment waterfall hardening: wrap each provider in its own step.run + declarative
         throttle/concurrency (channel caps + quiet hours) in @oie/orchestration. Verify by typecheck + test.
 - [ ] NX5  promptfoo eval harness + a canon-grounded eval set + a turbo task + CI gate on pass-rate.
