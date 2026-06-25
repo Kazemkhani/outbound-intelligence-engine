@@ -5,6 +5,7 @@ import { advance, nextDueAt, shouldStop } from "./state-machine";
 import type { EnrolmentState, SequenceEvent, SequenceStep } from "./state-machine";
 import { executeSendStep } from "./send-step";
 import type { SendStepParams, SuppressionRecord } from "./send-step";
+import { SEND_APPROVED_EVENT, approvalFromEvent } from "./approval";
 import type { EmailSender, MessagingChannel } from "@oie/integrations";
 import { costCapStatus } from "../enrolment/cost-caps";
 import type { DailySpend, CostCaps } from "../enrolment/cost-caps";
@@ -376,6 +377,22 @@ export const runEnrolment = inngest.createFunction(
         },
       );
 
+      // Durable human approval (NX3). Only suspend when a real send is possible:
+      // in DRY_RUN (the default everywhere) we skip the wait and simulate exactly
+      // as before. When DRY_RUN is off and the action is not pre-approved, the run
+      // suspends at zero idle cost until the Close Room emits the approval event,
+      // matched to this enrolment. On resume, executeSendStep STILL re-checks the
+      // send-gate, so DRY_RUN flipping back on yields a simulate, never a send.
+      let approval: ApprovalState = payload.approval;
+      if (!payload.dryRun && approval !== "approved") {
+        const approvalEvent = await step.waitForEvent(`await-approval-step-${i}`, {
+          event: SEND_APPROVED_EVENT,
+          timeout: "3d",
+          match: "data.enrolmentId",
+        });
+        approval = approvalFromEvent(approvalEvent, payload.approval);
+      }
+
       const sendParams: SendStepParams = {
         step: sequenceStep,
         stepIndex: i,
@@ -386,7 +403,7 @@ export const runEnrolment = inngest.createFunction(
         subject: payload.subjects?.[sequenceStep.templateId],
         body: payload.bodies[sequenceStep.templateId] ?? "",
         dryRun: payload.dryRun,
-        approval: payload.approval,
+        approval,
         channelEnabled: payload.channelEnabled[sequenceStep.channel] ?? false,
         suppressions,
         emailSender: registry.emailSender,

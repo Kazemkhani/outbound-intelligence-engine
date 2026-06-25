@@ -408,3 +408,46 @@ ROI number; no secret was ever committed or echoed; the Anthropic key remained p
 Operator login at https://huscribe-revenue-os.fly.dev (gp@humai.ae). Run locally + daily playbook in
 docs/revenue-os/RUNBOOK.md. Start any doc dive at docs/README.md. Loop is stopped; re-arm by scheduling
 a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session is wanted.
+
+---
+
+## Phase 2 loop restarted (operator: "keep going dont stop") + NX1 done
+- Re-established the autonomous loop for the researched Next phase: new window in STARTED_AT.md
+  (started 2026-06-25 13:33 +04, STOP_AFTER 16:33 +04, 3h), a "Next-phase build" NX1..NX10 backlog
+  section in BACKLOG.md with safe-first ordering + dep/key/owner BLOCKED rules, cron 34254406 (fires
+  :08/:33/:58), caffeinate refreshed (pid 8111). Phase 1 is fully shipped (Fly v13).
+- NX1 DONE: DLD / Dubai Pulse SignalProvider adapter (packages/integrations/src/dld: index.ts + mapper.ts
+  + fixtures/transactions.json + dld.test.ts). Emits transaction_spike (strength = (ratio-1)/2, saturating
+  at a 3x ratio) and off_plan_launch (0.8), companyDomain null (DLD is name-keyed; evidence carries
+  developer/area/project). Never fabricates a date (invalid periodEnd -> no signal). isConfigured gates on
+  an endpoint; returns [] when unconfigured (no live calls). NOT wired to live ingestion (gated on the DB
+  migration + a spike GO). Exported DLDAdapter. VERIFIED: typecheck 6/6, lint clean, test 368 total pass
+  (+10 DLD). NOVA stays DEMO_MODE; DRY_RUN on; scoring stays code; no secrets.
+- NEXT: NX2 (Suppression -> phone + channel, pure util + tests, DB migration deferred).
+
+## NX2 DONE — Suppression to phone + per-channel scope
+- packages/orchestration/src/sequencing/send-step.ts: SuppressionRecord gained phone? + channel?
+  (optional; existing email/domain rows unchanged). isSuppressionMatch is now an EXPORTED pure util that
+  matches email, domain, and phone (compared digits-only so formatting is irrelevant) and honours
+  per-record channel scope: an unscoped record is a global opt-out (every channel), a scoped record only
+  suppresses its own channel. executeSendStep now accepts recipientPhone and passes {email, phone} to the
+  check. +7 tests (suppression.test.ts).
+- DB migration (add phone + channel columns to the Suppression model) is DEFERRED and documented; the
+  fields are optional so the live query/upsert path is unchanged and the build stays green.
+- VERIFIED: typecheck 6/6, lint clean, test 375 total pass (+7). Invariants intact (send-gate untouched,
+  DRY_RUN on, scoring stays code). NEXT: NX3 (durable send-gate step.waitForEvent + resume re-checks DRY_RUN).
+
+## NX3 DONE — durable send-gate (step.waitForEvent) + resume re-checks DRY_RUN
+- packages/orchestration/src/sequencing/approval.ts (new, pure): SEND_APPROVED_EVENT ("oie/send.approved")
+  + approvalFromEvent(event, fallback) mapping the Close Room approval event to an ApprovalState; a timeout
+  (null event) falls back to "pending", so a suspended send can never auto-fire.
+- inngest.ts runEnrolment: before the send step it now suspends on step.waitForEvent(SEND_APPROVED_EVENT,
+  {match:"data.enrolmentId", timeout:"3d"}) ONLY when DRY_RUN is off and the action is not pre-approved. In
+  DRY_RUN (the default everywhere) the wait is skipped and behaviour is unchanged. On resume, executeSendStep
+  STILL re-evaluates evaluateSendGate, so DRY_RUN flipping back on yields a simulate, never a send.
+- +9 tests (approval.test.ts) prove the invariant: dryRun on + resumed-approved = simulate/allowSend false;
+  rejection event = blocked_rejected; timeout = blocked_awaiting_approval; real send only when dryRun off AND
+  approved. VERIFIED: typecheck 6/6, lint clean, test 384 total pass (+9). waitForEvent typechecks against
+  inngest ^3.27.
+- MILESTONE: NX1+NX2+NX3 (backend hardening) -> opening a PR to main, merging on green CI, deploying.
+- NEXT: NX4 (enrichment waterfall hardening: per-provider step.run + declarative throttle/concurrency).
