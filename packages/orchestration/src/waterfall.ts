@@ -18,6 +18,15 @@ import {
 export interface WaterfallOptions {
   /** Stop early once this predicate is satisfied. Defaults to domain+industry+employees. */
   isComplete?: (company: NormalisedCompany) => boolean;
+  /**
+   * Optional durable step runner (e.g. Inngest `step.run`). When provided, each
+   * provider call is memoised under its own step id, so a replay after a transient
+   * failure re-runs ONLY the providers that have not yet completed. The wrapped
+   * function never throws (it returns a discriminated result), so the cascade's
+   * fall-through on a provider error is preserved under replay. Defaults to a
+   * direct call, leaving the pure (non-Inngest) usage identical.
+   */
+  runStep?: <T>(id: string, fn: () => Promise<T>) => Promise<T>;
 }
 
 export interface WaterfallTrace {
@@ -92,6 +101,9 @@ export async function enrichCompanyWaterfall(
   options: WaterfallOptions = {},
 ): Promise<WaterfallResult> {
   const isComplete = options.isComplete ?? defaultComplete;
+  // Default runner: call directly. When an Inngest step.run is passed, each
+  // provider is memoised under its own id and a replay re-runs only what failed.
+  const runStep = options.runStep ?? (<T>(_id: string, fn: () => Promise<T>) => fn());
   const trace: WaterfallTrace[] = [];
   const costs: CostRecord[] = [];
   const matchedBy: string[] = [];
@@ -102,24 +114,35 @@ export async function enrichCompanyWaterfall(
       trace.push({ provider: provider.name, outcome: "skipped_unconfigured" });
       continue;
     }
-    try {
-      const result = await provider.enrichCompany(query, ctx);
-      if (result.cost) {
-        costs.push(result.cost);
-        ctx.recordCost?.(result.cost);
+
+    // The wrapped call returns a value (never throws) so step.run can memoise it
+    // and the cascade still falls through to the next provider on an error.
+    const outcome = await runStep(`enrich-${provider.name}`, async () => {
+      try {
+        return { ok: true as const, result: await provider.enrichCompany(query, ctx) };
+      } catch (err) {
+        const detail = err instanceof AdapterError ? `${err.kind}: ${err.message}` : String(err);
+        return { ok: false as const, detail };
       }
-      if (result.matched && result.data) {
-        company = mergeCompany(company, result.data, provider.name);
-        matchedBy.push(provider.name);
-        trace.push({ provider: provider.name, outcome: "matched" });
-        if (isComplete(company)) break; // stop early — we own the cost ceiling
-      } else {
-        trace.push({ provider: provider.name, outcome: "no_match" });
-      }
-    } catch (err) {
-      const detail = err instanceof AdapterError ? `${err.kind}: ${err.message}` : String(err);
-      trace.push({ provider: provider.name, outcome: "error", detail });
-      // Fall through to the next provider rather than aborting the cascade.
+    });
+
+    if (!outcome.ok) {
+      trace.push({ provider: provider.name, outcome: "error", detail: outcome.detail });
+      continue; // fall through to the next provider rather than aborting
+    }
+
+    const result = outcome.result;
+    if (result.cost) {
+      costs.push(result.cost);
+      ctx.recordCost?.(result.cost);
+    }
+    if (result.matched && result.data) {
+      company = mergeCompany(company, result.data, provider.name);
+      matchedBy.push(provider.name);
+      trace.push({ provider: provider.name, outcome: "matched" });
+      if (isComplete(company)) break; // stop early — we own the cost ceiling
+    } else {
+      trace.push({ provider: provider.name, outcome: "no_match" });
     }
   }
 
