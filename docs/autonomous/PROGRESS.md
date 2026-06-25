@@ -574,3 +574,24 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   security-hardening-and-searchapi. Not deployed (it is a local/runtime tool, not part of the Fly web app).
 - REMAINING NX: only NX9 (AgentKit on Inngest) is unchecked — substantial + dep-heavy + entangled with
   orchestration; deferred to the next tick (window closing ~16:33 +04). NEXT: NX9 or self-terminate at STOP.
+
+## PHASE 2 WINDOW CLOSED + INDEPENDENT AUDIT (2026-06-25 ~16:45 +04)
+- The 3h Phase-2 window passed STOP_AFTER_EPOCH (1782390829); the autonomous cron loop (job 34254406)
+  was CronDeleted. Phase-2 shipped: NX1-NX8, NX10, NX11 (NX5 + NX7-Langfuse carry honest key-BLOCKED
+  follow-ups). NX9 (AgentKit) left UNCHECKED — see audit below for why it should NOT be auto-built.
+- INDEPENDENT 5-specialist audit (workflow wf_67937edc-37b) re-verified reality (not the self-log):
+  prod /api/health 200 live (Fly v17), build honestly green (~405 tests, typecheck/lint 7/7), crown-jewel
+  invariants real (deterministic scoring, LLM-never-scores, DRY_RUN-wins send gate all enforced + tested),
+  exemplary discipline (1 justified `as any`, 0 empty catch). Claims-honesty 92/100 — progress is REAL.
+- STRATEGIST VERDICT: AT-RISK, trust 85. "Trustworthy work, WRONG TARGET." Nearly all effort went into
+  OUTBOUND plumbing (18 adapters / ~9.1k LOC, MCP, eval harness) that no customer pulls on, while NOVA
+  (the INBOUND voice qualifier actually being sold) is demo-mode only and api.novalabs.ae returns HTTP 000
+  (down). Zero customers/pilots/leads after 11 days; GTM Phase 0 unmet. Market check: voice category is
+  crowded in 2026 and the market is WhatsApp-first (70%+ of Dubai inquiries) while live PSTN is TDRA-blocked.
+- DIRECTIVE CHANGE: stop auto-grinding the NX backlog (it is gold-plating at zero customers). Reallocate to
+  SELL-FIRST: (1) get NOVA back up + record a 90s bilingual demo clip [owner], (2) book 5-10 discovery calls
+  this week [owner], (3) sign 2 demo-mode pilots [owner], (4) test a WhatsApp-first wedge before betting on
+  PSTN voice [buildable], (5) start TDRA/caller-ID/DNCR/PDPL as a parallel owner admin track [owner].
+- NEXT (autonomous, aligned): build the WhatsApp-first qualification wedge (demo-mode, behind the existing
+  anti-corruption boundary) + a founder go-to-market execution kit (discovery list, hand-sent LinkedIn DMs,
+  tightened demo script, pilot one-pager) so founder selling time is unblocked. Pending owner direction.
