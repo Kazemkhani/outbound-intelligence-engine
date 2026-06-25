@@ -10,10 +10,12 @@ import type { SignalType } from "./types";
 export const DEFAULT_SIGNAL_TTL_DAYS: Record<SignalType, number> = {
   funding: 90, // funding rounds stay relevant for a quarter
   tech_adoption: 60,
+  off_plan_launch: 45, // a developer launch window drives portal-lead spikes for ~6 weeks
   job_change: 45,
   hiring: 30, // a job posting goes stale within a month
   news: 30,
   web_change: 21,
+  transaction_spike: 14, // a "this week" timing signal: a fresh transaction surge decays fast
 };
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Huscribe Revenue OS: Architecture Report</title>
+<style>
+  :root {
+    --bg: #0b0d11;
+    --bg2: #0e1117;
+    --card: #14171d;
+    --card2: #171b22;
+    --line: #232934;
+    --line2: #2c333f;
+    --ink: #eef1f6;
+    --body: #aab2c0;
+    --muted: #828c9c;
+    --gold: #f0c454;
+    --gold-dim: #c9a23e;
+    --teal: #4fd1b5;
+    --teal-dim: #3aa68f;
+    --rose: #e08c8c;
+    --radius: 14px;
+    --maxw: 960px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 620px at 50% -8%, rgba(240,196,84,0.10), transparent 60%),
+      radial-gradient(900px 520px at 88% 6%, rgba(79,209,181,0.07), transparent 55%),
+      linear-gradient(180deg, #0b0d11 0%, #0a0c10 100%);
+    background-attachment: fixed;
+    color: var(--body);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", sans-serif;
+    font-size: 16.5px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
+
+  /* Header */
+  header.site {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    background: rgba(11,13,17,0.78);
+    border-bottom: 1px solid var(--line);
+  }
+  header.site .bar {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 10px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .mark { display: inline-flex; align-items: center; gap: 11px; }
+  .mark .name { color: var(--ink); font-weight: 650; letter-spacing: 0.2px; font-size: 15.5px; }
+  .pill {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--gold);
+    border: 1px solid rgba(240,196,84,0.35);
+    background: rgba(240,196,84,0.07);
+    padding: 4px 11px;
+    border-radius: 999px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  /* Hero */
+  .hero { padding: 64px 0 30px; }
+  .eyebrow {
+    color: var(--teal);
+    font-size: 12.5px;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  h1.title {
+    color: var(--ink);
+    font-size: 41px;
+    line-height: 1.12;
+    margin: 0 0 16px;
+    letter-spacing: -0.6px;
+    font-weight: 700;
+  }
+  h1.title .accent { color: var(--gold); }
+  .subtitle { font-size: 18.5px; color: var(--body); max-width: 760px; margin: 0; }
+  .meta-row {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  /* Chips */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--body);
+    background: var(--card);
+    border: 1px solid var(--line2);
+    padding: 5px 11px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); flex: none; }
+  .chip.gold .dot { background: var(--gold); }
+
+  /* TOC */
+  nav.toc {
+    margin: 38px 0 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  nav.toc h2 {
+    font-size: 12px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  nav.toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 2;
+    column-gap: 34px;
+  }
+  nav.toc li {
+    break-inside: avoid;
+    margin-bottom: 9px;
+    counter-increment: toc;
+    font-size: 14.5px;
+  }
+  nav.toc ol { counter-reset: toc; }
+  nav.toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    color: var(--gold-dim);
+    font-variant-numeric: tabular-nums;
+    margin-right: 10px;
+    font-size: 12.5px;
+  }
+  nav.toc a { color: var(--body); text-decoration: none; border-bottom: 1px solid transparent; transition: color .15s; }
+  nav.toc a:hover { color: var(--gold); }
+
+  /* Sections */
+  section { padding: 40px 0 8px; scroll-margin-top: 70px; }
+  .sec-num {
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  h2.sec {
+    color: var(--ink);
+    font-size: 27px;
+    margin: 6px 0 6px;
+    letter-spacing: -0.3px;
+    font-weight: 680;
+  }
+  h3 {
+    color: var(--ink);
+    font-size: 18.5px;
+    margin: 30px 0 10px;
+    font-weight: 640;
+  }
+  h4 {
+    color: var(--ink);
+    font-size: 15.5px;
+    margin: 22px 0 6px;
+    font-weight: 640;
+    letter-spacing: 0.2px;
+  }
+  p { margin: 13px 0; }
+  a.inline { color: var(--teal); text-decoration: none; border-bottom: 1px solid rgba(79,209,181,0.3); }
+  strong { color: var(--ink); font-weight: 640; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: #10141b;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1px 6px;
+    color: #d6deea;
+  }
+  .lead { font-size: 17.5px; color: var(--body); }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--line2), transparent); margin: 8px 0; border: 0; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin: 20px 0;
+  }
+  .card.tight { padding: 18px 20px; }
+
+  /* Metric cards */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 24px 0 8px;
+  }
+  .metric {
+    background: linear-gradient(180deg, var(--card2), var(--card));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+  }
+  .metric .v { font-size: 27px; color: var(--gold); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+  .metric .v.teal { color: var(--teal); }
+  .metric .l { font-size: 12.5px; color: var(--muted); margin-top: 7px; letter-spacing: 0.2px; }
+
+  /* Callouts */
+  .callout {
+    border-left: 3px solid var(--gold);
+    background: linear-gradient(90deg, rgba(240,196,84,0.06), rgba(240,196,84,0.01));
+    border-radius: 0 12px 12px 0;
+    padding: 16px 20px;
+    margin: 22px 0;
+  }
+  .callout.teal { border-left-color: var(--teal); background: linear-gradient(90deg, rgba(79,209,181,0.06), rgba(79,209,181,0.01)); }
+  .callout.warn { border-left-color: var(--rose); background: linear-gradient(90deg, rgba(224,140,140,0.06), rgba(224,140,140,0.01)); }
+  .callout .tag {
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.teal .tag { color: var(--teal); }
+  .callout.warn .tag { color: var(--rose); }
+  .callout p { margin: 4px 0; font-size: 15px; }
+
+  /* Tables */
+  .table-scroll { overflow-x: auto; margin: 20px 0; border-radius: var(--radius); border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 540px; }
+  thead th {
+    text-align: left;
+    color: var(--ink);
+    font-weight: 620;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 12px 15px;
+    background: #11151c;
+    border-bottom: 1px solid var(--line2);
+    white-space: nowrap;
+  }
+  tbody td { padding: 11px 15px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(even) td { background: rgba(255,255,255,0.012); }
+  td code, th code { white-space: nowrap; }
+  .yes { color: var(--teal); font-weight: 600; }
+  .no { color: var(--rose); font-weight: 600; }
+  .mono-cell { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12.5px; color: #cdd6e2; }
+
+  /* Badges inside text */
+  .badge { display: inline-block; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line2); color: var(--body); background: var(--card); }
+  .badge.gold { color: var(--gold); border-color: rgba(240,196,84,0.4); }
+  .badge.teal { color: var(--teal); border-color: rgba(79,209,181,0.4); }
+  .badge.rose { color: var(--rose); border-color: rgba(224,140,140,0.4); }
+
+  /* Diagram shells */
+  .diagram {
+    background:
+      radial-gradient(600px 240px at 50% 0%, rgba(79,209,181,0.05), transparent 70%),
+      var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin: 22px 0;
+    overflow-x: auto;
+  }
+  .diagram .cap {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    margin: 0 0 16px;
+    text-transform: uppercase;
+  }
+  .diagram svg { display: block; width: 100%; height: auto; }
+
+  /* ASCII / pipeline blocks */
+  .flow {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #cdd6e2;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 22px 0;
+  }
+  .flow .g { color: var(--gold); }
+  .flow .t { color: var(--teal); }
+  .flow .m { color: var(--muted); }
+
+  ul.clean, ol.clean { padding-left: 22px; margin: 12px 0; }
+  ul.clean li, ol.clean li { margin: 7px 0; }
+  ul.clean li::marker { color: var(--gold-dim); }
+  ol.clean li::marker { color: var(--gold-dim); font-variant-numeric: tabular-nums; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* Footer */
+  footer {
+    margin-top: 56px;
+    border-top: 1px solid var(--line);
+    padding: 34px 0 60px;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  footer .stack { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+
+  @media (max-width: 720px) {
+    h1.title { font-size: 31px; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    nav.toc ol { columns: 1; }
+    .two-col { grid-template-columns: 1fr; }
+    .hero { padding: 40px 0 18px; }
+  }
+
+  @media print {
+    body { background: #fff; color: #1a1d24; font-size: 11pt; }
+    header.site, nav.toc { position: static; }
+    .pill, .chip, .badge { border-color: #bbb; }
+    .card, .diagram, .flow, .metric, .table-scroll { border-color: #ccc; box-shadow: none; break-inside: avoid; }
+    h1.title, h2.sec, h3, h4, strong { color: #000; }
+    .callout { background: #f6f6f6; }
+    a.inline, nav.toc a { color: #1a1d24; }
+    section { padding: 18px 0; }
+    .diagram { background: #fafafa; }
+    .flow { color: #222; background: #fafafa; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="bar">
+    <span class="mark">
+      <svg width="26" height="26" viewBox="0 0 32 32" role="img" aria-label="Huscribe mark">
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <path d="M10 8 v16 M10 16 h12 M22 8 v16" stroke="#f0c454" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span class="name">Huscribe Revenue OS</span>
+    </span>
+    <span class="pill">Architecture Report</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Outbound Intelligence Engine</div>
+    <h1 class="title">A revenue control plane, <span class="accent">built by an autonomous agent loop</span></h1>
+    <p class="subtitle">An expert-grade walkthrough of how Huscribe Revenue OS is built and how it runs: a TypeScript monorepo with a deterministic ICP scoring engine, durable Inngest orchestration, anti-corruption vendor adapters, and a dogfooded voice agent. Crucially, the software itself was assembled by a Claude Code native multi-agent orchestration, with no third-party agent framework.</p>
+    <div class="meta-row">
+      <span class="chip gold"><span class="dot"></span>Next.js 15</span>
+      <span class="chip"><span class="dot"></span>React 19</span>
+      <span class="chip"><span class="dot"></span>Prisma 6.2</span>
+      <span class="chip"><span class="dot"></span>PostgreSQL</span>
+      <span class="chip"><span class="dot"></span>Inngest 3.27</span>
+      <span class="chip"><span class="dot"></span>Anthropic SDK</span>
+      <span class="chip"><span class="dot"></span>LiveKit (NOVA)</span>
+      <span class="chip gold"><span class="dot"></span>Fly.io v12</span>
+      <span class="chip"><span class="dot"></span>Auth.js v5</span>
+    </div>
+  </div>
+
+  <nav class="toc" aria-label="Table of contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#overview">Executive overview</a></li>
+      <li><a href="#build">Build-time multi-agent orchestration</a></li>
+      <li><a href="#frameworks">Framework comparison</a></li>
+      <li><a href="#runtime">Product runtime architecture</a></li>
+      <li><a href="#nova">Voice and NOVA</a></li>
+      <li><a href="#data">Data model</a></li>
+      <li><a href="#deploy">Deployment and security</a></li>
+      <li><a href="#adr">Architecture decisions</a></li>
+      <li><a href="#scope">Honest scope and caveats</a></li>
+      <li><a href="#stack">Tech stack and footer</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. EXECUTIVE OVERVIEW -->
+  <section id="overview">
+    <div class="sec-num">SECTION 01</div>
+    <h2 class="sec">Executive overview</h2>
+    <p class="lead">Huscribe Revenue OS (internally the Outbound Intelligence Engine, package name <code>oie</code>) is an end-to-end sales control plane: a private TypeScript ESM monorepo that discovers and enriches accounts, qualifies them by real conversation through a voice agent, scores them deterministically, and routes the best ones into a human-gated close. It is a single operator-facing product, live in production behind operator login.</p>
+
+    <p>This report answers two distinct questions that are easy to conflate. The first is <strong>how the running product is architected</strong>: its packages, its data model, its orchestration, its deployment. The second is the more interesting and more often misunderstood one: <strong>how the software was built</strong>, because it was assembled largely autonomously by an AI agent over an eight hour window.</p>
+
+    <div class="callout">
+      <span class="tag">The headline answer: did we use LangGraph?</span>
+      <p>No. The build used <strong>no third-party agent framework</strong>. Not LangGraph, not LangChain, not LlamaIndex, not CrewAI, not AutoGen, not OpenAI Assistants or Swarm. There is no Python agent graph anywhere. The orchestration was <strong>Claude Code native</strong>, built from two primitives: a cron-driven autonomous loop that re-invoked the top-level agent on a fixed cadence, and the Claude Code Workflow tool, a deterministic JavaScript orchestrator whose nodes are full tool-using Claude sub-agents. Control flow was plain deterministic code, never model-driven routing.</p>
+    </div>
+
+    <p>So there are two orchestration stories that sit on top of each other. The product <em>runtime</em> uses Inngest for durable workflow execution (retries, multi-day delays, resume-after-deploy). The product <em>build</em> used the two Claude Code native layers described in Section 2. These are independent: Inngest never built anything, and the agent loop is not part of the shipped product.</p>
+
+    <div class="metrics">
+      <div class="metric"><div class="v">5</div><div class="l">internal packages plus one app</div></div>
+      <div class="metric"><div class="v teal">18</div><div class="l">verified build cycles</div></div>
+      <div class="metric"><div class="v">~15</div><div class="l">PRs merged to main</div></div>
+      <div class="metric"><div class="v teal">v12</div><div class="l">live Fly release</div></div>
+    </div>
+
+    <div class="callout warn">
+      <span class="tag">Accuracy correction held throughout this report</span>
+      <p>The Prisma datasource provider is the generic <code>postgresql</code> with <code>url = env("DATABASE_URL")</code>. There is no Neon driver adapter, no <code>directUrl</code>, no pgbouncer config in <code>schema.prisma</code>, and <code>.env.example</code> defaults to <code>localhost:5432</code> (Colima plus Docker). Neon is a plausible deployed target but is <strong>not evidenced</strong> in the schema or env files. This report treats the stack as provider-agnostic PostgreSQL on Prisma 6.2.</p>
+    </div>
+  </section>
+
+  <!-- 2. BUILD-TIME ORCHESTRATION -->
+  <section id="build">
+    <div class="sec-num">SECTION 02</div>
+    <h2 class="sec">Build-time multi-agent orchestration</h2>
+    <p class="lead">This is the architecturally novel part. The system was built by composing two Claude Code native orchestration layers: a durable autonomous loop for cadence and resumability, and the Workflow tool for deterministic parallel sub-agent fan-outs inside individual firings.</p>
+
+    <h3>Layer 1: the autonomous cron loop</h3>
+    <p>The operator left the machine running, kept awake with the macOS <code>caffeinate</code> tool, and authorized full autonomy for roughly eight hours. A session-only cron job (created with Claude Code's <code>CronCreate</code>, id <code>7e46fd64</code>, firing at minutes 8, 33, and 58, about every 25 minutes) re-invoked the <strong>top-level</strong> Claude agent with a fixed AUTONOMOUS BUILD LOOP prompt. Each firing was one bounded, verified increment.</p>
+
+    <p>Every firing followed a contract file, <code>docs/autonomous/LOOP.md</code>. The contract is the determinism: it removes the need for the model to improvise the meta-procedure.</p>
+
+    <div class="card tight">
+      <ol class="clean">
+        <li><strong>Check the clock.</strong> Read <code>STARTED_AT.md</code>; if now is at or past <code>STOP_AFTER_EPOCH</code> (or the backlog is fully checked), self-terminate.</li>
+        <li><strong>Orient.</strong> Read <code>BACKLOG.md</code> and the tail of <code>PROGRESS.md</code>.</li>
+        <li><strong>Work.</strong> Take the next 1 to 3 backlog items; do one verified increment; use a Workflow for substantial or parallel work.</li>
+        <li><strong>Verify before done.</strong> Typecheck, lint, test, or a Next.js build, plus live curl checks for deploys. Show evidence.</li>
+        <li><strong>Ship.</strong> Commit and push to the working branch; at a milestone open or merge a PR to main if checks pass.</li>
+        <li><strong>Record.</strong> Tick the backlog; append evidence to <code>PROGRESS.md</code>.</li>
+        <li><strong>Stop this firing.</strong> Do not spin; the next tick continues.</li>
+      </ol>
+    </div>
+
+    <h4>File-based blackboard state</h4>
+    <p>Memory between firings is a durable Markdown blackboard on disk. Nothing relies on a single long-lived process or an in-memory context that a compaction would erase.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>File</th><th>Role</th><th>Property it provides</th></tr></thead>
+        <tbody>
+          <tr><td class="mono-cell">LOOP.md</td><td>The firing contract</td><td>Determinism across firings</td></tr>
+          <tr><td class="mono-cell">BACKLOG.md</td><td>The plan plus a recurring cycle log</td><td>Shared goal state</td></tr>
+          <tr><td class="mono-cell">PROGRESS.md</td><td>Append-only evidence per firing</td><td>Auditable history, resumability</td></tr>
+          <tr><td class="mono-cell">STARTED_AT.md</td><td>The 8 hour window and stop epoch</td><td>Self-termination boundary</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>This blackboard is exactly what made the loop <strong>resumable across firings and context compactions</strong>, and able to <strong>self-terminate</strong> with <code>CronDelete</code> at the window end. Cron job <code>7e46fd64</code> did in fact delete itself at the boundary, with a final summary appended to <code>PROGRESS.md</code>. This is a scheduled-re-invocation pattern, a durable agent loop, and it is distinct from the Workflow tool below.</p>
+
+    <h3>Layer 2: the Workflow tool</h3>
+    <p>Inside firings that needed substantial or parallel work, the agent used Claude Code's Workflow primitive: a deterministic JavaScript orchestration script. Its hooks are <code>agent(prompt, opts)</code>, <code>parallel(thunks)</code> (a barrier), <code>pipeline(items, ...stages)</code> (no barrier, stage-per-item), <code>phase(title)</code>, and <code>log(msg)</code>.</p>
+    <p>The crucial properties: <code>agent()</code> returns the sub-agent's text, or a <strong>JSON-schema-validated object</strong> when a schema is supplied (structured output is forced via a <code>StructuredOutput</code> tool the sub-agent must call, and the model retries until valid). Each node is a <strong>full Claude sub-agent</strong> with tool access (Read, Write, Bash, Grep, Glob, WebSearch, MCP). The control flow, the fan-out, the loops, the conditionals, the barriers, is plain deterministic JS. Concurrency is capped at about <code>min(16, cpu cores minus 2)</code>; runs are journaled and resumable.</p>
+
+    <div class="two-col">
+      <div class="card tight">
+        <h4 style="margin-top:0">Where it was used (a)</h4>
+        <p style="font-size:14.5px">A 24-agent docs run, organized in phases: 4 parallel research agents, then 10 doc-writer agents, then 7 module-guide agents writing per-folder AGENTS.md, then 3 strategy agents. The script <code>wf-docs-md-strategy.js</code> in <code>docs/autonomous/</code> is the artifact.</p>
+      </div>
+      <div class="card tight">
+        <h4 style="margin-top:0">Where it was used (b)</h4>
+        <p style="font-size:14.5px">Producing both HTML reports as a <strong>gather to compose to verify to fix</strong> shape: gather facts, compose the artifact, run separate adversarial reviewer agents to fact-check and design-check it, then a fix agent applies the returned issues.</p>
+      </div>
+    </div>
+
+    <h4>Patterns applied</h4>
+    <p>Parallel fan-out with a barrier; pipeline (stage-per-item, no barrier); explicit phases; structured outputs via JSON schema; and <strong>adversarial, independent verification</strong>, where separate reviewer sub-agents fact-check and design-check the artifact and return issues for a fix agent to apply.</p>
+
+    <h3>Verification discipline (woven through both layers)</h3>
+    <p>Nothing was called done without evidence: typecheck, lint, test, or a Next.js build, plus live curl checks for deploys. Every PR was gated on CI, a <code>verify</code> job (<code>turbo run typecheck lint test build</code>) plus a <strong>gitleaks</strong> secret scan, before merge. Generated artifacts were adversarially reviewed by independent sub-agents. A secret scan ran before each commit.</p>
+
+    <div class="callout teal">
+      <span class="tag">Evidence anchor</span>
+      <p>15 PRs merged to main across 18 cycles, every one CI-gated. The CI files are real: <code>.github/workflows/ci.yml</code> (the verify job) and <code>.github/workflows/secret-scan.yml</code> (gitleaks-action v2, with <code>pull-requests: read</code> so it can list PR commits).</p>
+    </div>
+
+    <div class="diagram">
+      <p class="cap">Diagram 1: build-time multi-agent orchestration topology</p>
+      <svg viewBox="0 0 900 520" role="img" aria-label="Build-time orchestration topology diagram">
+        <defs>
+          <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#4fd1b5"/>
+          </marker>
+          <marker id="arrowg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#f0c454"/>
+          </marker>
+        </defs>
+
+        <!-- Layer 1 label -->
+        <text x="20" y="30" fill="#f0c454" font-family="monospace" font-size="12" letter-spacing="1.5">LAYER 1: AUTONOMOUS CRON LOOP</text>
+
+        <!-- Cron -->
+        <rect x="24" y="48" width="180" height="70" rx="10" fill="#14171d" stroke="#c9a23e"/>
+        <text x="114" y="76" fill="#eef1f6" font-family="monospace" font-size="13" text-anchor="middle">cron 7e46fd64</text>
+        <text x="114" y="96" fill="#828c9c" font-family="monospace" font-size="11" text-anchor="middle">fires ~every 25 min</text>
+
+        <!-- re-invoke arrow -->
+        <path d="M204,83 H300" stroke="#f0c454" stroke-width="1.6" fill="none" marker-end="url(#arrowg)"/>
+        <text x="252" y="74" fill="#f0c454" font-family="monospace" font-size="10" text-anchor="middle">re-invoke</text>
+
+        <!-- Top-level agent -->
+        <rect x="300" y="40" width="230" height="86" rx="10" fill="#171b22" stroke="#2c333f"/>
+        <text x="415" y="66" fill="#eef1f6" font-family="monospace" font-size="13" text-anchor="middle">TOP-LEVEL CLAUDE AGENT</text>
+        <text x="415" y="86" fill="#aab2c0" font-family="monospace" font-size="10.5" text-anchor="middle">reads LOOP.md contract</text>
+        <text x="415" y="104" fill="#828c9c" font-family="monospace" font-size="10" text-anchor="middle">one verified increment</text>
+
+        <!-- Blackboard -->
+        <rect x="600" y="40" width="276" height="86" rx="10" fill="#14171d" stroke="#3aa68f"/>
+        <text x="738" y="62" fill="#4fd1b5" font-family="monospace" font-size="11" text-anchor="middle">FILE BLACKBOARD (durable)</text>
+        <text x="738" y="82" fill="#aab2c0" font-family="monospace" font-size="9.5" text-anchor="middle">BACKLOG.md  PROGRESS.md</text>
+        <text x="738" y="98" fill="#aab2c0" font-family="monospace" font-size="9.5" text-anchor="middle">STARTED_AT.md  LOOP.md</text>
+        <text x="738" y="115" fill="#828c9c" font-family="monospace" font-size="9" text-anchor="middle">resumable + self-terminating</text>
+
+        <!-- agent <-> blackboard -->
+        <path d="M530,83 H600" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+        <path d="M600,103 H530" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)" transform="translate(0,16)"/>
+        <text x="565" y="118" fill="#828c9c" font-family="monospace" font-size="9" text-anchor="middle">read/write</text>
+
+        <!-- spawn down -->
+        <path d="M415,126 V168" stroke="#f0c454" stroke-width="1.6" fill="none" marker-end="url(#arrowg)"/>
+        <text x="470" y="152" fill="#f0c454" font-family="monospace" font-size="10" text-anchor="middle">spawn Workflow</text>
+
+        <!-- Layer 2 box -->
+        <rect x="24" y="178" width="852" height="312" rx="12" fill="#0e1117" stroke="#232934"/>
+        <text x="40" y="202" fill="#4fd1b5" font-family="monospace" font-size="12" letter-spacing="1.5">LAYER 2: WORKFLOW TOOL (deterministic JS orchestrator, schema-validated nodes)</text>
+
+        <!-- phase 1: parallel research -->
+        <text x="48" y="230" fill="#828c9c" font-family="monospace" font-size="10">phase(): parallel() barrier</text>
+        <rect x="48" y="238" width="150" height="44" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <text x="123" y="258" fill="#eef1f6" font-family="monospace" font-size="10.5" text-anchor="middle">4x research agent</text>
+        <text x="123" y="273" fill="#828c9c" font-family="monospace" font-size="9" text-anchor="middle">WebSearch + schema</text>
+
+        <!-- barrier arrow -->
+        <path d="M198,260 H250" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- phase 2: doc writers -->
+        <rect x="250" y="238" width="150" height="44" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <text x="325" y="258" fill="#eef1f6" font-family="monospace" font-size="10.5" text-anchor="middle">10x doc writer</text>
+        <text x="325" y="273" fill="#828c9c" font-family="monospace" font-size="9" text-anchor="middle">Read repo + Write</text>
+
+        <path d="M400,260 H452" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- phase 3: module guides -->
+        <rect x="452" y="238" width="150" height="44" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <text x="527" y="258" fill="#eef1f6" font-family="monospace" font-size="10.5" text-anchor="middle">7x module guide</text>
+        <text x="527" y="273" fill="#828c9c" font-family="monospace" font-size="9" text-anchor="middle">per-folder AGENTS.md</text>
+
+        <path d="M602,260 H654" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- phase 4: strategy -->
+        <rect x="654" y="238" width="150" height="44" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <text x="729" y="258" fill="#eef1f6" font-family="monospace" font-size="10.5" text-anchor="middle">3x strategy agent</text>
+        <text x="729" y="273" fill="#828c9c" font-family="monospace" font-size="9" text-anchor="middle">docs/strategy/*</text>
+
+        <text x="426" y="306" fill="#828c9c" font-family="monospace" font-size="10" text-anchor="middle">the 24-agent docs run</text>
+
+        <!-- separator -->
+        <line x1="48" y1="324" x2="852" y2="324" stroke="#232934" stroke-dasharray="3 4"/>
+
+        <!-- report pipeline -->
+        <text x="48" y="350" fill="#828c9c" font-family="monospace" font-size="10">report run: gather -&gt; compose -&gt; verify -&gt; fix</text>
+
+        <rect x="48" y="362" width="150" height="50" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <text x="123" y="392" fill="#eef1f6" font-family="monospace" font-size="11" text-anchor="middle">gather facts</text>
+        <path d="M198,387 H250" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+
+        <rect x="250" y="362" width="150" height="50" rx="8" fill="#14171d" stroke="#2c333f"/>
+        <text x="325" y="392" fill="#eef1f6" font-family="monospace" font-size="11" text-anchor="middle">compose HTML</text>
+        <path d="M400,387 H452" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+
+        <rect x="452" y="362" width="150" height="50" rx="8" fill="#14171d" stroke="#e08c8c"/>
+        <text x="527" y="386" fill="#e08c8c" font-family="monospace" font-size="11" text-anchor="middle">adversarial</text>
+        <text x="527" y="401" fill="#aab2c0" font-family="monospace" font-size="9.5" text-anchor="middle">reviewer agents</text>
+        <path d="M602,387 H654" stroke="#4fd1b5" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+
+        <rect x="654" y="362" width="150" height="50" rx="8" fill="#14171d" stroke="#3aa68f"/>
+        <text x="729" y="392" fill="#4fd1b5" font-family="monospace" font-size="11" text-anchor="middle">fix agent</text>
+
+        <!-- verify gate -->
+        <rect x="48" y="432" width="756" height="44" rx="8" fill="#0b0d11" stroke="#c9a23e"/>
+        <text x="426" y="450" fill="#f0c454" font-family="monospace" font-size="11" text-anchor="middle">VERIFICATION GATE  (every increment)</text>
+        <text x="426" y="467" fill="#aab2c0" font-family="monospace" font-size="9.5" text-anchor="middle">typecheck / lint / test / Next build  +  live curl  +  CI verify job  +  gitleaks before merge</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 3. FRAMEWORK COMPARISON -->
+  <section id="frameworks">
+    <div class="sec-num">SECTION 03</div>
+    <h2 class="sec">Framework comparison</h2>
+    <p class="lead">An honest positioning. The Claude Code Workflow tool is conceptually in the same family as LangGraph: deterministic, code-defined orchestration over LLM nodes with structured I/O and journaling or resume. It is a different runtime, and its nodes are tool-using Claude agents rather than graph-library nodes. None of the frameworks below were used in this build.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Dimension</th><th>Claude Code Workflow tool</th><th>LangGraph</th><th>CrewAI</th><th>AutoGen</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Control flow</strong></td>
+            <td>Plain deterministic JS (fan-out, loops, conditionals, barriers)</td>
+            <td>Stateful graph: nodes and edges, conditional routing, cycles</td>
+            <td>Role / task / crew abstraction, sequential or hierarchical process</td>
+            <td>Conversational, message-passing between agents</td>
+          </tr>
+          <tr>
+            <td><strong>State model</strong></td>
+            <td>JS variables plus the file blackboard; structured outputs via JSON schema</td>
+            <td>Shared typed state object threaded through the graph</td>
+            <td>Task context and shared memory passed across tasks</td>
+            <td>Conversation history shared among participants</td>
+          </tr>
+          <tr>
+            <td><strong>Node type</strong></td>
+            <td>A full Claude sub-agent with tools (Read, Write, Bash, Grep, Glob, WebSearch, MCP)</td>
+            <td>Any callable: function or LLM call you wire in</td>
+            <td>An LLM agent bound to a role and tools</td>
+            <td>An LLM-backed conversational agent</td>
+          </tr>
+          <tr>
+            <td><strong>Persistence / resume</strong></td>
+            <td>Runs journaled and resumable; loop adds durable Markdown blackboard</td>
+            <td>Checkpointers persist graph state, supports resume</td>
+            <td>Varies by integration; memory add-ons</td>
+            <td>Varies; conversation state is the durable artifact</td>
+          </tr>
+          <tr>
+            <td><strong>Routing decision</strong></td>
+            <td>Code decides; not model-driven for control flow</td>
+            <td>Code-defined edges, plus conditional routing functions</td>
+            <td>Process strategy plus optional manager agent</td>
+            <td>Often model-driven via the conversation</td>
+          </tr>
+          <tr>
+            <td><strong>Where it shines</strong></td>
+            <td>Tool-using coding agents under deterministic control with schema-validated outputs</td>
+            <td>General stateful agent graphs with explicit branching and cycles</td>
+            <td>Fast role-based team setups for well-shaped tasks</td>
+            <td>Open-ended multi-agent dialogue and emergent collaboration</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <span class="tag">Explicit: what was and was not used</span>
+      <p><strong>Used:</strong> Claude Code native primitives only. The cron-driven autonomous loop (Layer 1) and the Workflow tool (Layer 2), both Anthropic / Claude Code native.</p>
+      <p><strong>Not used at any point:</strong> LangGraph, LangChain, LlamaIndex, AutoGen, CrewAI, OpenAI Assistants or Swarm, or any other third-party agent framework. There is no Python agent graph, and control flow was deterministic code, not model-driven routing.</p>
+    </div>
+
+    <p>The fair summary: if you already think in LangGraph terms, the Workflow tool will feel familiar (deterministic code orchestrating LLM nodes, structured I/O, resumability). The difference is that each node here is a sandboxed Claude agent with the full Claude Code tool surface, and the durable cadence came from an external cron re-invoking the top-level agent rather than from a long-running graph process. The frameworks above are all capable, mature tools; they were simply not the chosen path here.</p>
+  </section>
+
+  <!-- 4. PRODUCT RUNTIME ARCHITECTURE -->
+  <section id="runtime">
+    <div class="sec-num">SECTION 04</div>
+    <h2 class="sec">Product runtime architecture</h2>
+    <p class="lead">A private TypeScript ESM monorepo using pnpm workspaces (pnpm 10.33.0, Node 20.11 or newer) with Turborepo as the task runner. Workspace globs are <code>packages/*</code> and <code>apps/*</code>: exactly 5 internal packages plus one Next.js 15 app.</p>
+
+    <h3>The monorepo and its 5 packages</h3>
+    <p>Internal packages are consumed as <strong>raw TypeScript source</strong> via the <code>"."</code> export pointing at <code>./src/index.ts</code>; <code>noEmit</code> is set everywhere, and <code>tsx</code> plus Vitest transpile. Turbo orchestrates typecheck, lint, test, and build with <code>dependsOn ^build</code> and <code>^typecheck</code> for topological ordering; <code>pnpm verify</code> runs all four. The shared <code>tsconfig.base.json</code> is strict ES2022 / ESNext / Bundler with <code>verbatimModuleSyntax</code>, <code>isolatedModules</code>, and <code>noUncheckedIndexedAccess</code>.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Package</th><th>Responsibility</th><th>Depends on</th><th>Notable</th></tr></thead>
+        <tbody>
+          <tr><td><code>@oie/core</code></td><td>Domain types, Zod schemas, the deterministic scoring engine</td><td class="mono-cell">zod only</td><td>Vendor-free, persistence-free; only ranks, never acts</td></tr>
+          <tr><td><code>@oie/db</code></td><td>Prisma data layer, migrations, seed</td><td class="mono-cell">@oie/core, @prisma/client</td><td><code>postinstall</code> runs <code>prisma generate</code></td></tr>
+          <tr><td><code>@oie/integrations</code></td><td>Anti-corruption vendor adapters behind stable contracts</td><td class="mono-cell">@oie/core, zod</td><td>No vendor SDK deps at package level</td></tr>
+          <tr><td><code>@oie/orchestration</code></td><td>The brain: waterfall, cost ceiling, send-gate, Inngest functions</td><td class="mono-cell">core, db, integrations, inngest</td><td>Top of the internal dependency graph</td></tr>
+          <tr><td><code>@oie/config</code></td><td>Env loading and validation, fails fast on missing keys</td><td class="mono-cell">zod only</td><td>Leaf package, no workspace deps</td></tr>
+          <tr><td><code>apps/web</code></td><td>Next.js 15 control plane (the UI and API)</td><td class="mono-cell">all four non-config packages</td><td>next 15, react 19, next-auth v5, inngest, Sentry</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="diagram">
+      <p class="cap">Package dependency sketch (topological)</p>
+      <div class="flow"><span class="m">leaf                  domain                persistence             adapters</span>
+<span class="t">@oie/config</span>           <span class="g">@oie/core</span>  ─────────►  <span class="t">@oie/db</span>  ──────►  <span class="t">@oie/integrations</span>
+  (zod)                 (zod)                 (prisma)                 (zod)
+                          │                      │                        │
+                          └──────────────┬───────┴────────────────────────┘
+                                         ▼
+                              <span class="g">@oie/orchestration</span>  ◄── inngest 3.27
+                              (waterfall + send-gate + Inngest fns)
+                                         │
+                                         ▼
+                                   <span class="t">apps/web</span>  (Next.js 15 control plane)
+                       next 15 · react 19 · next-auth v5 · @sentry/nextjs · inngest</div>
+    </div>
+
+    <h3>The flywheel pipeline</h3>
+    <p>The product is a flywheel: every voice call makes the master database more valuable. That is the verify-by-conversation moat.</p>
+
+    <div class="diagram">
+      <p class="cap">Diagram 2: the product flywheel pipeline</p>
+      <svg viewBox="0 0 900 300" role="img" aria-label="Product flywheel pipeline diagram">
+        <defs>
+          <marker id="fa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f0c454"/></marker>
+        </defs>
+        <!-- stages -->
+        <g font-family="monospace">
+          <rect x="20" y="60" width="120" height="64" rx="10" fill="#14171d" stroke="#2c333f"/>
+          <text x="80" y="88" fill="#eef1f6" font-size="12" text-anchor="middle">DISCOVER</text>
+          <text x="80" y="106" fill="#828c9c" font-size="9" text-anchor="middle">Places / Apollo</text>
+
+          <rect x="172" y="60" width="120" height="64" rx="10" fill="#14171d" stroke="#2c333f"/>
+          <text x="232" y="84" fill="#eef1f6" font-size="12" text-anchor="middle">ENRICH</text>
+          <text x="232" y="100" fill="#828c9c" font-size="9" text-anchor="middle">vendor waterfall</text>
+          <text x="232" y="113" fill="#828c9c" font-size="9" text-anchor="middle">we own cost ceiling</text>
+
+          <rect x="324" y="60" width="120" height="64" rx="10" fill="#14171d" stroke="#3aa68f"/>
+          <text x="384" y="84" fill="#4fd1b5" font-size="12" text-anchor="middle">NOVA VOICE</text>
+          <text x="384" y="100" fill="#828c9c" font-size="9" text-anchor="middle">qualify by</text>
+          <text x="384" y="113" fill="#828c9c" font-size="9" text-anchor="middle">conversation</text>
+
+          <rect x="476" y="60" width="130" height="64" rx="10" fill="#14171d" stroke="#c9a23e"/>
+          <text x="541" y="84" fill="#f0c454" font-size="12" text-anchor="middle">MASTER DB</text>
+          <text x="541" y="100" fill="#828c9c" font-size="9" text-anchor="middle">findings enrich</text>
+          <text x="541" y="113" fill="#828c9c" font-size="9" text-anchor="middle">CallSession/Finding</text>
+
+          <rect x="638" y="60" width="120" height="64" rx="10" fill="#14171d" stroke="#2c333f"/>
+          <text x="698" y="84" fill="#eef1f6" font-size="12" text-anchor="middle">SCORE</text>
+          <text x="698" y="100" fill="#828c9c" font-size="9" text-anchor="middle">deterministic</text>
+          <text x="698" y="113" fill="#828c9c" font-size="9" text-anchor="middle">tier A/B/C/D</text>
+
+          <rect x="790" y="60" width="92" height="64" rx="10" fill="#14171d" stroke="#e08c8c"/>
+          <text x="836" y="84" fill="#e08c8c" font-size="11" text-anchor="middle">CLOSE</text>
+          <text x="836" y="100" fill="#828c9c" font-size="9" text-anchor="middle">human</text>
+          <text x="836" y="113" fill="#828c9c" font-size="9" text-anchor="middle">gated</text>
+
+          <!-- arrows -->
+          <path d="M140,92 H172" stroke="#f0c454" stroke-width="1.6" marker-end="url(#fa)"/>
+          <path d="M292,92 H324" stroke="#f0c454" stroke-width="1.6" marker-end="url(#fa)"/>
+          <path d="M444,92 H476" stroke="#f0c454" stroke-width="1.6" marker-end="url(#fa)"/>
+          <path d="M606,92 H638" stroke="#f0c454" stroke-width="1.6" marker-end="url(#fa)"/>
+          <path d="M758,92 H790" stroke="#f0c454" stroke-width="1.6" marker-end="url(#fa)"/>
+
+          <!-- feedback loop -->
+          <path d="M836,124 V200 H80 V124" stroke="#3aa68f" stroke-width="1.5" fill="none" stroke-dasharray="5 5" marker-end="url(#fa)"/>
+          <text x="450" y="220" fill="#4fd1b5" font-size="11" text-anchor="middle">the flywheel: every consented call makes the master DB more valuable (verify-by-conversation moat)</text>
+        </g>
+      </svg>
+    </div>
+
+    <h3>Deterministic scoring: the LLM never scores</h3>
+    <p>The crown jewel is in <code>@oie/core</code>: a pure, deterministic, explainable ICP scoring engine. <code>scoreLead(subject, icp, now)</code> turns a vendor-agnostic <code>ScoringSubject</code> plus a Zod-validated <code>IcpProfile</code> into a <code>ScoreResult</code> of fit, intent, composite, and tier, with a full rationale. <strong>Code computes every number. The LLM never computes, adjusts, or emits fit, intent, composite, or a tier</strong>; models only extract and reason over source text.</p>
+    <ul class="clean">
+      <li><strong>Fit</strong> is a weight-normalised average over up to eight firmographic, technographic, people, and keyword dimensions, each scored 0 to 100 with a <code>known</code> flag, so missing data scores zero and lowers coverage rather than being guessed.</li>
+      <li><strong>Intent</strong> groups signals per ICP criterion, applies linear time-decay from detection to expiry, combines multiples of one type with probabilistic-OR diminishing returns (<code>1 minus the product of (1 minus s)</code>), then weight-normalises.</li>
+      <li><strong>Composite</strong> is <code>blend.fit * fit + blend.intent * intent</code> (blend validated to sum to 1); <code>assignTier</code> maps composite to A, B, C, or D using ICP thresholds (D is the implicit below-C bucket).</li>
+      <li><strong>Purity</strong> is strict: the only non-pure input is the caller-passed <code>now</code>. Same input plus same <code>now</code> yields byte-identical output. <code>SCORING_MODEL_VERSION</code> (currently <code>scoring-v1</code>) is stamped on every score and must be bumped on any computation change.</li>
+    </ul>
+
+    <h3>The enrichment waterfall</h3>
+    <p><code>enrichCompanyWaterfall</code> calls <code>EnrichmentProvider</code>s in priority order, merges only still-missing fields with per-field source attribution, stops early once a record is complete-enough (<strong>we own the cost ceiling</strong>), and falls through provider errors rather than aborting. <code>collectSignals</code> is the signal analogue, with cross-provider dedup via <code>signalDedupeKey</code> (keeping the stronger signal so intent is never double-counted) and central decay windows. The cascade, fallback order, and cost ceiling live in <strong>our</strong> orchestration core, never in any adapter.</p>
+
+    <h3>The send-gate and DRY_RUN</h3>
+    <p>The single most dangerous action, a real send, is guarded by <code>evaluateSendGate</code> in <code>send-gate.ts</code> (ADR-0009): a pure, total function. Two independent conditions must both hold for a real send: <strong>DRY_RUN off</strong> (system-level) AND <strong>explicit per-action human approval</strong>. LinkedIn and WhatsApp carry a third gate (<code>GATED_CHANNELS</code>), the channel must be operator-enabled, off by default.</p>
+    <div class="callout warn">
+      <span class="tag">DRY_RUN always wins</span>
+      <p>DRY_RUN defaults true everywhere and always wins: it returns outcome <code>simulate</code> regardless of approval. Flipping DRY_RUN alone can never send, and an approval can never override DRY_RUN. <code>executeSendStep</code> is the <strong>only</strong> place that calls an adapter's <code>.send()</code>, and only when <code>allowSend</code> is true. Defence in depth adds a deny rule, a PreToolUse hook, and adapter-level <code>dryRun</code> honoring.</p>
+    </div>
+
+    <h3>Inngest durable orchestration</h3>
+    <p>The runtime brain is the in-repo <code>packages/orchestration</code> logic wrapped by Inngest durable step functions (ADR-0002). Inngest provides retries, exactly-once-by-memoisation, durable multi-day delays, resume-after-deploy, and event-driven cancellation. <code>runEnrolment</code> wraps every operation in <code>step.run</code> (memoised on replay) and uses <code>step.sleepUntil</code> for multi-day cadences. The gate and approval check run on <strong>every</strong> execution including replays, never memoised away. The production pipeline reaches vendors over REST and webhooks only, never MCP; the send-path is never behind an interactive MCP call.</p>
+
+    <h3>Anti-corruption adapters</h3>
+    <p>Every bought rail (Clay, Apollo, Explorium, Places, SearchApi, TheirStack, PredictLeads, Exa, Smartlead, Resend, Unipile, HubSpot, the LLM, NOVA) is wrapped in an adapter implementing one of <strong>five stable internal interfaces</strong>: <code>EnrichmentProvider</code>, <code>SignalProvider</code>, <code>EmailSender</code>, <code>MessagingChannel</code>, <code>CrmStore</code>. Each validates the raw wire payload with Zod inside its own <code>mapper.ts</code>, folds vendor free-text enums onto closed OIE enums (emitting unknown rather than guessing), records per-field provenance in a <code>sources</code> map, and converts vendor errors to a typed <code>AdapterError</code> taxonomy. A shared base layer provides an injectable HTTP transport seam (fixtures in CI), retry with full-jitter backoff, and deterministic sha256 idempotency keys. Only adapter classes are exported; mappers stay internal.</p>
+
+    <h3>Anthropic SDK usage and model tiering</h3>
+    <p>AI features (Close Room, Knowledge, Voice Dojo) call Claude through one client, <code>apps/web/lib/llm.ts</code>, which wraps the engine's <code>LlmClient</code> from <code>@oie/integrations</code>. There is one Anthropic client, one set of model ids, one place that reads the key. The key is server-only, read lazily from <code>process.env</code>, never <code>NEXT_PUBLIC_</code> and never logged. The LLM reasons over text; code computes every number.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tier</th><th>Model id</th><th>Used for</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge gold">hard</span></td><td><code>claude-opus-4-8</code></td><td>Hard judgement, planning, verifier and security review, deep post-call review</td></tr>
+          <tr><td><span class="badge teal">personalise</span></td><td><code>claude-sonnet-4-6</code></td><td>Personalisation, scoring rationale, prep and outreach copy</td></tr>
+          <tr><td><span class="badge">parse</span></td><td><code>claude-haiku-4-5</code></td><td>High-volume parsing and classification</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5. VOICE / NOVA -->
+  <section id="nova">
+    <div class="sec-num">SECTION 05</div>
+    <h2 class="sec">Voice and NOVA</h2>
+    <p class="lead">The Revenue OS dogfoods Huscribe's own voice agent, NOVA, a separate service (FastAPI plus LiveKit at <code>api.novalabs.ae</code>). The calls that build the database <strong>are</strong> the product.</p>
+
+    <h3>The 4-phase agent</h3>
+    <p>NOVA runs a fixed conversational arc: <strong>Greeting, Discovery, Pitch, Close</strong>, handed to NOVA's <strong>DSPy</strong> pre-call context. Integration is via <code>scripts/nova-call.ts</code>: it pulls <code>awaiting_approval</code> leads from the master DB, places a call (POST <code>/calls</code>), polls (GET <code>/calls/{id}</code>), and ingests <code>CallSession</code> plus <code>CallFinding</code> rows. The POST body carries <code>owner_email</code>, product, leads, context, <code>goal='qualify_interest'</code>, language, <code>consent=true</code>, and an idempotency key. Phones are normalised to E.164 (UAE-aware) by <code>toE164()</code>.</p>
+
+    <h3>Compliance gate, demo versus live</h3>
+    <div class="callout warn">
+      <span class="tag">DEMO_MODE: no live PSTN</span>
+      <p><code>demoMode</code> is computed as <code>!NOVA_API_KEY</code>. Both <code>place_calls</code> and <code>get_call</code> are public (no token); the optional <code>NOVA_API_KEY</code> Bearer is what flips <code>demoMode</code> off. By default, calls only join a LiveKit room named <code>call-&lt;context_id&gt;</code> with no PSTN dial. <code>demoMode</code> is persisted on every <code>CallSession</code>. NOVA's own compliance gate (consent, DNCR, calling-window) plus owner sign-off are prerequisites before any real PSTN dial, aligned to UAE Cabinet Resolution 56 of 2024 and PDPL (Federal Decree-Law 45 of 2021).</p>
+    </div>
+
+    <h3>CallSession and CallFinding</h3>
+    <p>On accept, each call is upserted as a <code>CallSession</code> (status pending, unique <code>novaCallId</code>, <code>consentBasis='operator_initiated_demo'</code>). <code>ingestCallResult</code> updates transcript, summary, outcome, cost, and opt-out, replaces <code>CallFinding</code> rows, and enriches the master DB <strong>only if</strong> the session is consented: <code>mobile</code> maps to <code>Contact.phone</code> / <code>whatsapp</code>; <code>tools</code> maps to <code>Company.techStack</code> plus a <code>tech_adoption</code> Signal.</p>
+    <p>Findings pass through a pure anti-corruption function, <code>nova/findings.ts</code>, which keeps only seven canonical, consented keys: <code>identity_confirmed</code>, <code>after_hours_handling</code>, <code>tools</code>, <code>monthly_volume</code>, <code>mobile</code>, <code>demo_interest</code>, <code>opt_in</code>. It drops any non-canonical key, ignores null or empty values (never fabricates), coerces booleans to yes or no, clamps to 500 chars, and only keeps a confidence in 0 to 1.</p>
+
+    <div class="callout teal">
+      <span class="tag">The moat</span>
+      <p>Every consented call writes verified, first-party facts straight into the master DB. Competitors buy the same vendor data; only this system holds the verify-by-conversation layer on top of it. That compounding, owned dataset is the durable advantage.</p>
+    </div>
+  </section>
+
+  <!-- 6. DATA MODEL -->
+  <section id="data">
+    <div class="sec-num">SECTION 06</div>
+    <h2 class="sec">Data model</h2>
+    <p class="lead">The Prisma schema (<code>packages/db/prisma/schema.prisma</code>) is the persistence-side single source of truth: 15 models over generic PostgreSQL. Dedupe is on <code>domain</code> (plus <code>placeId</code>) for companies and <code>email</code> or <code>linkedinUrl</code> for contacts.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Model</th><th>Purpose</th><th>Key relations / constraints</th></tr></thead>
+        <tbody>
+          <tr><td><code>IcpProfile</code></td><td>Versioned ICP config as validated JSON</td><td>unique (name, version); has many Score</td></tr>
+          <tr><td><code>Company</code></td><td>Account record</td><td>unique domain, unique placeId; has Contact, Signal, CallSession</td></tr>
+          <tr><td><code>Contact</code></td><td>Person record</td><td>unique email, unique linkedinUrl; belongs to Company (SetNull)</td></tr>
+          <tr><td><code>Signal</code></td><td>Intent signal, raw strength 0 to 1 pre-decay</td><td>type enum; cascade from Company and Contact</td></tr>
+          <tr><td><code>Score</code></td><td>Persisted deterministic scoring output</td><td>unique (contactId, icpProfileId); carries modelVersion</td></tr>
+          <tr><td><code>Sequence</code></td><td>Outreach sequence, steps as JSON</td><td>status draft / active / archived</td></tr>
+          <tr><td><code>Enrolment</code></td><td>Links contact to a sequence</td><td>unique (contactId, sequenceId)</td></tr>
+          <tr><td><code>Message</code></td><td>Every channel action, including awaiting_approval</td><td>unique (channel, externalId); externalId is the idempotency anchor</td></tr>
+          <tr><td><code>Mailbox</code></td><td>Email senders, caps and warmup</td><td>dailyLimit default 30</td></tr>
+          <tr><td><code>ChannelAccount</code></td><td>LinkedIn / WhatsApp accounts</td><td>enabled default false (off by default)</td></tr>
+          <tr><td><code>Suppression</code></td><td>Opt-outs</td><td>unique email, domain</td></tr>
+          <tr><td><code>AuditLog</code></td><td>Append-only audit trail</td><td>actor, action, entity, payload, at</td></tr>
+          <tr><td><code>ProviderCost</code></td><td>Per-call cost accounting</td><td>provider, task, units, costUsd</td></tr>
+          <tr><td><code>CallSession</code></td><td>One row per placed NOVA call</td><td>unique novaCallId; demoMode default true; has CallFinding</td></tr>
+          <tr><td><code>CallFinding</code></td><td>Structured consented fact from a call</td><td>cascade from CallSession; seven canonical keys</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Enums: <code>Seniority</code>, <code>SignalType</code> (hiring, funding, tech_adoption, job_change, news, web_change), <code>EmailStatus</code>, <code>Channel</code> (email, linkedin, whatsapp), <code>Tier</code> (A, B, C, D), <code>EnrolmentStatus</code>, <code>MessageDirection</code>, <code>MessageStatus</code>, <code>SequenceStatus</code>.</p>
+  </section>
+
+  <!-- 7. DEPLOYMENT + SECURITY -->
+  <section id="deploy">
+    <div class="sec-num">SECTION 07</div>
+    <h2 class="sec">Deployment and security</h2>
+    <p class="lead">A single-stage Docker image (<code>node:22-slim</code>) on Fly.io, app <code>huscribe-revenue-os</code>, primary region <code>fra</code>, currently live at release v12.</p>
+
+    <h3>Fly deploy posture</h3>
+    <ul class="clean">
+      <li><strong>Image:</strong> single-stage <code>node:22-slim</code>, built on a Fly remote builder. The build runs with inline throwaway placeholder env (<code>DATABASE_URL</code>, <code>AUTH_SECRET</code>) so no real secret persists to a layer. <code>@oie/db postinstall</code> runs <code>prisma generate</code>.</li>
+      <li><strong>Scale-to-zero:</strong> <code>auto_stop_machines='stop'</code>, <code>auto_start_machines=true</code>, <code>min_machines_running=0</code>; <code>shared-cpu-1x</code> / 1024 mb; <code>force_https</code>; concurrency soft 180 / hard 220.</li>
+      <li><strong>IPv4:</strong> a dedicated IPv4 (<code>109.105.222.142</code>) was allocated so the app routes from IPv4-only networks, after the hostname initially had only an AAAA record.</li>
+      <li><strong>Health check:</strong> Fly runs <code>GET /api/health</code> every 30s; on deploy it waits for the check to pass before marking a release healthy. The endpoint is a pure no-auth, no-DB <em>liveness</em> probe returning 200 JSON, so a DB or provider blip cannot flap health and trigger restarts.</li>
+    </ul>
+
+    <h3>Auth and headers</h3>
+    <p>Auth is <strong>Auth.js v5</strong> (<code>next-auth 5.0.0-beta.31</code>) with JWT sessions (12h maxAge, 1h updateAge), <code>trustHost:true</code> baked in, and an <code>authorized</code> callback allowlisting <code>/signin</code>, <code>/api/health</code>, <code>/api/auth</code>, <code>/api/inngest</code>. Login is operator email plus a bcrypt hash (<code>bcryptjs</code>); no DB adapter; fail-closed if creds are absent in production. <code>next.config.mjs</code> applies a full security header set on every route: a CSP, HSTS with preload (<code>max-age=63072000; includeSubDomains; preload</code>), <code>X-Frame-Options DENY</code>, <code>nosniff</code>, Referrer-Policy, and a Permissions-Policy disabling camera, microphone, geolocation, and browsing-topics. <code>poweredByHeader</code> is false.</p>
+
+    <h3>Secrets and CI gates</h3>
+    <p>Every secret (<code>DATABASE_URL</code>, <code>AUTH_SECRET</code>, <code>ANTHROPIC_API_KEY</code>, <code>AUTH_OPERATOR_*</code>, provider keys, <code>NOVA_API_KEY</code>) is set via <code>flyctl secrets set</code> and injected at runtime only; <code>fly.toml</code> and the image carry only non-secret env. CI gates: a <code>verify</code> job plus a gitleaks secret scan, both required before merge.</p>
+
+    <div class="callout">
+      <span class="tag">Flagged doc discrepancy (not invented)</span>
+      <p><code>SECURITY.md</code> is stale on two points: it lists the security headers and <code>trustHost:true</code> as not-yet-shipped backlog items, but both are already implemented in <code>next.config.mjs</code> and <code>auth.config.ts</code> respectively. The code is the source of truth here.</p>
+    </div>
+  </section>
+
+  <!-- 8. ADRs -->
+  <section id="adr">
+    <div class="sec-num">SECTION 08</div>
+    <h2 class="sec">Architecture decisions</h2>
+    <p class="lead">Ten ADRs in <code>docs/adr/</code> lock the load-bearing decisions.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>ADR</th><th>Decision</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td><code>0001</code></td><td>TypeScript monorepo (pnpm plus Turbo)</td><td>One language, topological builds, packages as TS source</td></tr>
+          <tr><td><code>0002</code></td><td>Inngest durable orchestration</td><td>Retries, exactly-once, multi-day delays; send-path never behind MCP</td></tr>
+          <tr><td><code>0003</code></td><td>Clay / Apollo / Explorium enrichment</td><td>The enrichment waterfall sources</td></tr>
+          <tr><td><code>0004</code></td><td>TheirStack / PredictLeads / Exa signals</td><td>The intent signal sources</td></tr>
+          <tr><td><code>0005</code></td><td>Smartlead email</td><td>Email send rail behind the EmailSender contract</td></tr>
+          <tr><td><code>0006</code></td><td>Unipile LinkedIn and WhatsApp</td><td>Messaging channels, off by default, gated</td></tr>
+          <tr><td><code>0007</code></td><td>HubSpot CRM</td><td>CrmStore find-or-create, no duplicates</td></tr>
+          <tr><td><code>0008</code></td><td>Deterministic scoring engine</td><td>The LLM never computes a number; code does</td></tr>
+          <tr><td><code>0009</code></td><td>Send-gate and DRY_RUN</td><td>Two independent conditions plus a channel gate; DRY_RUN always wins</td></tr>
+          <tr><td><code>0010</code></td><td>Anti-corruption adapters</td><td>Vendor shapes never leak into core or persistence</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9. SCOPE + CAVEATS -->
+  <section id="scope">
+    <div class="sec-num">SECTION 09</div>
+    <h2 class="sec">Honest scope and caveats</h2>
+    <p class="lead">An accurate picture of what is live versus demo, and what needs an owner decision. No overclaiming.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Capability</th><th>Status</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Production control plane</td><td><span class="yes">Live</span></td><td>Fly release v12, operator login verified, scale-to-zero, dedicated IPv4, health check 200</td></tr>
+          <tr><td>Deterministic scoring engine</td><td><span class="yes">Live</span></td><td>Pure, tested, model-versioned; LLM never scores</td></tr>
+          <tr><td>Enrichment waterfall and signals</td><td><span class="yes">Built</span></td><td>Integration tests run against recorded fixtures, no live vendor calls in CI</td></tr>
+          <tr><td>Channel sends (email, LinkedIn, WhatsApp)</td><td><span class="no">DRY_RUN</span></td><td>DRY_RUN defaults true and always wins; nothing sends without it off AND human approval</td></tr>
+          <tr><td>NOVA voice calling</td><td><span class="no">DEMO_MODE</span></td><td>No live PSTN dial; calls join a LiveKit room only until the NOVA owner sets <code>NOVA_API_KEY</code></td></tr>
+          <tr><td>UAE live PSTN marketing calls</td><td><span class="no">Needs sign-off</span></td><td>Hard-gated by law: TDRA approval, registered caller ID, DNCR screening, 09:00 to 18:00 Asia/Dubai window, consent and AI disclosure</td></tr>
+          <tr><td>Error monitoring (Sentry)</td><td><span class="no">Inert</span></td><td>Wired but inert until <code>SENTRY_DSN</code> is set in Fly secrets (optional)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <span class="tag">Invariants held across the entire build</span>
+      <p>DRY_RUN stayed true. NOVA stayed in DEMO_MODE with zero live PSTN dials. The LLM never computed a score or an ROI number. No secret was ever committed or echoed. The Anthropic key remained protected in Fly secrets.</p>
+    </div>
+
+    <p>One more honesty note carried from Section 1: the deployed database is described elsewhere as Neon, but the repository itself only evidences generic PostgreSQL via Prisma. Where the schema and env files are the source of truth, this report says PostgreSQL, not Neon.</p>
+  </section>
+
+  <!-- 10. STACK + FOOTER -->
+  <section id="stack">
+    <div class="sec-num">SECTION 10</div>
+    <h2 class="sec">Tech stack</h2>
+    <div class="card">
+      <div class="meta-row" style="margin-top:0">
+        <span class="chip gold"><span class="dot"></span>TypeScript 5.7 (strict, ESM)</span>
+        <span class="chip"><span class="dot"></span>pnpm 10.33 workspaces</span>
+        <span class="chip"><span class="dot"></span>Turborepo 2.3</span>
+        <span class="chip"><span class="dot"></span>Next.js 15</span>
+        <span class="chip"><span class="dot"></span>React 19</span>
+        <span class="chip"><span class="dot"></span>Prisma 6.2</span>
+        <span class="chip"><span class="dot"></span>PostgreSQL</span>
+        <span class="chip"><span class="dot"></span>Inngest 3.27</span>
+        <span class="chip"><span class="dot"></span>Zod 3.24</span>
+        <span class="chip"><span class="dot"></span>Anthropic SDK (opus / sonnet / haiku tiers)</span>
+        <span class="chip"><span class="dot"></span>Auth.js v5 (bcryptjs)</span>
+        <span class="chip"><span class="dot"></span>Tailwind 3.4</span>
+        <span class="chip"><span class="dot"></span>@sentry/nextjs</span>
+        <span class="chip"><span class="dot"></span>Vitest</span>
+        <span class="chip"><span class="dot"></span>NOVA: FastAPI + LiveKit + DSPy</span>
+        <span class="chip gold"><span class="dot"></span>Fly.io (Docker, region fra)</span>
+        <span class="chip"><span class="dot"></span>GitHub Actions + gitleaks</span>
+      </div>
+    </div>
+
+    <div class="card tight">
+      <h4 style="margin-top:6px">Build orchestration (not part of the shipped product)</h4>
+      <div class="meta-row" style="margin-top:8px">
+        <span class="chip teal"><span class="dot"></span>Claude Code native (no framework)</span>
+        <span class="chip"><span class="dot"></span>Cron-driven autonomous loop (CronCreate / CronDelete)</span>
+        <span class="chip"><span class="dot"></span>Workflow tool (agent / parallel / pipeline / phase)</span>
+        <span class="chip"><span class="dot"></span>Structured outputs (JSON schema)</span>
+        <span class="chip"><span class="dot"></span>Adversarial sub-agent review</span>
+        <span class="chip"><span class="dot"></span>caffeinate</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong style="color:var(--ink)">Huscribe Revenue OS</strong> (Outbound Intelligence Engine). Architecture report.</p>
+    <p>Product facts in this report are drawn from the repository and verified against source: <code>package.json</code> files, <code>turbo.json</code>, <code>tsconfig.base.json</code>, <code>schema.prisma</code>, the <code>send-gate.ts</code> and scoring engine, <code>fly.toml</code>, <code>next.config.mjs</code>, <code>auth.config.ts</code>, the ADRs in <code>docs/adr/</code>, and the autonomous-loop artifacts in <code>docs/autonomous/</code>. Where a prompt assertion (Neon) was not evidenced in those files, the report says so plainly.</p>
+    <p style="margin-top:18px; color:var(--muted)">No em dashes anywhere. Single self-contained file, no external network requests, inline SVG only. Build orchestration was Claude Code native: no LangGraph, LangChain, CrewAI, or AutoGen.</p>
+  </footer>
+
+</div>
+</body>
+</html>

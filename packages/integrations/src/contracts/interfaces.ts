@@ -83,3 +83,65 @@ export interface CrmStore {
   upsertCompany(company: NormalisedCompany, ctx: AdapterContext): Promise<CrmRef>;
   upsertContact(contact: NormalisedContact, ctx: AdapterContext): Promise<CrmRef>;
 }
+
+/**
+ * Compliance rails for live voice + messaging (UAE PDPL + TDRA). These are NEW
+ * seams added ahead of the Next-gated live-calling work (see VOICE-ACTIVATION.md +
+ * COMPLIANCE.md). They are FAIL-CLOSED by contract: a missing record, an unknown
+ * status, or an unconfigured provider must NEVER read as permission. Only an
+ * explicit "allowed" permits contact; everything else is "blocked" or "unknown",
+ * and the policy (see ./compliance) treats anything other than "allowed" as
+ * not-contactable. They sit behind the same anti-corruption boundary as every
+ * other rail: vendor shapes never leak past the adapter.
+ */
+export type ComplianceVerdict = "allowed" | "blocked" | "unknown";
+
+export interface ComplianceDecision {
+  verdict: ComplianceVerdict;
+  /** Human-readable reason, safe to log (never contains secrets or full PII). */
+  reason: string;
+}
+
+/** Do-Not-Call Registry screening (UAE DNCR). Fail-closed: unknown is not clear. */
+export interface DncrProvider {
+  readonly name: string;
+  isConfigured(): boolean;
+  /** Screen an E.164 number. "allowed" only if positively confirmed not-listed. */
+  screen(e164: string, ctx: AdapterContext): Promise<ComplianceDecision>;
+}
+
+/** Consent ledger. Fail-closed: no record means no consent ("blocked"/"unknown"). */
+export interface ConsentStore {
+  readonly name: string;
+  isConfigured(): boolean;
+  /** Whether this subject has consented to be contacted on this channel. */
+  check(subjectId: string, channel: ChannelRef, ctx: AdapterContext): Promise<ComplianceDecision>;
+  /** Record a consent grant or withdrawal. */
+  record(grant: ConsentGrant, ctx: AdapterContext): Promise<void>;
+}
+
+export type ChannelRef = "voice" | "whatsapp" | "linkedin" | "email";
+
+export interface ConsentGrant {
+  subjectId: string;
+  channel: ChannelRef;
+  granted: boolean;
+  basis: string; // e.g. "explicit_optin", "made_public", "withdrawn"
+  sourceUrl?: string;
+  at: Date;
+}
+
+/** Tamper-evident audit logging for compliance-relevant actions. */
+export interface AuditSink {
+  readonly name: string;
+  isConfigured(): boolean;
+  record(event: AuditEvent, ctx: AdapterContext): Promise<void>;
+}
+
+export interface AuditEvent {
+  actor: string; // who/what took the action, e.g. "system:nova-call"
+  action: string; // e.g. "voice.place_call", "consent.withdraw"
+  entity: string; // the affected entity type/id
+  at: Date;
+  payload?: Record<string, unknown>; // must be PII-minimised by the caller
+}

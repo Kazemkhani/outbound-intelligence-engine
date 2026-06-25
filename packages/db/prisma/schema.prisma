@@ -27,6 +27,11 @@ enum SignalType {
   job_change
   news
   web_change
+  // UAE-native intent signals (DLD / Dubai Pulse). Kept in sync with the @oie/core
+  // Zod enum. NOTE: a Postgres migration must run before these are persisted at
+  // runtime; the producing DLD adapter is Next-gated, so no live writes use these yet.
+  off_plan_launch
+  transaction_spike
 }
 
 enum EmailStatus {

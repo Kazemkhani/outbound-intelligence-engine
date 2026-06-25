@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Huscribe Revenue OS - Software Architecture</title>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0d1016;
+    --card: #14171d;
+    --card2: #181c24;
+    --line: rgba(255,255,255,0.06);
+    --line2: rgba(255,255,255,0.10);
+    --gold: #f0c454;
+    --gold-dim: #b9933a;
+    --teal: #4fd1b5;
+    --teal-dim: #2f9c86;
+    --head: #eef1f6;
+    --body: #aab2c0;
+    --muted: #7d8696;
+    --code-bg: #0b0e13;
+    --red: #e88c8c;
+    --blue: #88b6e8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 620px at 50% -8%, rgba(240,196,84,0.07), transparent 60%),
+      radial-gradient(900px 540px at 85% 8%, rgba(79,209,181,0.05), transparent 55%),
+      var(--bg);
+    color: var(--body);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 22px; }
+
+  /* Sticky header */
+  header.site {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,12,16,0.82);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .site .wrap { display: flex; align-items: center; gap: 13px; padding-top: 13px; padding-bottom: 13px; }
+  .brand-name { color: var(--head); font-weight: 700; font-size: 17px; letter-spacing: 0.2px; }
+  .pill {
+    margin-left: auto;
+    font-size: 12px; color: var(--gold);
+    border: 1px solid rgba(240,196,84,0.35);
+    background: rgba(240,196,84,0.07);
+    padding: 4px 11px; border-radius: 999px; white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .logoH { width: 30px; height: 30px; flex: 0 0 auto; }
+
+  /* Hero */
+  .hero { padding: 58px 0 30px; border-bottom: 1px solid var(--line); }
+  .hero h1 {
+    color: var(--head); font-size: 38px; line-height: 1.18; margin: 0 0 14px;
+    letter-spacing: -0.4px; font-weight: 760;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(90deg, var(--gold), var(--teal));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p.sub { font-size: 18px; color: var(--body); margin: 0 0 22px; max-width: 760px; }
+  .hero .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: var(--body);
+    border: 1px solid var(--line2);
+    background: var(--card);
+    padding: 4px 10px; border-radius: 7px;
+    font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  .chip.gold { color: var(--gold); border-color: rgba(240,196,84,0.3); }
+  .chip.teal { color: var(--teal); border-color: rgba(79,209,181,0.3); }
+
+  /* TOC */
+  nav.toc {
+    margin: 26px 0 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  nav.toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted); margin: 0 0 14px; }
+  nav.toc ol { margin: 0; padding: 0; list-style: none; counter-reset: toc;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a {
+    color: var(--body); text-decoration: none; font-size: 14.5px;
+    display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid transparent;
+  }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    color: var(--gold-dim); font-family: ui-monospace, monospace; font-size: 12px;
+    min-width: 22px;
+  }
+  nav.toc a:hover { color: var(--head); }
+
+  /* Sections */
+  section { padding: 40px 0; border-bottom: 1px solid var(--line); }
+  section > h2.sh {
+    color: var(--head); font-size: 26px; margin: 0 0 6px; letter-spacing: -0.2px;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  section > h2.sh .num {
+    font-family: ui-monospace, monospace; font-size: 14px; color: var(--gold);
+    border: 1px solid rgba(240,196,84,0.3); border-radius: 6px; padding: 2px 8px;
+  }
+  section > p.lede { font-size: 16.5px; color: var(--body); margin: 6px 0 22px; }
+  h3.ssh { color: var(--head); font-size: 18px; margin: 28px 0 10px; font-weight: 650; }
+  h4.qh { color: var(--gold); font-size: 14px; margin: 20px 0 8px; letter-spacing: 0.3px; text-transform: uppercase; }
+  p { margin: 12px 0; }
+  a { color: var(--teal); }
+  code {
+    font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 13px; background: rgba(255,255,255,0.05); color: #d6dae3;
+    padding: 1.5px 5px; border-radius: 5px; border: 1px solid var(--line);
+  }
+  strong { color: var(--head); font-weight: 650; }
+  em { color: #c4cad4; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 13px; padding: 20px 22px; margin: 16px 0;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* Callouts */
+  .callout {
+    border-left: 3px solid var(--teal);
+    background: linear-gradient(90deg, rgba(79,209,181,0.07), rgba(79,209,181,0.01));
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0;
+  }
+  .callout.gold { border-left-color: var(--gold); background: linear-gradient(90deg, rgba(240,196,84,0.08), rgba(240,196,84,0.01)); }
+  .callout.red { border-left-color: var(--red); background: linear-gradient(90deg, rgba(232,140,140,0.07), rgba(232,140,140,0.01)); }
+  .callout .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gold); font-weight: 700; display:block; margin-bottom: 4px; }
+  .callout.tealc .lbl { color: var(--teal); }
+  .callout.red .lbl { color: var(--red); }
+
+  /* Code / figure blocks */
+  pre.fig {
+    background: var(--code-bg); border: 1px solid var(--line2);
+    border-radius: 11px; padding: 16px 18px; overflow-x: auto; margin: 16px 0;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.7px; line-height: 1.62; color: #cdd3dd;
+  }
+  pre.fig .c { color: #6b7585; font-style: italic; }
+  pre.fig .k { color: var(--gold); }
+  pre.fig .t { color: var(--teal); }
+  pre.fig .s { color: #c0a574; }
+  pre.fig .fn { color: var(--blue); }
+  .fig-cap { font-size: 12px; color: var(--muted); margin: -8px 0 18px; padding-left: 4px; }
+
+  /* Tables */
+  .tbl-scroll { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 11px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.4px; }
+  table th {
+    text-align: left; color: var(--head); font-weight: 650; background: var(--card2);
+    padding: 10px 13px; border-bottom: 1px solid var(--line2); white-space: nowrap;
+    font-size: 12.5px; letter-spacing: 0.2px;
+  }
+  table td { padding: 9px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table tr:last-child td { border-bottom: none; }
+  table td code { font-size: 12px; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.4px; }
+
+  /* Badges within tables */
+  .badge { display: inline-block; font-size: 10.5px; padding: 1.5px 7px; border-radius: 5px; font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; }
+  .b-gated { color: var(--red); background: rgba(232,140,140,0.12); border: 1px solid rgba(232,140,140,0.3); }
+  .b-public { color: var(--teal); background: rgba(79,209,181,0.1); border: 1px solid rgba(79,209,181,0.3); }
+  .b-dyn { color: var(--gold); background: rgba(240,196,84,0.1); border: 1px solid rgba(240,196,84,0.3); }
+  .b-static { color: var(--blue); background: rgba(136,182,232,0.1); border: 1px solid rgba(136,182,232,0.3); }
+
+  /* SVG diagram frames */
+  .diagram {
+    background: var(--code-bg); border: 1px solid var(--line2);
+    border-radius: 13px; padding: 18px; margin: 18px 0; overflow-x: auto;
+  }
+  .diagram svg { display: block; max-width: 100%; height: auto; }
+  .dia-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0 0 12px; padding-left: 4px; }
+
+  /* CSS flow diagrams */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 16px 0; }
+  .flow-node {
+    background: var(--card2); border: 1px solid var(--line2); border-radius: 10px;
+    padding: 11px 14px; font-size: 13px; color: var(--head); position: relative;
+    flex: 1; min-width: 130px;
+  }
+  .flow-node .sub { font-size: 11.5px; color: var(--muted); display: block; margin-top: 2px; font-family: ui-monospace, monospace; }
+  .flow-arrow { display:flex; align-items:center; color: var(--gold); padding: 0 9px; font-size: 18px; }
+
+  ul.tight { margin: 10px 0; padding-left: 22px; }
+  ul.tight li { margin: 5px 0; }
+  .kv { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--teal); }
+
+  footer.site { padding: 40px 0 60px; color: var(--muted); font-size: 13.5px; }
+  footer.site .wrap { border-top: 1px solid var(--line); padding-top: 26px; }
+
+  .anchor { position: relative; top: -70px; visibility: hidden; }
+
+  @media (max-width: 720px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    nav.toc ol { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 29px; }
+  }
+
+  @media print {
+    body { background: #fff; color: #1a1a1a; }
+    header.site, nav.toc { position: static; }
+    .pill, .chip { color: #333; border-color: #ccc; }
+    section, .card, .diagram, pre.fig { break-inside: avoid; }
+    .hero h1, h2.sh, h3.ssh, strong { color: #000; }
+    pre.fig, .diagram { background: #f6f6f6; color: #111; border-color: #ccc; }
+    a { color: #111; text-decoration: underline; }
+    .callout { background: #f4f4f4; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <svg class="logoH" viewBox="0 0 40 40" fill="none" aria-label="Huscribe">
+      <rect x="1" y="1" width="38" height="38" rx="10" stroke="#f0c454" stroke-width="1.6" fill="rgba(240,196,84,0.06)"/>
+      <path d="M12 10 V30 M12 20 H28 M28 10 V30" stroke="#f0c454" stroke-width="3.2" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-name">Huscribe Revenue OS</span>
+    <span class="pill">Software Architecture</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>The architecture of <span class="grad">Huscribe Revenue OS</span></h1>
+    <p class="sub">A private pnpm + Turbo TypeScript monorepo (codename OIE) that discovers, enriches, scores, and human-gates B2B outreach. The LLM writes copy and reasons; deterministic code owns every number; nothing sends without a passing dry-run and explicit human approval.</p>
+    <div class="meta">
+      <span class="chip gold">pnpm@10.33 + Turbo</span>
+      <span class="chip">Node &gt;=20.11 ESM</span>
+      <span class="chip teal">Next.js 15 (App Router)</span>
+      <span class="chip">React 19</span>
+      <span class="chip">Prisma + Postgres (Neon)</span>
+      <span class="chip teal">Inngest 3.27</span>
+      <span class="chip">Auth.js v5</span>
+      <span class="chip gold">Anthropic Messages REST</span>
+      <span class="chip">Fly.io (fra)</span>
+      <span class="chip">Zod everywhere</span>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#s1">System overview and package graph</a></li>
+      <li><a href="#s2">Monorepo, build, and config</a></li>
+      <li><a href="#s3">Domain core and the scoring engine</a></li>
+      <li><a href="#s4">Data model (Prisma) and ERD</a></li>
+      <li><a href="#s5">Integration layer (anti-corruption)</a></li>
+      <li><a href="#s6">Runtime orchestration and the send-gate</a></li>
+      <li><a href="#s7">The Next.js control plane</a></li>
+      <li><a href="#s8">AI features internals</a></li>
+      <li><a href="#s9">Voice / NOVA data flow</a></li>
+      <li><a href="#s10">Deployment and security</a></li>
+      <li><a href="#s11">Architecture decisions (ADRs)</a></li>
+      <li><a href="#s12">Invariants and honest scope</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ SECTION 1 ============ -->
+  <span id="s1" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">01</span> System overview and package graph</h2>
+    <p class="lede">Huscribe Revenue OS (the repository is named <code>oie</code>) is a layered outbound-intelligence engine. Five internal libraries form a clean dependency DAG with the pure domain core at the root, and a single Next.js 15 application (<code>apps/web</code>, package name <code>web</code>) is the control plane on top.</p>
+
+    <p>The system is organised around four architectural ideas that recur in every layer:</p>
+    <ul class="tight">
+      <li><strong>A pure deterministic core.</strong> <code>@oie/core</code> depends only on <code>zod</code>. It owns the domain vocabulary, the Zod-validated ICP config, the normalised fact view of a lead, and the entire scoring engine. No LLM, no I/O, no wall-clock.</li>
+      <li><strong>An anti-corruption boundary.</strong> <code>@oie/integrations</code> wraps every bought rail (enrichment, signals, email, messaging, CRM, voice, LLM) behind five stable internal interfaces, translating vendor JSON into unified DTOs. Vendor shapes never escape a mapper.</li>
+      <li><strong>An orchestration brain.</strong> <code>@oie/orchestration</code> holds pure decision functions (send-gate, sequence state machine, waterfall, cost caps) wrapped by Inngest durable steps. The scoring-bridge lives here so that pure core never imports the integration layer.</li>
+      <li><strong>A human-gated control plane.</strong> <code>apps/web</code> renders the operator UI, runs all AI surfaces through one <code>ask()</code> chokepoint, and routes every send through the code-level send-gate. DRY_RUN is surfaced everywhere.</li>
+    </ul>
+
+    <div class="diagram">
+      <p class="dia-title">Figure 1.1 - System context and package-dependency graph (a DAG, core at the root)</p>
+      <svg viewBox="0 0 920 460" font-family="ui-monospace, Menlo, monospace" font-size="13">
+        <defs>
+          <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#6b7585"/>
+          </marker>
+          <marker id="arrg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#f0c454"/>
+          </marker>
+        </defs>
+
+        <!-- external rails -->
+        <rect x="660" y="20" width="240" height="120" rx="9" fill="rgba(79,209,181,0.05)" stroke="rgba(79,209,181,0.3)"/>
+        <text x="675" y="40" fill="#4fd1b5" font-size="11">EXTERNAL RAILS (HTTP)</text>
+        <text x="675" y="62" fill="#aab2c0" font-size="11">Anthropic Messages API</text>
+        <text x="675" y="82" fill="#aab2c0" font-size="11">19 optional provider keys (Apollo, Exa...)</text>
+        <text x="675" y="102" fill="#aab2c0" font-size="11">Inngest cloud (durable)</text>
+        <text x="675" y="122" fill="#aab2c0" font-size="11">NOVA voice (FastAPI+LiveKit)</text>
+
+        <!-- web app -->
+        <rect x="40" y="20" width="280" height="64" rx="9" fill="rgba(240,196,84,0.07)" stroke="#f0c454"/>
+        <text x="55" y="44" fill="#eef1f6" font-size="14">apps/web  (Next.js 15, "web")</text>
+        <text x="55" y="64" fill="#7d8696" font-size="11">control plane / UI / server actions / API routes</text>
+
+        <!-- orchestration -->
+        <rect x="40" y="130" width="280" height="56" rx="9" fill="#181c24" stroke="rgba(255,255,255,0.14)"/>
+        <text x="55" y="153" fill="#eef1f6">@oie/orchestration</text>
+        <text x="55" y="172" fill="#7d8696" font-size="11">send-gate, waterfall, Inngest fns, scoring-bridge</text>
+
+        <!-- integrations -->
+        <rect x="40" y="230" width="280" height="56" rx="9" fill="#181c24" stroke="rgba(255,255,255,0.14)"/>
+        <text x="55" y="253" fill="#eef1f6">@oie/integrations</text>
+        <text x="55" y="272" fill="#7d8696" font-size="11">5 contracts, adapters, LlmClient, NOVA findings</text>
+
+        <!-- db -->
+        <rect x="40" y="330" width="135" height="56" rx="9" fill="#181c24" stroke="rgba(255,255,255,0.14)"/>
+        <text x="55" y="353" fill="#eef1f6">@oie/db</text>
+        <text x="55" y="372" fill="#7d8696" font-size="11">Prisma + prisma</text>
+
+        <!-- core -->
+        <rect x="185" y="330" width="135" height="56" rx="9" fill="rgba(240,196,84,0.07)" stroke="#f0c454"/>
+        <text x="200" y="353" fill="#f0c454">@oie/core</text>
+        <text x="200" y="372" fill="#7d8696" font-size="11">zod only (root)</text>
+
+        <!-- config -->
+        <rect x="40" y="410" width="280" height="40" rx="9" fill="#181c24" stroke="rgba(255,255,255,0.14)"/>
+        <text x="55" y="435" fill="#eef1f6">@oie/config  <tspan fill="#7d8696" font-size="11">standalone (zod only): env fail-fast validation</tspan></text>
+
+        <!-- edges web->orch/integrations/db/core -->
+        <path d="M180,84 L180,128" stroke="#f0c454" stroke-width="1.5" marker-end="url(#arrg)"/>
+        <path d="M300,84 C420,120 330,200 320,228" stroke="#6b7585" stroke-width="1.2" marker-end="url(#arr)" fill="none"/>
+        <!-- orch -> integrations, db, core -->
+        <path d="M180,186 L180,228" stroke="#6b7585" stroke-width="1.2" marker-end="url(#arr)"/>
+        <path d="M130,186 C110,240 110,300 110,328" stroke="#6b7585" stroke-width="1.2" marker-end="url(#arr)" fill="none"/>
+        <path d="M250,186 C285,250 280,300 265,328" stroke="#6b7585" stroke-width="1.2" marker-end="url(#arr)" fill="none"/>
+        <!-- integrations -> core -->
+        <path d="M245,286 C275,300 280,315 270,328" stroke="#6b7585" stroke-width="1.2" marker-end="url(#arr)" fill="none"/>
+        <!-- db -> core -->
+        <path d="M160,355 L183,355" stroke="#6b7585" stroke-width="1.2" marker-end="url(#arr)"/>
+        <!-- integrations -> external -->
+        <path d="M322,250 C520,200 560,130 658,100" stroke="#4fd1b5" stroke-width="1.2" marker-end="url(#arr)" fill="none" stroke-dasharray="4 3"/>
+        <text x="470" y="170" fill="#4fd1b5" font-size="10">HTTP seam</text>
+      </svg>
+    </div>
+    <p class="fig-cap">Solid gold = the consume edge from the UI. Grey = workspace dependency edges. Dashed teal = network boundary, crossed only by adapters. <code>@oie/integrations</code> is NOT in <code>next.config.mjs</code> <code>transpilePackages</code>; it is pulled transitively.</p>
+
+    <div class="callout gold">
+      <span class="lbl">Layering invariant</span>
+      The edges only ever point down. <code>@oie/core</code> imports nothing from <code>@oie/integrations</code> or <code>@oie/db</code>. The DTO-to-fact conversion (scoring-bridge) is deliberately hoisted into <code>@oie/orchestration</code> so the pure core stays free of the integration layer.
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2 ============ -->
+  <span id="s2" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">02</span> The monorepo, build, and config</h2>
+    <p class="lede">Root <code>package.json</code>: name <code>oie</code>, <code>private</code>, <code>type: "module"</code>, engines <code>node&gt;=20.11.0</code> and <code>pnpm&gt;=9.0.0</code>, <code>packageManager pnpm@10.33.0</code>. <code>pnpm-workspace.yaml</code> globs <code>packages/*</code> and <code>apps/*</code>, resolving to <code>packages/{config,core,db,integrations,orchestration}</code> plus <code>apps/web</code>.</p>
+
+    <h3 class="ssh">Packages and their roles</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Package</th><th>Runtime deps</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>@oie/core</code></td><td><code>zod</code> (only)</td><td>Domain enums, ICP Zod schema, fact view, deterministic scoring engine. Graph root.</td></tr>
+          <tr><td><code>@oie/config</code></td><td><code>zod</code> (only)</td><td>Standalone. Env loading and fail-fast validation. No <code>@oie</code> deps.</td></tr>
+          <tr><td><code>@oie/db</code></td><td><code>@oie/core</code>, <code>@prisma/client</code></td><td>Prisma schema, hot-reload-safe <code>prisma</code> singleton, <code>seedIcp</code>, re-exports <code>@prisma/client</code>.</td></tr>
+          <tr><td><code>@oie/integrations</code></td><td><code>@oie/core</code>, <code>zod</code></td><td>Anti-corruption adapters, five contracts, <code>LlmClient</code>, NOVA findings normaliser.</td></tr>
+          <tr><td><code>@oie/orchestration</code></td><td><code>@oie/core</code>, <code>@oie/db</code>, <code>@oie/integrations</code>, <code>inngest ^3.27.0</code></td><td>Send-gate, waterfall, signal fan-in, scoring-bridge, Inngest durable functions. Top of the DAG.</td></tr>
+          <tr><td><code>web</code> (apps/web)</td><td>all four <code>@oie/*</code>, <code>next ^15</code>, <code>next-auth 5.0.0-beta.31</code>, <code>@sentry/nextjs</code>, <code>inngest</code>, <code>bcryptjs</code>, <code>react 19</code></td><td>App Router control plane. Not <code>@oie</code>-scoped.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="ssh">Source-only TypeScript consumption (no JS emit for libs)</h3>
+    <p>Every internal package's <code>package.json</code> sets <code>exports["."]: "./src/index.ts"</code> (raw TS) and defines <code>build = "tsc --noEmit"</code> (<code>@oie/db</code> prefixes <code>prisma generate &amp;&amp;</code>). <code>tsconfig.base.json</code> sets <code>noEmit: true</code>, <code>module ESNext</code>, <code>moduleResolution "Bundler"</code>, <code>verbatimModuleSyntax</code>, <code>isolatedModules</code>, <code>strict</code>, <code>noUncheckedIndexedAccess</code>, <code>noImplicitReturns</code>, <code>noFallthroughCasesInSwitch</code>. No package emits <code>dist/</code>; <code>tsx</code>/Vitest/Next transpile each lib at consume time. Effectively the only build artifact is <code>.next/**</code> from <code>web</code>.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">Turbo pipeline (turbo.json)</h4>
+        <ul class="tight">
+          <li><code>ui: "stream"</code>; <code>globalEnv: [NODE_ENV, DRY_RUN, DATABASE_URL]</code>.</li>
+          <li><code>typecheck</code>: <code>dependsOn ["^typecheck"]</code> (topological).</li>
+          <li><code>build</code>: <code>dependsOn ["^build"]</code>, outputs <code>["dist/**", ".next/**"]</code>.</li>
+          <li><code>lint</code> / <code>test</code>: no deps, run per package. <code>test</code> outputs <code>coverage/**</code>.</li>
+          <li><code>generate</code>: <code>cache: false</code>. No persistent/dev tasks.</li>
+        </ul>
+        <p style="margin-bottom:0">Root <code>verify = turbo run typecheck lint test build</code>.</p>
+      </div>
+      <div class="card">
+        <h4 class="qh">Env fail-fast (@oie/config)</h4>
+        <p style="margin-top:0"><code>loadEnv()</code> &rarr; Zod <code>safeParse</code>. On failure it throws <code>EnvValidationError</code> listing <em>every</em> problem at once as <code>path: message</code>. <code>getEnv()</code> memoises; <code>resetEnvCache()</code> for tests.</p>
+        <ul class="tight">
+          <li>Required: <code>DATABASE_URL</code> (url), <code>AUTH_SECRET</code> (min 16).</li>
+          <li><code>DRY_RUN</code>: <code>boolFromEnv(true)</code> - defaults <strong>true</strong>.</li>
+          <li>Cost caps: LLM 25, provider 50; <code>MIN_FREE_DISK_GB</code> 5.</li>
+          <li>19 provider keys are <code>optional("")</code> so adapters build before credentials arrive.</li>
+        </ul>
+      </div>
+    </div>
+
+    <pre class="fig"><span class="c">// @oie/config/src/schema.ts  -  fail-fast safety keys vs optional provider keys</span>
+<span class="k">const</span> optionalSecret = z.string().optional().default(<span class="s">""</span>);   <span class="c">// adapters build keyless</span>
+<span class="k">export const</span> <span class="fn">envSchema</span> = z.object({
+  DATABASE_URL:  z.string().url(),
+  AUTH_SECRET:   z.string().min(<span class="s">16</span>),
+  DRY_RUN:       <span class="fn">boolFromEnv</span>(<span class="k">true</span>),          <span class="c">// missing/blank -&gt; true; only true|1|yes|on flip it</span>
+  DAILY_LLM_COST_CAP_USD:      z.coerce.number().default(<span class="s">25</span>),
+  DAILY_PROVIDER_COST_CAP_USD: z.coerce.number().default(<span class="s">50</span>),
+  ANTHROPIC_API_KEY: optionalSecret, APOLLO_API_KEY: optionalSecret, EXA_API_KEY: optionalSecret,
+  <span class="c">/* ... 19 PROVIDER_KEYS total, all optional("") ... */</span>
+});</pre>
+    <p class="fig-cap">The anti-corruption boundary is structural: the scoring-bridge in <code>@oie/orchestration</code> (not core) maps Normalised DTOs into core's <code>ScoringSubject</code>, keeping <code>@oie/core</code> free of the integration layer.</p>
+  </section>
+
+  <!-- ============ SECTION 3 ============ -->
+  <span id="s3" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">03</span> Domain core and the deterministic scoring engine</h2>
+    <p class="lede"><code>@oie/core</code> owns the entire scorer as a pure function. <code>scoreLead(subject, icp, now)</code> never reads the clock and never imports an LLM SDK. The only "LLM" token in the whole package is a doc comment in <code>icp.ts</code> saying the LLM never computes the number.</p>
+
+    <h3 class="ssh">Key signatures</h3>
+    <pre class="fig"><span class="c">// packages/core/src/scoring-engine.ts</span>
+<span class="k">export function</span> <span class="fn">scoreLead</span>(subject: ScoringSubject, icp: IcpProfile, now: Date): ScoreResult;
+<span class="k">export const</span> SCORING_MODEL_VERSION = <span class="s">"scoring-v1"</span>;
+<span class="k">export function</span> <span class="fn">rankByComposite</span>(scores: ScoreResult[]): ScoreResult[];   <span class="c">// stable, composite desc</span>
+
+<span class="k">type</span> ScoreResult = {
+  fit: number; intent: number; composite: number; tier: Tier; modelVersion: string;
+  rationale: {
+    fit:    { score; coverage; components: FitComponent[] };
+    intent: { score; criteria: IntentCriterionResult[] };
+    composite: number; tier: Tier;
+  };
+};
+
+<span class="c">// packages/core/src/scoring.ts  -  math primitives (unit-tested in isolation)</span>
+<span class="fn">clampScore</span>(n)            <span class="c">// -&gt; [0,100]</span>
+<span class="fn">weightedScore</span>(items)    <span class="c">// clamp( sum(clamp(score_i)*w_i) / sum(w_i) )</span>
+<span class="fn">compositeScore</span>(fit, intent, blend) <span class="c">// clamp( clamp(fit)*blend.fit + clamp(intent)*blend.intent )</span>
+<span class="fn">signalDecayFactor</span>(detectedAt, expiresAt|null, now)
+<span class="fn">assignTier</span>(composite, thresholds)    <span class="c">// A|B|C|D, &gt;= inclusive</span></pre>
+
+    <h3 class="ssh">The fit / intent / composite / tier math</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">Fit: weighted average over configured dimensions only</h4>
+        <p style="margin-top:0">Up to 8 candidate <code>FitComponent</code>s are built (industry, employeeCount, revenue, geography, localCategory [nullable], technographics, people, keywords), then filtered to <code>c !== null &amp;&amp; c.weight &gt; 0</code>. Weight-0 dimensions are dropped entirely.</p>
+        <p class="kv">fit = weightedScore(components)<br>= clamp( &Sigma; clamp(score_i)&middot;w_i / &Sigma; w_i )</p>
+        <p style="margin-bottom:0"><code>coverage = knownCount / components.length</code> is reported in the rationale but does <strong>not</strong> scale the fit number: a known-but-zero and an unknown component both contribute score 0.</p>
+      </div>
+      <div class="card">
+        <h4 class="qh">Intent: strength &times; time-decay, diminishing returns</h4>
+        <p style="margin-top:0">Per criterion (weight &gt; 0), surviving signals each yield</p>
+        <p class="kv">s_i = (clamp(strength&middot;100)/100) &middot; decay(detectedAt, expiresAt, now)</p>
+        <p>folded by a probabilistic-OR:</p>
+        <p class="kv">combined = 1 &minus; &Prod;(1 &minus; clamp(s_i))</p>
+        <p style="margin-bottom:0"><code>score = clamp(combined&middot;100)</code>. One strong fresh signal dominates; many weak ones saturate slowly. Overall intent is the <code>weightedScore</code> across criteria.</p>
+      </div>
+    </div>
+
+    <pre class="fig"><span class="c">// Per-dimension fit sub-scores (each 0..100)</span>
+industry / revenue / localCategory : <span class="s">100</span> if matchesAny (fuzzy substring) else <span class="s">0</span>
+employeeCount  : <span class="s">100</span> inside [min,max]; else clamp(100 - 100*dist/width)
+geography      : country match -&gt; 100; else region -&gt; 100; else haversineKm &lt;= radius.km -&gt; 100; else 0
+technographics : any AVOIDED tool present -&gt; <span class="s">0</span> (hard disqualify); else clamp(100*min(matched,2)/2)
+people         : clamp(titleHit*50 + seniorityHit*25 + deptHit*25)   <span class="c">// title is the dominant 50pt signal</span>
+keywords       : any EXCLUDE term -&gt; 0; else clamp(100*hits/min(include.length,2))
+
+<span class="c">// Time decay (scoring.ts): linear from detection to expiry</span>
+<span class="fn">signalDecayFactor</span>(detectedAt, expiresAt, now):
+  expiresAt == null            -&gt; <span class="s">1</span>      <span class="c">// no decay</span>
+  span = expiresAt - detectedAt; span &lt;= 0 -&gt; <span class="s">0</span>
+  remaining = clamp01( 1 - (now - detectedAt) / span )    <span class="c">// 1 at detection, ~0.5 at midpoint, 0 at/after expiry</span>
+
+<span class="c">// Composite + tier (seed/test ICP: blend {fit:0.6, intent:0.4}; thresholds {A:80, B:65, C:50})</span>
+composite = clamp( clamp(fit)*0.6 + clamp(intent)*0.4 )    <span class="c">// blend is Zod-refined to sum to 1</span>
+tier      = composite &gt;= 80 ? A : &gt;= 65 ? B : &gt;= 50 ? C : D</pre>
+
+    <p>Signal TTL windows feed the decay and live in one place, <code>signal-windows.ts</code>: <code>DEFAULT_SIGNAL_TTL_DAYS = { funding 90, tech_adoption 60, job_change 45, hiring 30, news 30, web_change 21 }</code>. Adapters never set their own expiry; <code>signalExpiry(type, detectedAt, ttlDays?)</code> centralises it so ingestion and scoring stay in agreement.</p>
+
+    <div class="callout red">
+      <span class="lbl">The LLM is kept out structurally, not by convention</span>
+      <code>packages/core/package.json</code> declares exactly one runtime dependency: <code>zod ^3.24.1</code> (no <code>@anthropic-ai/*</code>). <code>scoreLead</code>'s signature is <code>(ScoringSubject, IcpProfile, Date) =&gt; ScoreResult</code>: there is no model client, prompt, or string-from-LLM input path, so there is no surface for a model to inject a number. A determinism test asserts <code>scoreLead(perfect, icp, NOW)</code> deep-equals a second call.
+    </div>
+
+    <p><strong>The fact view (anti-corruption inside core).</strong> The engine consumes only <code>CompanyFacts</code>, <code>ContactFacts</code>, and <code>SignalFact</code> (each field optional; missing scores zero and is recorded as unknown, never guessed), wrapped as <code>ScoringSubject {company, contact, signals[]}</code>. No vendor field reaches the engine. Identity helpers in <code>dedupe.ts</code> (<code>companyDedupeKey</code>, <code>contactDedupeKey</code>, <code>signalDedupeKey</code>) are pure so vendor shapes never decide identity.</p>
+  </section>
+
+  <!-- ============ SECTION 4 ============ -->
+  <span id="s4" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">04</span> Data model: Prisma schema and ERD</h2>
+    <p class="lede">The unified data model is the single source of truth across all providers (declared in the schema header). Postgres datasource (<code>provider "postgresql"</code>, <code>env("DATABASE_URL")</code>), <code>prisma-client-js</code> generator, single migration baseline <code>20260613234107_init</code>. 15 models, 9 enums. Every PK is <code>String @id @default(cuid())</code>.</p>
+
+    <h3 class="ssh">Enums (9)</h3>
+    <div class="card" style="font-size:13px">
+      <p style="margin:4px 0"><code>Seniority</code> {c_level, vp, director, manager, ic} &middot; <code>SignalType</code> {hiring, funding, tech_adoption, job_change, news, web_change} &middot; <code>EmailStatus</code> {verified, risky, invalid, unknown} &middot; <code>Channel</code> {email, linkedin, whatsapp} &middot; <code>Tier</code> {A, B, C, D}</p>
+      <p style="margin:4px 0"><code>EnrolmentStatus</code> {active, paused, completed, stopped} &middot; <code>MessageDirection</code> {outbound, inbound} &middot; <code>MessageStatus</code> {queued, <strong>awaiting_approval</strong>, sent, delivered, opened, replied, bounced, failed} &middot; <code>SequenceStatus</code> {draft, active, archived}</p>
+    </div>
+    <p><code>MessageStatus.awaiting_approval</code> is the structural anchor of the human send-gate; <code>SignalType</code> maps 1:1 to the seed ICP's signal types.</p>
+
+    <h3 class="ssh">Every model, key fields, and relations</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Model</th><th>Group</th><th>Key fields</th><th>Relations / constraints</th></tr></thead>
+        <tbody>
+          <tr><td><code>IcpProfile</code></td><td>config</td><td><code>name</code>, <code>version Int</code>, <code>active</code>, <code>config Json</code></td><td><code>@@unique([name,version])</code>; 1 &rarr; * Score</td></tr>
+          <tr><td><code>Company</code></td><td>graph</td><td><code>domain? @unique</code>, <code>placeId? @unique</code>, industry, employeeCount, lat/lng, <code>techStack String[]</code>, <code>sources Json</code>, <code>raw Json</code></td><td>1 &rarr; * Contact (SetNull), Signal (Cascade), CallSession (SetNull)</td></tr>
+          <tr><td><code>Contact</code></td><td>graph</td><td>fullName, title, <code>seniority Seniority?</code>, <code>email? @unique</code>, <code>emailStatus</code>, <code>linkedinUrl? @unique</code>, phone, whatsapp</td><td><code>company?</code> (SetNull, orphans survive); 1 &rarr; * Signal/Score/Enrolment/CallSession</td></tr>
+          <tr><td><code>Signal</code></td><td>graph</td><td><code>type SignalType</code>, <code>strength Float</code> (0..1 pre-decay), provider, <code>detectedAt</code>, <code>expiresAt?</code>, evidence Json</td><td>company? &amp;/or contact? (both Cascade, both nullable)</td></tr>
+          <tr><td><code>Score</code></td><td>graph</td><td><code>fit/intent/composite Float</code>, <code>tier Tier</code>, <code>rationale Json</code>, <code>modelVersion</code></td><td><code>@@unique([contactId,icpProfileId])</code>; M:N junction Contact&times;IcpProfile</td></tr>
+          <tr><td><code>Sequence</code></td><td>outreach</td><td><code>status SequenceStatus</code>, <code>steps Json</code></td><td>1 &rarr; * Enrolment (Cascade)</td></tr>
+          <tr><td><code>Enrolment</code></td><td>outreach</td><td><code>status</code>, <code>currentStep Int</code>, <code>nextActionAt?</code></td><td><code>@@unique([contactId,sequenceId])</code>; <code>@@index([status,nextActionAt])</code> (scheduler scan); M:N Contact&times;Sequence</td></tr>
+          <tr><td><code>Message</code></td><td>outreach</td><td><code>channel Channel</code>, <code>direction</code>, <code>status MessageStatus</code>, <code>externalId?</code></td><td><code>@@unique([channel,externalId])</code> (idempotency); enrolment? (SetNull)</td></tr>
+          <tr><td><code>Mailbox</code></td><td>capacity</td><td><code>email @unique</code>, domain, <code>dailyLimit 30</code>, warmupStatus, health</td><td>standalone (no FK)</td></tr>
+          <tr><td><code>ChannelAccount</code></td><td>capacity</td><td><code>type Channel</code>, handle, <code>dailyLimit 20</code>, <code>weeklyConnectLimit 80</code>, <code>enabled false</code></td><td><code>@@unique([provider,type,handle])</code>; standalone</td></tr>
+          <tr><td><code>Suppression</code></td><td>capacity</td><td><code>email? @unique</code>, domain?, reason</td><td>standalone; global do-not-contact</td></tr>
+          <tr><td><code>CallSession</code></td><td>voice</td><td><code>novaCallId @unique</code>, status (free-text), <code>demoMode true</code>, transcript, outcome, <code>consent true</code>, <code>optOut false</code>, <code>raw Json</code></td><td>contact? / company? (SetNull); 1 &rarr; * CallFinding</td></tr>
+          <tr><td><code>CallFinding</code></td><td>voice</td><td><code>key</code> (7 canonical), <code>value</code>, <code>confidence?</code>, <code>source "nova"</code></td><td>callSession (Cascade) - findings die with their call</td></tr>
+          <tr><td><code>AuditLog</code></td><td>ledger</td><td><code>actor</code>, <code>action</code>, <code>entity</code>, <code>entityId?</code>, <code>payload Json</code></td><td>append-only; polymorphic via entity/entityId; no FK</td></tr>
+          <tr><td><code>ProviderCost</code></td><td>ledger</td><td><code>provider</code>, <code>task</code>, <code>units</code>, <code>costUsd</code></td><td>cost-ceiling ledger; no FK</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig-cap">JSON-typed opaque blobs (the ERD marks these as blobs): <code>IcpProfile.config</code>, <code>Company.{funding,socials,sources,raw}</code>, <code>Contact.sources</code>, <code>Signal.evidence</code>, <code>Score.rationale</code>, <code>Sequence.steps</code>, <code>AuditLog.payload</code>, <code>CallSession.raw</code>.</p>
+
+    <div class="diagram">
+      <p class="dia-title">Figure 4.1 - Entity relationship diagram (cardinality and onDelete behaviour)</p>
+      <svg viewBox="0 0 920 470" font-family="ui-monospace, Menlo, monospace" font-size="12">
+        <defs>
+          <marker id="erd" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#7d8696"/></marker>
+        </defs>
+        <!-- nodes -->
+        <g>
+          <rect x="20" y="30" width="150" height="44" rx="7" fill="rgba(240,196,84,0.07)" stroke="#f0c454"/><text x="34" y="50" fill="#f0c454">IcpProfile</text><text x="34" y="66" fill="#7d8696" font-size="10">config (versioned)</text>
+          <rect x="20" y="200" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="34" y="220" fill="#eef1f6">Company</text><text x="34" y="236" fill="#7d8696" font-size="10">domain/placeId</text>
+          <rect x="280" y="200" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="294" y="220" fill="#eef1f6">Contact</text><text x="294" y="236" fill="#7d8696" font-size="10">email/linkedinUrl</text>
+          <rect x="280" y="40" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(79,209,181,0.4)"/><text x="294" y="60" fill="#4fd1b5">Score</text><text x="294" y="76" fill="#7d8696" font-size="10">M:N junction</text>
+          <rect x="150" y="320" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="164" y="340" fill="#eef1f6">Signal</text><text x="164" y="356" fill="#7d8696" font-size="10">strength pre-decay</text>
+          <rect x="540" y="200" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(79,209,181,0.4)"/><text x="554" y="220" fill="#4fd1b5">Enrolment</text><text x="554" y="236" fill="#7d8696" font-size="10">M:N junction</text>
+          <rect x="540" y="40" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="554" y="60" fill="#eef1f6">Sequence</text>
+          <rect x="760" y="200" width="140" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="774" y="220" fill="#eef1f6">Message</text><text x="774" y="236" fill="#7d8696" font-size="10">awaiting_approval</text>
+          <rect x="540" y="320" width="150" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="554" y="340" fill="#eef1f6">CallSession</text><text x="554" y="356" fill="#7d8696" font-size="10">novaCallId</text>
+          <rect x="760" y="320" width="140" height="44" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="774" y="340" fill="#eef1f6">CallFinding</text>
+        </g>
+        <!-- edges -->
+        <path d="M120,74 C170,120 230,40 278,55" fill="none" stroke="#7d8696" marker-end="url(#erd)"/><text x="180" y="90" fill="#7d8696" font-size="10">1..*</text>
+        <path d="M170,222 L278,222" stroke="#7d8696" marker-end="url(#erd)"/><text x="205" y="214" fill="#7d8696" font-size="10">1..* SetNull</text>
+        <path d="M355,84 L355,198" stroke="#7d8696" marker-end="url(#erd)"/><text x="360" y="150" fill="#7d8696" font-size="10">*..1 Cascade</text>
+        <path d="M130,244 C150,290 180,300 200,318" fill="none" stroke="#7d8696" marker-end="url(#erd)"/><text x="120" y="290" fill="#7d8696" font-size="10">Cascade</text>
+        <path d="M330,244 C300,290 270,300 250,318" fill="none" stroke="#7d8696" marker-end="url(#erd)"/>
+        <path d="M430,222 L538,222" stroke="#7d8696" marker-end="url(#erd)"/><text x="450" y="214" fill="#7d8696" font-size="10">1..* Cascade</text>
+        <path d="M615,84 L615,198" stroke="#7d8696" marker-end="url(#erd)"/><text x="620" y="150" fill="#7d8696" font-size="10">1..* Cascade</text>
+        <path d="M690,222 L758,222" stroke="#7d8696" marker-end="url(#erd)"/><text x="700" y="214" fill="#7d8696" font-size="10">1..* SetNull</text>
+        <path d="M430,232 C470,300 500,330 538,338" fill="none" stroke="#7d8696" marker-end="url(#erd)"/><text x="455" y="320" fill="#7d8696" font-size="10">SetNull</text>
+        <path d="M690,342 L758,342" stroke="#7d8696" marker-end="url(#erd)"/><text x="700" y="334" fill="#7d8696" font-size="10">1..* Cascade</text>
+        <!-- standalone note -->
+        <rect x="20" y="410" width="500" height="40" rx="7" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)"/>
+        <text x="34" y="427" fill="#7d8696" font-size="11">Standalone (no Prisma FK): Mailbox, ChannelAccount, Suppression,</text>
+        <text x="34" y="442" fill="#7d8696" font-size="11">AuditLog (polymorphic entity/entityId), ProviderCost</text>
+      </svg>
+    </div>
+
+    <p><strong>@oie/db exports exactly three things</strong> (<code>src/index.ts</code>): <code>export { prisma } from "./client"</code> (a <code>globalThis</code>-cached singleton, log level by NODE_ENV), <code>export { seedIcp } from "./seed-data"</code>, and <code>export * from "@prisma/client"</code> (all generated types + enums). The seed (<code>seed.ts</code>) validates via <code>icpProfile.parse(seedIcp)</code> against the canonical <code>@oie/core</code> Zod schema, upserts on <code>name_version</code>, enforces a single active profile, then writes an <code>AuditLog</code> (<code>actor "system:seed"</code>, <code>action "icp.seed"</code>). The seed ICP is <code>"UAE SMB - Sales Teams Running ERP (seed)"</code> with <code>compositeBlend {fit:0.6, intent:0.4}</code> and <code>tierThresholds {A:80, B:65, C:50}</code>.</p>
+  </section>
+
+  <!-- ============ SECTION 5 ============ -->
+  <span id="s5" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">05</span> Integration layer (anti-corruption)</h2>
+    <p class="lede"><code>packages/integrations</code> puts every bought rail behind one of five stable internal interfaces (<code>src/contracts/interfaces.ts</code>) and translates to/from normalised DTOs (<code>src/contracts/model.ts</code>). The per-vendor pattern is two files: <code>index.ts</code> (adapter class, HTTP via an injectable <code>HttpTransport</code> seam wrapped in <code>withRetry</code>) and <code>mapper.ts</code> (Zod schemas validating the wire shape plus pure <code>vendorShape -&gt; Normalised*</code> functions). Vendor shapes never escape the mapper; <code>src/index.ts</code> exports only adapter classes.</p>
+
+    <h3 class="ssh">The five contracts (method signatures)</h3>
+    <pre class="fig"><span class="c">// packages/integrations/src/contracts/interfaces.ts</span>
+<span class="k">interface</span> <span class="t">EnrichmentProvider</span> {
+  readonly name; isConfigured(): boolean;
+  discoverCompanies?(q: CompanyQuery, ctx: AdapterContext): Promise&lt;NormalisedCompany[]&gt;;
+  enrichCompany(q: CompanyQuery, ctx): Promise&lt;EnrichmentResult&lt;NormalisedCompany&gt;&gt;;
+  enrichContact(q: ContactQuery, ctx): Promise&lt;EnrichmentResult&lt;NormalisedContact&gt;&gt;;
+}
+<span class="k">interface</span> <span class="t">SignalProvider</span>   { name; isConfigured(); fetchSignals(q: SignalQuery, ctx): Promise&lt;NormalisedSignal[]&gt;; }
+<span class="k">interface</span> <span class="t">EmailSender</span>      { name; isConfigured(); send(m: OutboundEmail, ctx): Promise&lt;SendResult&gt;; } <span class="c">// MUST honour ctx.dryRun</span>
+<span class="k">interface</span> <span class="t">MessagingChannel</span> { name; readonly channel: <span class="s">"linkedin"|"whatsapp"</span>; isConfigured(); send(m: OutboundMessage, ctx): Promise&lt;SendResult&gt;; }
+<span class="k">interface</span> <span class="t">CrmStore</span>         { name; isConfigured(); upsertCompany(c, ctx): Promise&lt;CrmRef&gt;; upsertContact(c, ctx): Promise&lt;CrmRef&gt;; } <span class="c">// find-or-create</span>
+
+<span class="c">// Unified DTOs (model.ts). Seniority/EmailStatus/SignalType/Channel imported from @oie/core.</span>
+SendResult { outcome: <span class="s">"sent"|"dry_run"|"skipped"</span>; externalId?; provider; preview? }
+AdapterContext { dryRun: boolean; idempotencyKey?; signal?: AbortSignal; recordCost?: (r: CostRecord) =&gt; void }
+NormalisedSignal { type: SignalType; strength: number <span class="c">/* 0..1 raw pre-decay */</span>; provider; detectedAt: Date; expiresAt?: Date|null }</pre>
+
+    <h3 class="ssh">Provider list (public surface)</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Contract</th><th>Adapters</th></tr></thead>
+        <tbody>
+          <tr><td><code>EnrichmentProvider</code></td><td><code>PlacesAdapter</code>, <code>SearchApiAdapter</code>, <code>ApolloAdapter</code>, <code>ClayAdapter</code> (+<code>parseClayWebhook</code>), <code>ExploriumAdapter</code></td></tr>
+          <tr><td><code>SignalProvider</code></td><td><code>TheirStackAdapter</code>, <code>PredictLeadsAdapter</code>, <code>ExaAdapter</code></td></tr>
+          <tr><td><code>CrmStore</code></td><td><code>HubSpotAdapter</code></td></tr>
+          <tr><td><code>EmailSender</code> (honours dryRun)</td><td><code>SmartleadAdapter</code>, <code>ResendAdapter</code></td></tr>
+          <tr><td><code>MessagingChannel</code> (gated, off by default)</td><td><code>UnipileAdapter</code> (+<code>parseUnipileWebhook</code>)</td></tr>
+          <tr><td>LLM</td><td><code>LlmClient</code>, <code>MODEL_IDS</code>, <code>personaliseOpener</code>, <code>personaliseColdOpener</code>, <code>buildPersonalisationPrompt</code>, <code>extractCompanyFacts</code></td></tr>
+          <tr><td>Voice (not exported)</td><td>NOVA is a pure normaliser under <code>src/nova</code>, not an HTTP adapter class</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="ssh">The adapter pattern (Apollo is canonical)</h3>
+    <p><code>src/apollo/mapper.ts</code> declares Zod schemas (<code>apolloOrganizationResponse</code>, <code>apolloPeopleResponse</code>) that describe only the mapped fields, ignoring extra wire fields. Two enum-folding functions map vendor free-text onto closed <code>@oie/core</code> enums: <code>mapSeniority</code> (owner/founder/partner/c_suite &rarr; <code>c_level</code>; head/director &rarr; <code>director</code>; senior/entry/intern/ic &rarr; <code>ic</code>; else <code>null</code>) and <code>mapEmailStatus</code> (verified &rarr; verified; guessed/unverified &rarr; risky; unavailable/bounced &rarr; invalid; else unknown - the comment reads "we never guess deliverability"). <code>organizationToCompany</code> / <code>personToContact</code> call <code>normaliseDomain</code> and attribute every non-null field to <code>'apollo'</code> in <code>sources</code>. The <code>ApolloAdapter</code> carries cost on the result and does NOT call <code>ctx.recordCost</code> (the waterfall records once to avoid double counting).</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">LlmClient surface</h4>
+        <pre class="fig" style="margin:8px 0"><span class="t">MODEL_IDS</span> = {
+  hard:        <span class="s">"claude-opus-4-8"</span>,
+  personalise: <span class="s">"claude-sonnet-4-6"</span>,
+  parse:       <span class="s">"claude-haiku-4-5"</span>,
+}
+complete(o: CompleteOptions): Promise&lt;CompleteResult&gt;
+  -&gt; POST api.anthropic.com/v1/messages
+     headers x-api-key + anthropic-version 2023-06-01
+     withRetry(httpJson(...)); Zod messagesResponseSchema
+CompleteResult { text; toolInput; raw; cost: CostRecord }</pre>
+        <p style="margin-bottom:0">No <code>@anthropic-ai/sdk</code> dependency. <code>estimateCost</code> uses <code>PRICE_PER_M</code> (opus 15/75, sonnet 3/15, haiku 0.8/4 USD per M tokens) and returns a <code>CostRecord</code>, but orchestration must record it. <code>extract.ts</code>/<code>personalise.ts</code> use <code>tool_use</code> (<code>emit_company_facts</code>/<code>emit_opener</code>) with null-on-ungrounded fields. Neither emits a numeric score.</p>
+      </div>
+      <div class="card">
+        <h4 class="qh">DRY_RUN gate is structural in send adapters</h4>
+        <pre class="fig" style="margin:8px 0"><span class="c">// SmartleadAdapter.send() - FIRST statement</span>
+<span class="k">if</span> (ctx.dryRun) <span class="k">return</span> {
+  outcome: <span class="s">"dry_run"</span>, provider: this.name,
+  preview: <span class="s">`${m.subject} -&gt; ${m.to}`</span>,
+};
+<span class="c">// transport is never referenced on dry-run path</span></pre>
+        <p style="margin-bottom:0">"Structurally impossible to hit the network." On a real send it requires <code>campaignId</code>, forwards <code>idempotencyKey</code> as both <code>X-Idempotency-Key</code> and <code>client_reference_id</code>, injects a compliance footer + <code>List-Unsubscribe</code> headers, and records cost (<code>0.001</code>) only after the real send.</p>
+      </div>
+    </div>
+
+    <h3 class="ssh">Shared base and central decay ownership</h3>
+    <p><code>base/errors.ts</code>: <code>AdapterError</code> with <code>kind</code> (<code>auth | rate_limit | not_found | invalid_request | provider_unavailable | timeout | unknown</code>); <code>kindFromStatus</code> maps 401/403&rarr;auth, 404&rarr;not_found, 429&rarr;rate_limit, 4xx&rarr;invalid_request, 5xx&rarr;provider_unavailable. <code>base/retry.ts</code>: <code>withRetry</code> applies per-attempt <code>withTimeout</code> and full-jitter exponential backoff (<code>backoffDelay = floor(rand()*min(max, base*2^attempt))</code>). <code>base/http.ts</code>: <code>HttpTransport</code> seam with <code>fetchTransport</code> (prod) and <code>stubTransport</code> (replays a fixed queue) so CI runs with no live calls. The <code>ExaAdapter</code> mapper returns <code>null</code> when <code>publishedDate</code> is absent ("fabricating a timestamp would corrupt signal decay") and leaves <code>expiresAt</code> absent because decay is assigned centrally by orchestration core, not the adapter.</p>
+
+    <div class="callout tealc">
+      <span class="lbl">NOVA findings parser</span>
+      <code>src/nova/findings.ts</code> is a pure module (no I/O, no Prisma). <code>CANONICAL_FINDING_KEYS = ['identity_confirmed','after_hours_handling','tools','monthly_volume','mobile','demo_interest','opt_in']</code> is a Set used as an allowlist. <code>extractFindings(payload)</code> defensively reads from <code>payload.findings | .outcome.findings | .data.findings | .outcome</code>, accepts an array or a plain key/value object, coerces booleans to <code>'yes'/'no'</code>, clamps values to 500 chars, keeps confidence only when a number in [0,1], and never fabricates (missing field yields no finding). <code>affirmative(v)</code> regex-matches yes/true/confirmed/granted/opted-in/agreed/interested.
+    </div>
+  </section>
+
+  <!-- ============ SECTION 6 ============ -->
+  <span id="s6" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">06</span> Runtime orchestration and the send-gate</h2>
+    <p class="lede"><code>@oie/orchestration</code> is the brain: pure, deterministic decision functions wrapped by Inngest durable step functions that own retries, multi-day sleeps, exactly-once replay, and all DB/AuditLog persistence. The load-bearing safety rail is <code>evaluateSendGate</code> in <code>send-gate.ts</code>: a pure, total function gating every provider send.</p>
+
+    <h3 class="ssh">The data flywheel</h3>
+    <div class="diagram">
+      <p class="dia-title">Figure 6.1 - The data flywheel: discover -&gt; enrich waterfall -&gt; NOVA voice -&gt; master DB -&gt; deterministic score -&gt; human-gated close</p>
+      <svg viewBox="0 0 920 250" font-family="ui-monospace, Menlo, monospace" font-size="11.5">
+        <defs><marker id="fw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f0c454"/></marker></defs>
+        <g>
+          <rect x="14" y="40" width="118" height="56" rx="8" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="28" y="64" fill="#eef1f6">Discover</text><text x="22" y="82" fill="#7d8696" font-size="10">Places / Search</text>
+          <rect x="160" y="40" width="138" height="56" rx="8" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="174" y="62" fill="#eef1f6">Enrich waterfall</text><text x="174" y="80" fill="#7d8696" font-size="10">merge missing, per-field</text>
+          <rect x="326" y="40" width="118" height="56" rx="8" fill="#181c24" stroke="rgba(79,209,181,0.4)"/><text x="340" y="62" fill="#4fd1b5">NOVA voice</text><text x="340" y="80" fill="#7d8696" font-size="10">consented facts</text>
+          <rect x="472" y="40" width="118" height="56" rx="8" fill="rgba(240,196,84,0.07)" stroke="#f0c454"/><text x="486" y="62" fill="#f0c454">Master DB</text><text x="486" y="80" fill="#7d8696" font-size="10">unified model</text>
+          <rect x="618" y="40" width="130" height="56" rx="8" fill="#181c24" stroke="rgba(79,209,181,0.4)"/><text x="632" y="62" fill="#4fd1b5">scoreLead()</text><text x="632" y="80" fill="#7d8696" font-size="10">deterministic, code</text>
+          <rect x="776" y="40" width="130" height="56" rx="8" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="790" y="62" fill="#eef1f6">Human-gated</text><text x="790" y="80" fill="#7d8696" font-size="10">send-gate close</text>
+        </g>
+        <path d="M132,68 L158,68" stroke="#f0c454" marker-end="url(#fw)"/>
+        <path d="M298,68 L324,68" stroke="#f0c454" marker-end="url(#fw)"/>
+        <path d="M444,68 L470,68" stroke="#f0c454" marker-end="url(#fw)"/>
+        <path d="M590,68 L616,68" stroke="#f0c454" marker-end="url(#fw)"/>
+        <path d="M748,68 L774,68" stroke="#f0c454" marker-end="url(#fw)"/>
+        <!-- flywheel return -->
+        <path d="M841,96 C841,170 460,200 260,200 C120,200 73,150 73,98" fill="none" stroke="#4fd1b5" stroke-dasharray="5 4" marker-end="url(#fw)"/>
+        <text x="380" y="195" fill="#4fd1b5" font-size="10">verify-by-conversation: every consented call enriches the master DB, raising the next score</text>
+      </svg>
+    </div>
+
+    <h3 class="ssh">The send-gate decision logic</h3>
+    <pre class="fig"><span class="c">// packages/orchestration/src/send-gate.ts  -  pure and total, fixed precedence</span>
+<span class="k">function</span> <span class="fn">evaluateSendGate</span>(input: {
+  dryRun: boolean; approval: <span class="s">"pending"|"approved"|"rejected"</span>;
+  channel: Channel; channelEnabled: boolean;
+}): SendGateDecision {
+  <span class="c">// (1) channel opt-in first</span>
+  <span class="k">if</span> (GATED_CHANNELS.includes(channel) &amp;&amp; !channelEnabled) -&gt; <span class="s">"blocked_channel_disabled"</span>, allowSend false
+  <span class="c">// (2) rejection beats DRY_RUN</span>
+  <span class="k">if</span> (approval === <span class="s">"rejected"</span>)                     -&gt; <span class="s">"blocked_rejected"</span>,        allowSend false
+  <span class="c">// (3) DRY_RUN ALWAYS WINS, even over an approved action</span>
+  <span class="k">if</span> (dryRun)                                    -&gt; <span class="s">"simulate"</span>,               allowSend false
+  <span class="c">// (4) must be human-approved</span>
+  <span class="k">if</span> (approval !== <span class="s">"approved"</span>)                  -&gt; <span class="s">"blocked_awaiting_approval"</span>, allowSend false
+  <span class="c">// (5) the ONLY allowSend=true branch</span>
+  <span class="k">else</span>                                           -&gt; <span class="s">"send"</span>,    allowSend <span class="k">true</span>
+}</pre>
+
+    <div class="diagram">
+      <p class="dia-title">Figure 6.2 - Send-gate decision flow (allowSend=true is the only path that permits a provider call)</p>
+      <svg viewBox="0 0 920 300" font-family="ui-monospace, Menlo, monospace" font-size="11.5">
+        <defs><marker id="sg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7d8696"/></marker></defs>
+        <!-- diamonds approximated as rounded rects -->
+        <rect x="14" y="120" width="120" height="50" rx="8" fill="#181c24" stroke="#f0c454"/><text x="24" y="142" fill="#eef1f6" font-size="11">channel gated</text><text x="24" y="158" fill="#7d8696" font-size="10">&amp; !enabled?</text>
+        <rect x="190" y="120" width="120" height="50" rx="8" fill="#181c24" stroke="#f0c454"/><text x="200" y="142" fill="#eef1f6" font-size="11">approval ==</text><text x="200" y="158" fill="#7d8696" font-size="10">rejected?</text>
+        <rect x="366" y="120" width="120" height="50" rx="8" fill="#181c24" stroke="#f0c454"/><text x="376" y="148" fill="#eef1f6" font-size="11">dryRun?</text>
+        <rect x="542" y="120" width="120" height="50" rx="8" fill="#181c24" stroke="#f0c454"/><text x="552" y="142" fill="#eef1f6" font-size="11">approval !=</text><text x="552" y="158" fill="#7d8696" font-size="10">approved?</text>
+        <rect x="730" y="118" width="170" height="54" rx="8" fill="rgba(79,209,181,0.1)" stroke="#4fd1b5"/><text x="745" y="140" fill="#4fd1b5" font-size="12">SEND (allowSend=true)</text><text x="745" y="158" fill="#7d8696" font-size="10">the only provider-call path</text>
+        <!-- no edges across -->
+        <path d="M134,145 L188,145" stroke="#7d8696" marker-end="url(#sg)"/><text x="146" y="138" fill="#7d8696" font-size="9">no</text>
+        <path d="M310,145 L364,145" stroke="#7d8696" marker-end="url(#sg)"/><text x="322" y="138" fill="#7d8696" font-size="9">no</text>
+        <path d="M486,145 L540,145" stroke="#7d8696" marker-end="url(#sg)"/><text x="498" y="138" fill="#7d8696" font-size="9">no</text>
+        <path d="M662,145 L728,145" stroke="#7d8696" marker-end="url(#sg)"/><text x="676" y="138" fill="#7d8696" font-size="9">no</text>
+        <!-- yes branches down -->
+        <path d="M74,170 L74,230" stroke="#7d8696" marker-end="url(#sg)"/><rect x="14" y="232" width="130" height="40" rx="7" fill="rgba(232,140,140,0.1)" stroke="rgba(232,140,140,0.35)"/><text x="22" y="256" fill="#e88c8c" font-size="10">blocked_channel_disabled</text>
+        <path d="M250,170 L250,230" stroke="#7d8696" marker-end="url(#sg)"/><rect x="190" y="232" width="120" height="40" rx="7" fill="rgba(232,140,140,0.1)" stroke="rgba(232,140,140,0.35)"/><text x="200" y="256" fill="#e88c8c" font-size="10">blocked_rejected</text>
+        <path d="M426,170 L426,230" stroke="#7d8696" marker-end="url(#sg)"/><rect x="366" y="232" width="120" height="40" rx="7" fill="rgba(240,196,84,0.08)" stroke="rgba(240,196,84,0.3)"/><text x="386" y="256" fill="#f0c454" font-size="10">simulate (preview)</text>
+        <path d="M602,170 L602,230" stroke="#7d8696" marker-end="url(#sg)"/><rect x="542" y="232" width="140" height="40" rx="7" fill="rgba(232,140,140,0.1)" stroke="rgba(232,140,140,0.35)"/><text x="550" y="256" fill="#e88c8c" font-size="10">blocked_awaiting_approval</text>
+        <text x="78" y="200" fill="#7d8696" font-size="9">yes</text><text x="254" y="200" fill="#7d8696" font-size="9">yes</text><text x="430" y="200" fill="#7d8696" font-size="9">yes</text><text x="606" y="200" fill="#7d8696" font-size="9">yes</text>
+      </svg>
+    </div>
+    <p class="fig-cap">Three independent conditions must all hold for a real send: (1) channel operator-enabled (LinkedIn/WhatsApp off by default), (2) DRY_RUN off, (3) human-approved. DRY_RUN defaults true everywhere (<code>boolFromEnv(true)</code>); a missing or blank value resolves to true and must be explicitly set to a falsy token to live-send.</p>
+
+    <h3 class="ssh">executeSendStep: the only place that calls an adapter .send()</h3>
+    <p><code>send-step.ts</code> layers gates in order: (1) <code>isSuppressionMatch</code> (email==email OR domain==domain, case-insensitive, email only) returns <code>'suppressed'</code> with status <code>'failed'</code> and no provider call; (2) <code>evaluateSendGate</code>: if <code>!allowSend</code>, maps via <code>gateOutcomeToStepOutcome</code> (simulate&rarr;dry_run, blocked_awaiting_approval&rarr;awaiting_approval, blocked_rejected&rarr;rejected, blocked_channel_disabled&rarr;channel_disabled) and <code>pendingMessageStatus</code> (simulate and blocked_awaiting_approval both &rarr; <code>'awaiting_approval'</code> so dry-run previews sit in the approval queue); (3) only on <code>allowSend === true</code> it builds <code>AdapterContext { dryRun: false, idempotencyKey, signal }</code> and calls <code>emailSender.send</code> or <code>messagingChannel.send</code>. The idempotency key is stable across replays: <code>enrolment:${enrolmentId}:step:${stepIndex}:channel:${channel}</code>.</p>
+
+    <h3 class="ssh">The enrichment waterfall</h3>
+    <p><code>enrichCompanyWaterfall(query, providers, ctx, options)</code> iterates providers in priority order: unconfigured providers push a <code>skipped_unconfigured</code> trace; each <code>result.cost</code> is pushed and <code>ctx.recordCost?.(cost)</code> called; on a match, <code>mergeCompany</code> fills only fields still missing across <code>COMPANY_FIELDS</code> and records the supplying provider per field in <code>company.sources</code>; <code>isComplete</code> (default <code>domain &amp;&amp; industry &amp;&amp; employeeCount</code>) triggers an early break to stop spend. A thrown <code>AdapterError</code> is caught, recorded as an <code>error</code> trace, and the cascade <strong>falls through</strong> to the next provider rather than aborting. <code>collect-signals.ts</code> is the analogue: it fans in across <code>SignalProvider</code>s, dedupes via <code>signalDedupeKey</code> keeping the stronger strength on collision, and assigns central decay via <code>signalExpiry</code> when an adapter set none.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">Inngest durable cadence (runEnrolment)</h4>
+        <p style="margin-top:0"><code>inngest = new Inngest({ id: 'oie' })</code>. <code>runEnrolment</code> id <code>'sequence-enrol'</code>, <code>retries: 3</code>, <code>cancelOn oie/sequence.stop</code>. Per step, memoised <code>step.run</code>: (1) check-stop-pre-sleep (cost caps + stop events), (2) <code>step.sleepUntil(nextDueAt(...))</code> for durable multi-day delay, (3) check-stop-post-sleep (a reply may have arrived), (4) load-suppressions then <code>executeSendStep</code> + <code>prisma.message.create</code> (externalId = idempotencyKey) + AuditLog, (5) advance-state via pure <code>advance(state, steps, now)</code>. Date fields are re-hydrated from ISO strings because <code>step.run</code> serialises through JSON.</p>
+      </div>
+      <div class="card">
+        <h4 class="qh">DRY_RUN, approval queue, cost caps</h4>
+        <ul class="tight" style="margin-top:0">
+          <li>The approval queue today is a <strong>DRY_RUN stub</strong>: <code>approveMessage</code>/<code>rejectMessage</code> in <code>apps/web/app/approvals/actions.ts</code> record intent via <code>console.info</code> only and contact no provider (DB persist + Inngest enqueue are Phase 7 TODOs).</li>
+          <li><code>autoEnrolOnSignal</code> plans but never sends: <code>qualifiesForEnrolment</code> (rejects expired/non-qualifying signals or tier below <code>policy.minTier</code> via <code>TIER_RANK A:3 B:2 C:1 D:0</code>), then upserts an Enrolment; the first message still routes through the gate.</li>
+          <li><code>costCapStatus</code> is pure: <code>halt = llmUsd&gt;=cap || providerUsd&gt;=cap</code>. <code>readDailySpend</code> sums <code>prisma.providerCost</code> over the UTC day and swallows DB errors as zero so a transient hiccup never causes a false halt.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="lbl">There is no pipeline.ts</span>
+      The Stream A pipeline (discover &rarr; dedupe &rarr; enrich &rarr; score &rarr; rank) exists only as an integration test, <code>pipeline.test.ts</code>, composing <code>waterfall.ts</code> + <code>scoring-bridge.ts</code> + <code>@oie/core</code>. It asserts per-field attribution (<code>sources.placeId === 'places'</code>, <code>sources.industry === 'apollo'</code>, <code>matchedBy === ['places','apollo']</code>) then runs <code>toScoringSubject</code> + <code>scoreLead</code> + <code>rankByComposite</code>.
+    </div>
+  </section>
+
+  <!-- ============ SECTION 7 ============ -->
+  <span id="s7" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">07</span> The Next.js control plane (apps/web)</h2>
+    <p class="lede">A Next.js 15 App Router control plane with 11 page routes and 3 API route handlers, all rendered through one shell (<code>app/layout.tsx</code> wraps every page with <code>NavSidebar</code> + main; metadata title "Huscribe Revenue OS"). Data flows through a server-only layer (<code>lib/data.ts</code>) that queries Prisma and falls back to <code>lib/fixtures.ts</code> seed data when the DB is empty or unreachable, returning UI shapes that never expose raw Prisma rows.</p>
+
+    <h3 class="ssh">Route map</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Path</th><th>Purpose</th><th>Access</th><th>Render</th><th>Data load</th></tr></thead>
+        <tbody>
+          <tr><td><code>/</code></td><td>Home: flywheel cards + summary tiles</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-static">static</span></td><td><code>getAnalyticsTiles()</code></td></tr>
+          <tr><td><code>/signin</code></td><td>Sign-in ('use client'), posts <code>signIn('credentials')</code></td><td><span class="badge b-public">public</span></td><td><span class="badge b-static">static</span></td><td>none</td></tr>
+          <tr><td><code>/leads</code></td><td>Scored lead list</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getLeads()</code></td></tr>
+          <tr><td><code>/icp</code></td><td>Active ICP config</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getActiveIcp()</code> + <code>getLeads()</code></td></tr>
+          <tr><td><code>/signals</code></td><td>Signal feed</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getSignals()</code></td></tr>
+          <tr><td><code>/voice</code></td><td>NOVA call sessions</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getCallSessions()</code></td></tr>
+          <tr><td><code>/dojo</code></td><td>Voice Dojo roleplay</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td>static <code>SCENARIOS</code></td></tr>
+          <tr><td><code>/close</code></td><td>Close Room battlecards</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getLeads()</code></td></tr>
+          <tr><td><code>/knowledge</code></td><td>Knowledge Q&amp;A</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td>none</td></tr>
+          <tr><td><code>/approvals</code></td><td>Approval queue</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getApprovals()</code></td></tr>
+          <tr><td><code>/analytics</code></td><td>Analytics dashboard</td><td><span class="badge b-gated">gated</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td><code>getAnalytics()</code> + <code>getLeads()</code></td></tr>
+          <tr><td><code>/api/auth/[...nextauth]</code></td><td>Auth.js handlers (catch-all)</td><td><span class="badge b-public">public</span></td><td><span class="badge b-dyn">dynamic</span> (nodejs)</td><td>re-exports GET/POST</td></tr>
+          <tr><td><code>/api/inngest</code></td><td><code>serve({client,functions})</code> GET/POST/PUT</td><td><span class="badge b-public">public*</span></td><td><span class="badge b-dyn">dynamic</span> (nodejs)</td><td>signing-key authed</td></tr>
+          <tr><td><code>/api/health</code></td><td>Liveness, no auth/db/secrets</td><td><span class="badge b-public">public</span></td><td><span class="badge b-dyn">force-dynamic</span></td><td>returns {status:'ok',...}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig-cap">* <code>/api/inngest</code> is public to the middleware allowlist but authenticated server-to-server via <code>INNGEST_SIGNING_KEY</code>.</p>
+
+    <h3 class="ssh">Auth gating: one callback is the single gate</h3>
+    <p>Auth.js v5 uses a split config. <code>middleware.ts</code> is <code>export const { auth: middleware } = NextAuth(authConfig)</code> with a matcher excluding <code>_next/static</code>, <code>_next/image</code>, <code>favicon.ico</code> and image extensions. The Edge-safe <code>auth.config.ts</code> (no bcrypt, <code>satisfies NextAuthConfig</code>) sets <code>pages.signIn = '/signin'</code>, <code>trustHost: true</code>, <code>session { strategy: 'jwt', maxAge: 12h, updateAge: 1h }</code>, <code>providers: []</code>, and the <code>authorized({auth, request})</code> callback that allowlists <code>/signin</code>, <code>/api/health</code>, <code>/api/auth</code>, <code>/api/inngest</code> and otherwise requires <code>!!auth?.user</code>. The Node-runtime <code>auth.ts</code> spreads <code>authConfig</code> and adds the bcrypt Credentials provider: <code>authorize()</code> lowercases/trims the email, compares <code>AUTH_OPERATOR_EMAIL</code> + <code>bcrypt.compare(password, AUTH_OPERATOR_PASSWORD_HASH)</code>, and a dev fallback (<code>dev@oie.local</code>) is gated on <code>NODE_ENV !== 'production'</code> AND <code>ALLOW_DEV_LOGIN === 'true'</code> (fail-closed double opt-in).</p>
+
+    <h3 class="ssh">Server-action files (5 'use server' modules) and lib modules</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">Server actions</h4>
+        <ul class="tight" style="margin-top:0">
+          <li><code>lib/auth-actions.ts</code>: <code>signOutAction()</code>.</li>
+          <li><code>app/approvals/actions.ts</code>: <code>approveMessage</code>/<code>rejectMessage</code> (no-send stubs).</li>
+          <li><code>app/close/actions.ts</code>: <code>generatePrep</code>, <code>generateOutreach</code>, <code>coachTranscript</code> (deep), <code>computeRoi</code>.</li>
+          <li><code>app/dojo/actions.ts</code>: <code>prospectReply</code>, <code>scoreRoleplay</code> (deep).</li>
+          <li><code>app/knowledge/actions.ts</code>: <code>askKnowledge</code> (validates 3..2000 chars).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="qh">lib modules</h4>
+        <ul class="tight" style="margin-top:0">
+          <li><code>lib/data.ts</code> (server-only): Prisma-backed layer; <code>tryDb&lt;T&gt;()</code> swallows DB errors to null so build/dev stay green.</li>
+          <li><code>lib/fixtures.ts</code> (the data seam, no Prisma import): SEED_ICP, 8 UAE-SMB FIXTURE_LEADS, <code>scoreAndRankLeads</code>.</li>
+          <li><code>lib/llm.ts</code> (server-only): the single <code>ask()</code> chokepoint.</li>
+          <li><code>lib/canon.ts</code>: 8 canon blocks + <code>grounding(keys[])</code> (replaces RAG).</li>
+          <li><code>lib/utils.ts</code>: <code>cn</code>, <code>formatDate</code>, <code>signalTypeLabel</code>, etc.</li>
+        </ul>
+      </div>
+    </div>
+    <p><strong>Co-located non-action helpers</strong> are kept out of <code>'use server'</code> modules so they unit-test: <code>app/close/roi-math.ts</code> (pure <code>computeRoiMath</code>), <code>app/dojo/scenarios.ts</code>, <code>app/dojo/sanitize.ts</code> (<code>MAX_TURNS=60</code>, <code>MAX_TURN_CHARS=1500</code>).</p>
+  </section>
+
+  <!-- ============ SECTION 8 ============ -->
+  <span id="s8" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">08</span> AI features internals</h2>
+    <p class="lede">All three AI surfaces (Close Room, Knowledge, Voice Dojo) are <code>'use server'</code> actions following one identical pipeline: build a system prompt = feature template + <code>grounding(canon blocks)</code>, build a single user turn from real data, then call the one chokepoint <code>ask()</code>. <code>ask()</code> instantiates the <code>@oie/integrations LlmClient</code> and calls <code>.complete()</code>, a hand-rolled REST adapter over the Anthropic Messages API. There is no <code>@anthropic-ai/sdk</code> in the graph.</p>
+
+    <div class="diagram">
+      <p class="dia-title">Figure 8.1 - One AI feature end-to-end (Close Room battlecard): canon grounding -&gt; ask() -&gt; Anthropic -&gt; render</p>
+      <svg viewBox="0 0 920 360" font-family="ui-monospace, Menlo, monospace" font-size="11">
+        <defs><marker id="sq" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7d8696"/></marker></defs>
+        <!-- lifelines -->
+        <line x1="90"  y1="40" x2="90"  y2="340" stroke="rgba(255,255,255,0.1)"/>
+        <line x1="280" y1="40" x2="280" y2="340" stroke="rgba(255,255,255,0.1)"/>
+        <line x1="470" y1="40" x2="470" y2="340" stroke="rgba(255,255,255,0.1)"/>
+        <line x1="660" y1="40" x2="660" y2="340" stroke="rgba(255,255,255,0.1)"/>
+        <line x1="845" y1="40" x2="845" y2="340" stroke="rgba(255,255,255,0.1)"/>
+        <!-- heads -->
+        <rect x="30" y="18" width="120" height="34" rx="7" fill="#181c24" stroke="#f0c454"/><text x="44" y="40" fill="#eef1f6">generatePrep</text>
+        <rect x="222" y="18" width="116" height="34" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="236" y="40" fill="#eef1f6">grounding()</text>
+        <rect x="412" y="18" width="116" height="34" rx="7" fill="#181c24" stroke="rgba(79,209,181,0.4)"/><text x="426" y="40" fill="#4fd1b5">ask()</text>
+        <rect x="600" y="18" width="120" height="34" rx="7" fill="#181c24" stroke="rgba(255,255,255,0.14)"/><text x="610" y="40" fill="#eef1f6">LlmClient</text>
+        <rect x="788" y="18" width="116" height="34" rx="7" fill="#181c24" stroke="#f0c454"/><text x="800" y="40" fill="#f0c454">Anthropic</text>
+        <!-- messages -->
+        <path d="M90,80 L88,80 L88,80" stroke="none"/>
+        <path d="M90,85 L278,85" stroke="#7d8696" marker-end="url(#sq)"/><text x="100" y="78" fill="#aab2c0" font-size="10">findLead() via getLeads() -&gt; ScoredLead (score computed by code)</text>
+        <path d="M280,118 L92,118" stroke="#7d8696" marker-end="url(#sq)" stroke-dasharray="3 3"/><text x="100" y="111" fill="#7d8696" font-size="10">canon = grounding([FRAMEWORKS,OBJECTIONS,HUSCRIBE_FACTS,DUBAI,DISCOVERY])</text>
+        <path d="M90,152 L468,152" stroke="#7d8696" marker-end="url(#sq)"/><text x="100" y="145" fill="#aab2c0" font-size="10">ask({ system: PREP_SYSTEM(canon), user: leadBrief(lead), maxTokens: 2400 })</text>
+        <path d="M470,186 L658,186" stroke="#7d8696" marker-end="url(#sq)"/><text x="478" y="179" fill="#aab2c0" font-size="10">complete({ model: sonnet-4-6, system, messages:[{user}] })</text>
+        <path d="M660,220 L843,220" stroke="#7d8696" marker-end="url(#sq)"/><text x="668" y="213" fill="#aab2c0" font-size="10">POST /v1/messages (withRetry + httpJson)</text>
+        <path d="M845,254 L662,254" stroke="#4fd1b5" marker-end="url(#sq)" stroke-dasharray="3 3"/><text x="668" y="247" fill="#4fd1b5" font-size="10">Zod messagesResponseSchema -&gt; {text,toolInput:null,cost}</text>
+        <path d="M660,288 L472,288" stroke="#4fd1b5" marker-end="url(#sq)" stroke-dasharray="3 3"/><text x="478" y="281" fill="#4fd1b5" font-size="10">result.text.trim() (Sentry on empty/error)</text>
+        <path d="M470,322 L92,322" stroke="#4fd1b5" marker-end="url(#sq)" stroke-dasharray="3 3"/><text x="100" y="315" fill="#4fd1b5" font-size="10">{ ok:true, body } -&gt; Markdown source=body (dependency-free renderer)</text>
+      </svg>
+    </div>
+    <p class="fig-cap">Knowledge and Dojo traces are identical except for the grounded blocks, system template, user turn, tier (Dojo score and Close coach use <code>deep:true</code> = Opus), and maxTokens. The <code>ask()</code> path never passes tools, so <code>toolInput</code> stays null and <code>result.text</code> is the path used.</p>
+
+    <h3 class="ssh">grounding() replaces RAG; ask() is the single chokepoint</h3>
+    <pre class="fig"><span class="c">// apps/web/lib/llm.ts</span>
+<span class="k">const</span> DEFAULT_MODEL = MODEL_IDS.personalise;  <span class="c">// claude-sonnet-4-6</span>
+<span class="k">const</span> DEEP_MODEL    = MODEL_IDS.hard;         <span class="c">// claude-opus-4-8</span>
+<span class="k">export async function</span> <span class="fn">ask</span>(opts: { system; user; deep?; maxTokens? }): Promise&lt;string&gt; {
+  <span class="k">const</span> model = opts.deep ? DEEP_MODEL : DEFAULT_MODEL;
+  <span class="k">const</span> key = (process.env.ANTHROPIC_API_KEY ?? <span class="s">""</span>).trim();   <span class="c">// lazy; throws clean error if empty</span>
+  <span class="k">const</span> result = <span class="k">await new</span> <span class="fn">LlmClient</span>({ apiKey: key }).complete({
+    model, system: opts.system, messages: [{ role: <span class="s">"user"</span>, content: opts.user }], maxTokens: opts.maxTokens ?? <span class="s">2000</span>,
+  });  <span class="c">// Sentry.captureException on throw; captureMessage on empty text; key never logged</span>
+  <span class="k">return</span> result.text.trim();
+}
+
+<span class="c">// apps/web/lib/canon.ts  -  grounding() header (the &lt;CONFIRM&gt; discipline lives here too)</span>
+<span class="s">"# GROUNDING CANON\nAnswer ONLY from the methodology below. Never give generic LLM advice.</span>
+<span class="s">Always tie coaching and copy to a named framework. Treat every Huscribe price, metric, and</span>
+<span class="s">proof point as a &lt;CONFIRM&gt; placeholder; never invent specifics."</span>  <span class="c">// + de-duped blocks</span></pre>
+
+    <h3 class="ssh">Deterministic computeRoiMath: the LLM never computes the number</h3>
+    <pre class="fig"><span class="c">// apps/web/app/close/roi-math.ts  -  pure, dependency-free, unit-tested</span>
+<span class="fn">computeRoiMath</span>({ leadsPerMonth, pctUnanswered, avgCommissionAed, closeRatePct }): RoiMath {
+  recoveredLeadsPerMonth = leadsPerMonth * pctUnanswered / <span class="s">100</span>;
+  recoveredDealsPerMonth = recoveredLeadsPerMonth * closeRatePct / <span class="s">100</span>;
+  recoveredAedPerMonth   = recoveredDealsPerMonth * avgCommissionAed;
+  recoveredAedPerYear    = recoveredAedPerMonth * <span class="s">12</span>;
+}</pre>
+    <p>In <code>computeRoi(input)</code> the math runs first; the user turn is a "COMPUTED GAP (these are the only numbers you may use; show the arithmetic)" block; the <code>ROI_SYSTEM</code> cardinal rule is "frame, never invent. Use ONLY the numbers supplied... If a number needed is missing, write the literal token <code>&lt;CONFIRM&gt;</code>." The returned body <strong>prepends a deterministic headline</strong> ("Recovered pipeline: AED/month (AED/year)") above the model narrative so the operator sees the payback figure even if the model trims it.</p>
+
+    <div class="grid3">
+      <div class="card"><h4 class="qh">Close Room</h4><p style="margin:0;font-size:13px">Four actions returning <code>{ok,title,body,error?}</code>: <code>generatePrep</code> (battlecard, 5 sections), <code>generateOutreach</code> (OBSERVATION&rarr;CONSEQUENCE&rarr;ONE QUESTION spine + generation gate), <code>coachTranscript</code> (Opus, json scorecard), <code>computeRoi</code> (math headline + narrative).</p></div>
+      <div class="card"><h4 class="qh">Knowledge</h4><p style="margin:0;font-size:13px">Single <code>askKnowledge</code> over <code>ALL_CANON</code> (all 8 blocks), boundary-guarded to 3..2000 chars, Sonnet tier, maxTokens 1600. "Answer using ONLY the sales canon; if not covered, say so then give the closest principle."</p></div>
+      <div class="card"><h4 class="qh">Voice Dojo</h4><p style="margin:0;font-size:13px">Two-call loop: <code>prospectReply</code> (Sonnet, in-character, 1-4 sentences) and <code>scoreRoleplay</code> (Opus, qualitative scorecard, explicitly NOT the deterministic ICP score). Client history is <code>sanitizeHistory</code>'d at the boundary.</p></div>
+    </div>
+
+    <div class="callout gold">
+      <span class="lbl">The &lt;CONFIRM&gt; discipline (3 layers)</span>
+      (1) <code>grounding()</code>'s header line. (2) The <code>HUSCRIBE_FACTS</code> DISCIPLINE block (ONE-LINE, V2, PRICING, PROOF POINTS, COMPETITION all marked <code>&lt;CONFIRM&gt;</code>). (3) Per-feature reinforcement in <code>PREP_SYSTEM</code>, <code>OUTREACH_SYSTEM</code>, <code>ROI_SYSTEM</code>, <code>KNOWLEDGE_SYSTEM</code>, and <code>SCORE_SYSTEM</code>. This is the LLM-side analogue of the codebase invariant that scores and numbers are computed, not hallucinated. All output renders through one dependency-free <code>Markdown</code> component (<code>parseBlocks</code> in <code>markdown-parse.ts</code>).
+    </div>
+  </section>
+
+  <!-- ============ SECTION 9 ============ -->
+  <span id="s9" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">09</span> Voice / NOVA data flow</h2>
+    <p class="lede">NOVA is the voice surface: an external FastAPI + LiveKit agent at <code>api.novalabs.ae</code>, driven from the operator CLI script <code>scripts/nova-call.ts</code>. <code>DEMO_MODE</code> is the default and is derived purely from the absence of <code>NOVA_API_KEY</code> (<code>demoMode = !NOVA_KEY</code>): with no Bearer key, NOVA dispatches the agent into a LiveKit room <code>call-&lt;context_id&gt;</code> and never dials PSTN.</p>
+
+    <div class="diagram">
+      <p class="dia-title">Figure 9.1 - NOVA call lifecycle</p>
+      <div class="flow" style="background:none;border:none;padding:0">
+        <div class="flow-node">Build lead list<span class="sub">--phone, else awaiting_approval Message rows; toE164</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">GET /health<span class="sub">exit 1 if unreachable</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">POST /calls<span class="sub">place_calls (public)</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">upsert CallSession<span class="sub">status pending, novaCallId @unique</span></div>
+      </div>
+      <div class="flow" style="background:none;border:none;padding:0;margin-top:0">
+        <div class="flow-node">poll GET /calls/{id}<span class="sub">6x at 5s, calls[0] only</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">ingestCallResult<span class="sub">persist CallSession + CallFinding</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node" style="border-color:rgba(79,209,181,0.4)">enrich master DB<span class="sub">consented facts only</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">AuditLog<span class="sub">voice.place_calls; $disconnect</span></div>
+      </div>
+    </div>
+
+    <h3 class="ssh">The CallRequest and lead sourcing tie NOVA to the human gate</h3>
+    <p>With no <code>--phone</code>, leads are pulled from <code>prisma.message.findMany({ where: { status: "awaiting_approval" }, include: { enrolment: { include: { contact: { include: { company: true } } } } }, take: 40 })</code>. Each queued Message walks to its contact, runs <code>toE164(c.phone)</code>, and is admitted only if dialable and <code>leads.length &lt; Math.min(limit, 5)</code> (limit defaults to 3, hard-capped at 5). The same <code>awaiting_approval</code> human gate used by every other channel means voice calls are only placed against already-approved leads. The POST body literal includes <code>owner_email</code> (default <code>gp@humai.ae</code>), the 4-phase <code>HUSCRIBE_CONTEXT</code> script, <code>goal: "qualify_interest"</code>, <code>consent: true</code>, and <code>idempotency_key</code>. <code>place_calls</code> and <code>get_call</code> are public endpoints; the <code>NOVA_API_KEY</code> Bearer only unlocks account features.</p>
+
+    <pre class="fig"><span class="c">// scripts/nova-call.ts  -  toE164 (UAE-specific; returns null for non-dialable)</span>
+<span class="fn">toE164</span>(raw):  strip non [+digits]
+  starts <span class="s">"+"</span>           -&gt; valid only if /^\+\d{8,15}$/ else null
+  strip leading <span class="s">"00"</span>
+  <span class="s">"971..."</span>           -&gt; +971...
+  leading <span class="s">"0"</span>         -&gt; +971 + slice(1)        <span class="c">// UAE national -&gt; E.164</span>
+  bare /^(5\d{8})$/   -&gt; +971 + d
+  otherwise           -&gt; null                  <span class="c">// 800/toll-free/short codes not dialable</span></pre>
+
+    <h3 class="ssh">Persistence and the consent-gated enrichment (verify-by-conversation moat)</h3>
+    <p><code>ingestCallResult</code> looks up the session by <code>novaCallId</code>, defensively coerces <code>status</code>/<code>transcript</code>/<code>summary</code>/<code>outcome</code>/<code>costUsd</code> from multiple payload shapes, computes <code>optOut = optIn ? !affirmative(optIn.value) : false</code>, and updates the row with <code>raw: payload</code> for provenance. Findings are delete-then-recreate: <code>deleteMany</code> then <code>createMany</code> of <code>extractFindings(payload)</code> rows (<code>source: "nova"</code>). Then, only if <code>session.consent</code>:</p>
+    <ul class="tight">
+      <li><strong>mobile finding</strong>: <code>e164 = toE164(value)</code>; if valid, <code>prisma.contact.update</code> sets both <code>phone</code> AND <code>whatsapp</code>.</li>
+      <li><strong>tools finding</strong>: split on <code>[,/;]| and | &amp; /i</code>, keep 2..40-char tokens, Set-dedupe-merge into <code>Company.techStack</code>, then <code>prisma.signal.create</code> (type <code>tech_adoption</code>, strength <code>confidence ?? 0.6</code>, provider <code>nova</code>, evidence <code>{ capturedOnCall, tools }</code>, <code>detectedAt now</code>).</li>
+    </ul>
+    <p>If <code>!session.consent</code>, all enrichment is short-circuited. This is the moat: every consented call enriches the master DB with honest, consented facts that raise the next deterministic score. The anti-corruption layer (<code>extractFindings</code> + <code>affirmative</code>, Section 5) means vendor JSON never leaks into the persistence code; only the seven canonical keys survive, and a missing field yields no finding (missing = unknown, never fabricated).</p>
+
+    <div class="callout tealc">
+      <span class="lbl">DEMO_MODE vs live</span>
+      <code>demoMode = !NOVA_KEY</code> is persisted onto every <code>CallSession.create</code> (<code>CallSession.demoMode</code> defaults true in the schema). In demo mode NOVA joins a LiveKit room and no PSTN dial occurs. Flipping to live PSTN is the NOVA owner's action on the NOVA side, gated by <code>owner_email</code> accountability and non-code UAE legal prerequisites. It is not a change in this repo.
+    </div>
+  </section>
+
+  <!-- ============ SECTION 10 ============ -->
+  <span id="s10" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">10</span> Deployment and security</h2>
+    <p class="lede">Deploy is a single-stage Docker image on Fly.io (region fra, scale-to-zero, <code>/api/health</code> liveness). Auth is Auth.js v5 with a single bcrypt operator credential and a fail-closed dev backdoor. Security headers live in <code>next.config.mjs</code>; secrets live only in Fly. CI runs the verify pipeline on Postgres plus a gitleaks secret scan.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">Fly.io (fly.toml)</h4>
+        <ul class="tight" style="margin-top:0">
+          <li>app <code>huscribe-revenue-os</code>, <code>primary_region fra</code>.</li>
+          <li><code>[env]</code> NODE_ENV=production, PORT=3000, NEXT_TELEMETRY_DISABLED=1.</li>
+          <li><code>[http_service]</code> internal_port 3000, <code>force_https</code>, <code>auto_stop_machines=stop</code>, <code>auto_start_machines=true</code>, <code>min_machines_running=0</code> (scale-to-zero), concurrency soft 180 / hard 220.</li>
+          <li>Health check GET <code>/api/health</code> every 30s, timeout 5s, grace 10s. VM shared-cpu-1x / 1024mb.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="qh">Dockerfile (single-stage)</h4>
+        <ul class="tight" style="margin-top:0">
+          <li><code>FROM node:22-slim</code>, corepack enable, apt installs openssl + ca-certificates.</li>
+          <li><code>pnpm install --frozen-lockfile</code> and <code>pnpm --filter web build</code> run with inline <strong>BUILD-ONLY placeholder</strong> DATABASE_URL and AUTH_SECRET (never persisted to the runtime image).</li>
+          <li><code>@oie/db</code> postinstall runs <code>prisma generate</code>.</li>
+          <li>Runtime <code>CMD [pnpm, --filter, web, start]</code>. Real secrets come from <code>flyctl secrets</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="ssh">Auth.js v5 and the dev-backdoor gating</h3>
+    <p>The Edge-safe <code>auth.config.ts</code> sets <code>trustHost: true</code> (prevents UntrustedHost on self-hosted Fly) and caps the JWT session at <code>maxAge: 60*60*12</code> (12h absolute, vs the 30-day default), <code>updateAge: 60*60</code>. The Node <code>auth.ts</code> single Credentials provider compares <code>AUTH_OPERATOR_EMAIL</code> + <code>bcrypt.compare(password, AUTH_OPERATOR_PASSWORD_HASH)</code>; the dev fallback requires BOTH <code>NODE_ENV !== 'production'</code> AND <code>ALLOW_DEV_LOGIN === 'true'</code> (fail closed). <code>auth.config.test.ts</code> asserts the public allowlist, that all app routes are blocked without a session, <code>trustHost === true</code>, and <code>maxAge &lt;= 12h</code>.</p>
+
+    <h3 class="ssh">Security headers (next.config.mjs, applied to /:path*)</h3>
+    <div class="card" style="font-size:13px">
+      <p style="margin:4px 0"><strong>CSP</strong>: <code>default-src self</code>; <code>base-uri self</code>; <code>form-action self</code>; <code>frame-ancestors none</code>; <code>object-src none</code>; <code>img-src self data: blob: https:</code>; <code>font-src self data:</code>; <code>style-src self unsafe-inline</code>; <code>script-src self unsafe-inline unsafe-eval</code> (inline + eval still allowed for the Next runtime; nonce tightening is a tracked follow-up); <code>connect-src self</code>; <code>upgrade-insecure-requests</code>.</p>
+      <p style="margin:4px 0"><strong>Others</strong>: <code>Strict-Transport-Security max-age=63072000 includeSubDomains preload</code>; <code>X-Content-Type-Options nosniff</code>; <code>X-Frame-Options DENY</code>; <code>Referrer-Policy strict-origin-when-cross-origin</code>; <code>X-DNS-Prefetch-Control off</code>; <code>Permissions-Policy camera=()/microphone=()/geolocation=()/browsing-topics=()</code>. Also <code>poweredByHeader: false</code> and <code>transpilePackages [@oie/core, @oie/db, @oie/orchestration]</code>.</p>
+    </div>
+
+    <h3 class="ssh">CI gates</h3>
+    <p><code>.github/workflows/ci.yml</code> (job <code>verify</code> on ubuntu-latest, push to main + all PRs, cancel-in-progress) sets <code>DRY_RUN=true</code> and <code>NODE_ENV=test</code>, spins up <code>postgres:16-alpine</code> with a <code>pg_isready</code> healthcheck, then runs: checkout, pnpm/action-setup@v4, setup-node@v4 (node 22, pnpm cache), <code>pnpm install --frozen-lockfile</code>, <code>pnpm db:generate</code>, <code>pnpm --filter @oie/db migrate:deploy</code>, <code>pnpm verify</code> (typecheck + lint + test + build), then <code>pnpm db:seed</code> as a smoke. <code>.github/workflows/secret-scan.yml</code> (labelled SOC 2 CC7.2) runs <code>gitleaks/gitleaks-action@v2</code> on push, PR, and a weekly cron with full history (<code>fetch-depth: 0</code>). CI hard-codes <code>DRY_RUN=true</code>, consistent with the repo-wide invariant.</p>
+    <p class="fig-cap"><code>app/api/health/route.ts</code> is pure liveness (no auth, db, or secrets), returns <code>{ status: "ok", service: "huscribe-revenue-os", time }</code>, and must stay in the public allowlist for the Fly health check.</p>
+  </section>
+
+  <!-- ============ SECTION 11 ============ -->
+  <span id="s11" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">11</span> Architecture decisions (ADRs)</h2>
+    <p class="lede">Two ADRs are cited directly in the verified source (<code>docs/adr/0002</code> and <code>docs/adr/0009</code>). The table below records the load-bearing decisions evidenced in the code, with the two numbered ADRs anchored to their files.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Decision</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>ADR-0002</td><td>Inngest is the orchestration brain; the production pipeline runs over REST/webhooks, never MCP; the send-path is never behind an interactive MCP call.</td><td>Durable steps own retries, multi-day sleeps, and exactly-once replay without a worker thread; the send rail must be deterministic, not chat-driven.</td></tr>
+          <tr><td>ADR-0009</td><td>The send-gate is a code-level rail (reinforced by a deny rule + PreToolUse hook in <code>.claude/</code>), never a chat instruction; DRY_RUN stays on in production until an explicit live-send approval (Human Gate 2).</td><td>A remembered instruction can be forgotten or overridden; a pure <code>evaluateSendGate</code> cannot.</td></tr>
+          <tr><td>Core purity</td><td><code>@oie/core</code> depends only on zod; scoring is a pure function taking <code>(ScoringSubject, IcpProfile, Date)</code>.</td><td>Removes any surface for the LLM to inject a score; makes scoring deterministic and unit-testable.</td></tr>
+          <tr><td>Anti-corruption layer</td><td>Every vendor sits behind one of five contracts; mappers validate the wire shape with Zod; vendor shapes never escape a mapper.</td><td>Vendor churn stays contained; the unified model is the single source of truth.</td></tr>
+          <tr><td>Scoring-bridge placement</td><td>The DTO-to-fact mapper lives in <code>@oie/orchestration</code>, not core.</td><td>Keeps pure core from importing the integration layer.</td></tr>
+          <tr><td>Source-only TS libs</td><td>Internal packages export <code>./src/index.ts</code> with <code>noEmit</code>; only <code>web</code> builds.</td><td>No stale dist/, simpler graph, transpile at consume time.</td></tr>
+          <tr><td>Own Anthropic REST adapter</td><td><code>LlmClient</code> is a hand-rolled Messages REST client over an <code>HttpTransport</code> seam; no <code>@anthropic-ai/sdk</code>.</td><td>CI replays fixtures with no live calls; full control over cost accounting and Zod validation.</td></tr>
+          <tr><td>Central decay ownership</td><td>Signal TTL/expiry is assigned by core/orchestration, never by adapters.</td><td>Ingestion and scoring stay in agreement; a fabricated timestamp cannot corrupt decay.</td></tr>
+          <tr><td>Canon-as-grounding</td><td><code>grounding()</code> injects distilled APEX canon blocks into the system prompt, replacing runtime RAG.</td><td>Small enough to prompt-cache; forces named-framework answers and the <code>&lt;CONFIRM&gt;</code> discipline.</td></tr>
+          <tr><td>Split Edge/Node auth</td><td>Edge-safe <code>auth.config.ts</code> drives middleware; Node <code>auth.ts</code> adds bcrypt.</td><td>bcrypt cannot run on the Edge; one <code>authorized</code> callback remains the single route gate.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 12 ============ -->
+  <span id="s12" class="anchor"></span>
+  <section>
+    <h2 class="sh"><span class="num">12</span> Invariants and honest scope</h2>
+    <p class="lede">The architecture is built around a small set of hard invariants, each enforced structurally rather than by convention. The table separates what is live from what is a deliberate, documented stub or demo.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 class="qh">Hard invariants (enforced in code)</h4>
+        <ul class="tight" style="margin-top:0">
+          <li><strong>The LLM never computes a score.</strong> <code>scoreLead</code> is pure with no model input path; <code>@oie/core</code> has zero Anthropic dependency; <code>Score</code> stores numeric fields computed by code with the LLM narrative confined to <code>rationale Json</code>.</li>
+          <li><strong>DRY_RUN defaults true.</strong> <code>boolFromEnv(true)</code> resolves missing/blank to true; CI hard-codes it true; it must be explicitly set to a falsy token to live-send.</li>
+          <li><strong>Nothing sends without a passing dry-run AND explicit human approval.</strong> <code>evaluateSendGate</code> is the single rail; <code>allowSend === true</code> is the only path to a provider call; DRY_RUN always wins.</li>
+          <li><strong>Vendor shapes never leak into core.</strong> Mappers validate and fold every wire shape; the NOVA findings normaliser allowlists seven keys; missing data is unknown, never fabricated.</li>
+          <li><strong>Channels off by default.</strong> <code>ChannelAccount.enabled</code> defaults false (LinkedIn/WhatsApp), and the gate blocks disabled channels first.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="qh">Live vs demo / stub</h4>
+        <ul class="tight" style="margin-top:0">
+          <li><strong>Live:</strong> the scoring engine, the enrichment waterfall + signal fan-in, the Prisma data model, the AI surfaces (Close/Knowledge/Dojo) over the real Anthropic Messages API, Auth.js gating, security headers, the CI verify + secret-scan, and Fly deploy.</li>
+          <li><strong>Stub (documented):</strong> the approval-queue server actions are explicit no-send stubs (<code>console.info</code> only; DB persist + Inngest enqueue are Phase 7 TODOs).</li>
+          <li><strong>Demo by default:</strong> NOVA runs in <code>DEMO_MODE</code> (no <code>NOVA_API_KEY</code> &rarr; LiveKit room, no PSTN dial). <code>CallSession.demoMode</code> defaults true.</li>
+          <li><strong>Off by default:</strong> live sending (DRY_RUN true everywhere), LinkedIn/WhatsApp channels (disabled), live PSTN (a NOVA-side owner action with non-code legal prerequisites).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="lbl">Why these invariants compose</span>
+      The system is safe-by-construction: even with every credential present and the operator clicking approve, a real send still requires DRY_RUN to be explicitly flipped off in validated env, the channel to be operator-enabled, and the action to pass the pure gate. Voice calls inherit the same human gate because they are sourced from <code>awaiting_approval</code> Message rows. Master-DB enrichment from a call is consent-gated. The deterministic scorer cannot be moved by the model. Each guarantee is an independent code-level check, so no single mistake or forgotten instruction can produce an unintended send or a hallucinated number.
+    </div>
+  </section>
+
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <p style="margin:0 0 6px"><strong style="color:var(--head)">Huscribe Revenue OS - Software Architecture.</strong> Every fact in this report was read from the repository source (packages <code>core/config/db/integrations/orchestration</code>, <code>apps/web</code>, <code>scripts/nova-call.ts</code>, <code>fly.toml</code>, <code>Dockerfile</code>, and the CI workflows) and verified against the named files, exported symbols, types, Prisma models, and function signatures. Nothing here is invented; where the code is a stub or a demo, this report says so.</p>
+    <p style="margin:6px 0 0;color:var(--muted)">Self-contained single file. No external network requests, no CDN, no external fonts or images. All diagrams are inline SVG or styled HTML. No em dashes.</p>
+  </div>
+</footer>
+
+</body>
+</html>
