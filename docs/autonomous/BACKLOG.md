@@ -13,8 +13,11 @@ only in env/Fly; NOVA stays DEMO_MODE).
         at 3x) + off_plan_launch (0.8). Anti-corruption: vendor shapes confined to ./mapper. Not wired to
         live ingestion (DB migration + spike GO still gated). Exported as DLDAdapter. typecheck + lint +
         test green (194 integrations tests).
-- [ ] NX2  Suppression extended to phone + channel: core/db types + a pure suppression-check util + tests.
-        DB migration deferred + documented (no prod migration in the loop).
+- [x] NX2  DONE — Suppression extended to phone + per-channel scope. SuppressionRecord gained phone? +
+        channel? (optional, so existing rows stay valid); isSuppressionMatch is now exported as the pure
+        util, matches email/domain/phone (digits-only), and honours channel scope (unscoped = global
+        opt-out). executeSendStep takes recipientPhone. +7 tests. DB column migration deferred + documented
+        (packages/db/PLAN.md). typecheck + lint + test green (87 orchestration).
 - [ ] NX3  Durable send-gate: Inngest step.waitForEvent approval suspend before the send step, with a
         regression test proving resume re-checks DRY_RUN (suspend -> approve -> resume with DRY_RUN on = simulate).
 - [ ] NX4  Enrichment waterfall hardening: wrap each provider in its own step.run + declarative

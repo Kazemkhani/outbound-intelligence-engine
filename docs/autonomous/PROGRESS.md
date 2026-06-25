@@ -424,3 +424,15 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   migration + a spike GO). Exported DLDAdapter. VERIFIED: typecheck 6/6, lint clean, test 368 total pass
   (+10 DLD). NOVA stays DEMO_MODE; DRY_RUN on; scoring stays code; no secrets.
 - NEXT: NX2 (Suppression -> phone + channel, pure util + tests, DB migration deferred).
+
+## NX2 DONE — Suppression to phone + per-channel scope
+- packages/orchestration/src/sequencing/send-step.ts: SuppressionRecord gained phone? + channel?
+  (optional; existing email/domain rows unchanged). isSuppressionMatch is now an EXPORTED pure util that
+  matches email, domain, and phone (compared digits-only so formatting is irrelevant) and honours
+  per-record channel scope: an unscoped record is a global opt-out (every channel), a scoped record only
+  suppresses its own channel. executeSendStep now accepts recipientPhone and passes {email, phone} to the
+  check. +7 tests (suppression.test.ts).
+- DB migration (add phone + channel columns to the Suppression model) is DEFERRED and documented; the
+  fields are optional so the live query/upsert path is unchanged and the build stays green.
+- VERIFIED: typecheck 6/6, lint clean, test 375 total pass (+7). Invariants intact (send-gate untouched,
+  DRY_RUN on, scoring stays code). NEXT: NX3 (durable send-gate step.waitForEvent + resume re-checks DRY_RUN).

@@ -33,6 +33,15 @@ import type { SequenceStep } from "./state-machine";
 export interface SuppressionRecord {
   email?: string | null;
   domain?: string | null;
+  /** E.164 (or any format) phone; matched digits-only for whatsapp/voice channels. */
+  phone?: string | null;
+  /**
+   * The channel this suppression applies to. When null/undefined the record is
+   * global and suppresses EVERY channel (e.g. a hard opt-out). When set, it only
+   * suppresses that one channel. The DB column for this is a deferred migration
+   * (see packages/db/PLAN.md); the field is optional so existing rows stay valid.
+   */
+  channel?: Channel | null;
   reason: string;
 }
 
@@ -48,6 +57,8 @@ export interface SendStepParams {
   recipientEmail?: string;
   /** Recipient social handle (required when channel is "linkedin" or "whatsapp"). */
   recipientHandle?: string;
+  /** Recipient phone (whatsapp/voice); used for the phone suppression check. */
+  recipientPhone?: string;
   /** Sender email address (required when channel is "email"). */
   fromEmail?: string;
 
@@ -136,20 +147,39 @@ export function buildIdempotencyKey(
 
 // ── Suppression check ─────────────────────────────────────────────────────────
 
-function isSuppressionMatch(
+/** Compare phone numbers by digits only, so formatting differences do not matter. */
+function digitsOnly(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
+/**
+ * Pure suppression check across email, domain, and phone, honouring per-record
+ * channel scope. A record with no `channel` is global (suppresses every channel);
+ * a record with a `channel` only suppresses that channel. Email/domain match on
+ * the email channel; phone matches on whatsapp/voice. Used by executeSendStep and
+ * directly unit-tested. Never throws; absence of an identifier means no match.
+ */
+export function isSuppressionMatch(
   suppressions: SuppressionRecord[],
-  email: string | undefined,
+  recipient: { email?: string | null; phone?: string | null },
   channel: Channel,
 ): { suppressed: boolean; reason?: string } {
-  if (channel !== "email" || !email) return { suppressed: false };
-
-  const domain = email.split("@")[1];
+  const email = recipient.email ?? undefined;
+  const phone = recipient.phone ?? undefined;
+  const domain = email ? email.split("@")[1] : undefined;
+  const phoneDigits = phone ? digitsOnly(phone) : undefined;
 
   for (const record of suppressions) {
-    if (record.email && record.email.toLowerCase() === email.toLowerCase()) {
+    // Channel scope: a scoped record only applies to its own channel.
+    if (record.channel && record.channel !== channel) continue;
+
+    if (email && record.email && record.email.toLowerCase() === email.toLowerCase()) {
       return { suppressed: true, reason: record.reason };
     }
-    if (record.domain && domain && record.domain.toLowerCase() === domain.toLowerCase()) {
+    if (domain && record.domain && record.domain.toLowerCase() === domain.toLowerCase()) {
+      return { suppressed: true, reason: record.reason };
+    }
+    if (phoneDigits && record.phone && digitsOnly(record.phone) === phoneDigits) {
       return { suppressed: true, reason: record.reason };
     }
   }
@@ -178,6 +208,7 @@ export async function executeSendStep(params: SendStepParams): Promise<SendStepR
     enrolmentId,
     recipientEmail,
     recipientHandle,
+    recipientPhone,
     fromEmail,
     subject,
     body,
@@ -193,7 +224,11 @@ export async function executeSendStep(params: SendStepParams): Promise<SendStepR
   const idempotencyKey = buildIdempotencyKey(enrolmentId, stepIndex, step.channel);
 
   // ── 1. Suppression check ─────────────────────────────────────────────────
-  const suppressionCheck = isSuppressionMatch(suppressions, recipientEmail, step.channel);
+  const suppressionCheck = isSuppressionMatch(
+    suppressions,
+    { email: recipientEmail, phone: recipientPhone },
+    step.channel,
+  );
   if (suppressionCheck.suppressed) {
     const message: PendingMessage = {
       enrolmentId,
