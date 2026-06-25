@@ -47,7 +47,14 @@ only in env/Fly; NOVA stays DEMO_MODE).
         (the web wires Sentry: anti-corruption preserved). +2 tests. Langfuse + a full OTel GenAI span are
         the dep-gated FOLLOW-UP (need the langfuse dep + LANGFUSE_* keys), logged not faked.
         typecheck 6/6, lint clean, test 401, web build OK.
-- [ ] NX8  shadcn/ui + Tremor analytics dashboard + TanStack Table for /leads + /approvals. (Adds deps.)
+- [x] NX8  DONE (core) — TanStack Table + analytics on /leads. Added @tanstack/react-table (headless,
+        React-19 safe; pnpm install + full web build stayed green). leads-view.tsx rebuilt on
+        useReactTable: global search box (company/industry/contact/title), column sorting (composite
+        default desc), tier column-filtering via the pills; drawer + badges + aria-sort preserved. Added a
+        pure-CSS pipeline-summary strip (total, A/B/C/D counts, avg composite) over all leads. NO Tremor
+        dep (avoided recharts/React-19 risk; strip is plain Tailwind). shadcn primitives already present
+        (cva+clsx+tailwind-merge+lucide). FOLLOW-UP (logged, not blocked): TanStack on /approvals + optional
+        Tremor charts on /analytics. typecheck clean, lint 0 warnings, test 50, full next build OK.
 - [ ] NX9  AgentKit on Inngest: an agent layer over the existing adapters, code router calling the scorer +
         evaluateSendGate as CODE steps (never an LLM). (Adds a dep.)
 - [ ] NX10 One read-only internal MCP server (TS SDK) for operator/Claude agents. Never the send-path.
