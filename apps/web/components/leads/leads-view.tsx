@@ -1,7 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type FilterFn,
+  type SortingState,
+} from "@tanstack/react-table";
+import { ChevronDown, ChevronsUpDown, ChevronUp, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import { LeadDrawer } from "./lead-drawer";
@@ -18,46 +29,184 @@ const TIER_VARIANT = {
   D: "tier_d",
 } as const;
 
-type SortKey = "composite" | "fit" | "intent" | "company" | "signals";
-type SortDir = "asc" | "desc";
+const SIGNAL_VARIANT = {
+  hiring: "hiring",
+  funding: "funding",
+  tech_adoption: "tech_adoption",
+  job_change: "job_change",
+  news: "news",
+  web_change: "web_change",
+} as const;
 
-function sortLeads(leads: ScoredLead[], key: SortKey, dir: SortDir): ScoredLead[] {
-  return [...leads].sort((a, b) => {
-    let cmp = 0;
-    if (key === "composite") cmp = a.score.composite - b.score.composite;
-    else if (key === "fit") cmp = a.score.fit - b.score.fit;
-    else if (key === "intent") cmp = a.score.intent - b.score.intent;
-    else if (key === "company") cmp = a.company.name.localeCompare(b.company.name);
-    else if (key === "signals") cmp = a.signals.length - b.signals.length;
-    return dir === "desc" ? -cmp : cmp;
-  });
-}
+/**
+ * Global search across the operator-visible text columns (company, industry,
+ * contact, title). Numeric/score columns are filtered via the tier pills, not
+ * the free-text box, so a stray digit in a name never masks a score match.
+ */
+const searchLeads: FilterFn<ScoredLead> = (row, _columnId, value) => {
+  const q = String(value).toLowerCase().trim();
+  if (!q) return true;
+  const l = row.original;
+  return (
+    l.company.name.toLowerCase().includes(q) ||
+    l.company.industry.toLowerCase().includes(q) ||
+    l.contact.fullName.toLowerCase().includes(q) ||
+    l.contact.title.toLowerCase().includes(q)
+  );
+};
 
 export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
-  const [tierFilter, setTierFilter] = useState<Tier | "all">("all");
   const [selectedLead, setSelectedLead] = useState<ScoredLead | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("composite");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sorting, setSorting] = useState<SortingState>([{ id: "composite", desc: true }]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
-    } else {
-      setSortKey(key);
-      setSortDir("desc");
+  // Live ICP-distribution summary, computed from ALL leads (not the filtered
+  // view) so the operator always sees the full pipeline shape. Pure derived —
+  // the scores themselves come from the deterministic engine, never recomputed.
+  const stats = useMemo(() => {
+    const byTier: Record<Tier, number> = { A: 0, B: 0, C: 0, D: 0 };
+    let sum = 0;
+    for (const l of initialLeads) {
+      byTier[l.score.tier] += 1;
+      sum += l.score.composite;
     }
-  };
+    return { total: initialLeads.length, byTier, avg: initialLeads.length ? sum / initialLeads.length : 0 };
+  }, [initialLeads]);
 
-  const filtered =
-    tierFilter === "all" ? initialLeads : initialLeads.filter((l) => l.score.tier === tierFilter);
+  const columns = useMemo<ColumnDef<ScoredLead>[]>(
+    () => [
+      {
+        id: "company",
+        header: "Company",
+        accessorFn: (l) => l.company.name,
+        cell: ({ row }) => (
+          <button
+            type="button"
+            onClick={() => setSelectedLead(row.original)}
+            className="text-left font-medium text-ink-50"
+          >
+            {row.original.company.name}
+            <span className="block text-xs font-normal text-ink-500">{row.original.company.industry}</span>
+          </button>
+        ),
+      },
+      {
+        id: "contact",
+        header: "Contact",
+        enableSorting: false,
+        accessorFn: (l) => l.contact.fullName,
+        cell: ({ row }) => (
+          <button
+            type="button"
+            onClick={() => setSelectedLead(row.original)}
+            className="text-left text-ink-200"
+          >
+            {row.original.contact.fullName}
+            <span className="block text-xs text-ink-500">{row.original.contact.title}</span>
+          </button>
+        ),
+      },
+      {
+        id: "tier",
+        header: "Tier",
+        enableSorting: false,
+        accessorFn: (l) => l.score.tier,
+        filterFn: (row, id, value) => row.getValue(id) === value,
+        cell: ({ row }) => <Badge variant={TIER_VARIANT[row.original.score.tier]}>{row.original.score.tier}</Badge>,
+      },
+      {
+        id: "composite",
+        header: "Composite",
+        accessorFn: (l) => l.score.composite,
+        cell: ({ row }) => (
+          <span className="font-mono font-semibold text-gold-300">{round1(row.original.score.composite)}</span>
+        ),
+      },
+      {
+        id: "fit",
+        header: "Fit",
+        accessorFn: (l) => l.score.fit,
+        cell: ({ row }) => <span className="font-mono text-ink-300">{round1(row.original.score.fit)}</span>,
+      },
+      {
+        id: "intent",
+        header: "Intent",
+        accessorFn: (l) => l.score.intent,
+        cell: ({ row }) => <span className="font-mono text-ink-300">{round1(row.original.score.intent)}</span>,
+      },
+      {
+        id: "signals",
+        header: "Signals",
+        accessorFn: (l) => l.signals.length,
+        cell: ({ row }) => {
+          const signals = row.original.signals;
+          if (signals.length === 0) return <span className="text-xs text-ink-600">None</span>;
+          return (
+            <div className="flex flex-wrap gap-1">
+              {signals.slice(0, 2).map((s) => (
+                <Badge key={s.id} variant={SIGNAL_VARIANT[s.type]} className="text-[10px]">
+                  {signalTypeLabel(s.type)}
+                </Badge>
+              ))}
+              {signals.length > 2 && <span className="text-xs text-ink-500">+{signals.length - 2}</span>}
+            </div>
+          );
+        },
+      },
+    ],
+    [],
+  );
 
-  const sorted = sortLeads(filtered, sortKey, sortDir);
+  const table = useReactTable({
+    data: initialLeads,
+    columns,
+    state: { sorting, columnFilters, globalFilter },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: searchLeads,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  const tierFilter = (columnFilters.find((f) => f.id === "tier")?.value as Tier | undefined) ?? "all";
+  const setTierFilter = (t: Tier | "all") =>
+    setColumnFilters(t === "all" ? [] : [{ id: "tier", value: t }]);
+
+  const rows = table.getRowModel().rows;
 
   return (
     <>
-      {/* Filters */}
+      {/* Pipeline summary (analytics strip) */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <StatCard label="Leads" value={String(stats.total)} />
+        <StatCard label="Tier A" value={String(stats.byTier.A)} accent="tier_a" />
+        <StatCard label="Tier B" value={String(stats.byTier.B)} accent="tier_b" />
+        <StatCard label="Tier C" value={String(stats.byTier.C)} accent="tier_c" />
+        <StatCard label="Tier D" value={String(stats.byTier.D)} accent="tier_d" />
+        <StatCard label="Avg composite" value={String(round1(stats.avg))} />
+      </div>
+
+      {/* Search + tier filters */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="label-mono mr-1">Filter</span>
+        <div className="relative">
+          <Search
+            size={14}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500"
+          />
+          <input
+            type="search"
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search company, contact, title…"
+            aria-label="Search leads by company, contact, or title"
+            className="w-64 rounded-full border border-ink-700 bg-ink-850 py-1.5 pl-8 pr-3 text-xs text-ink-100 placeholder:text-ink-500 focus:border-gold-500 focus:outline-none focus:ring-1 focus:ring-gold-500"
+          />
+        </div>
+        <span className="label-mono ml-2 mr-1">Tier</span>
         {TIER_OPTIONS.map((t) => (
           <button
             key={t}
@@ -74,94 +223,70 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
           </button>
         ))}
         <span className="ml-auto font-mono text-xs text-ink-500">
-          {sorted.length} lead{sorted.length !== 1 ? "s" : ""}
+          {rows.length} lead{rows.length !== 1 ? "s" : ""}
         </span>
       </div>
 
       {/* Table */}
-      {sorted.length === 0 ? (
+      {rows.length === 0 ? (
         <EmptyState
-          title="No leads in this tier"
-          description="Try selecting a different tier filter above."
+          title="No matching leads"
+          description="Try a different search term or tier filter above."
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850 shadow-card">
           <table className="min-w-full divide-y divide-ink-800 text-sm">
             <thead className="bg-ink-900">
-              <tr>
-                <SortTh label="Company" sortKey="company" current={sortKey} dir={sortDir} onSort={handleSort} />
-                <th scope="col" className="px-4 py-3 text-left label-mono">
-                  Contact
-                </th>
-                <th scope="col" className="px-4 py-3 text-left label-mono">
-                  Tier
-                </th>
-                <SortTh label="Composite" sortKey="composite" current={sortKey} dir={sortDir} onSort={handleSort} />
-                <SortTh label="Fit" sortKey="fit" current={sortKey} dir={sortDir} onSort={handleSort} />
-                <SortTh label="Intent" sortKey="intent" current={sortKey} dir={sortDir} onSort={handleSort} />
-                <SortTh label="Signals" sortKey="signals" current={sortKey} dir={sortDir} onSort={handleSort} />
-              </tr>
+              {table.getHeaderGroups().map((hg) => (
+                <tr key={hg.id}>
+                  {hg.headers.map((header) => {
+                    const sorted = header.column.getIsSorted();
+                    const canSort = header.column.getCanSort();
+                    const Icon = sorted === "desc" ? ChevronDown : sorted === "asc" ? ChevronUp : ChevronsUpDown;
+                    return (
+                      <th
+                        key={header.id}
+                        scope="col"
+                        aria-sort={
+                          sorted === "desc"
+                            ? "descending"
+                            : sorted === "asc"
+                              ? "ascending"
+                              : canSort
+                                ? "none"
+                                : undefined
+                        }
+                        className="px-4 py-3 text-left label-mono"
+                      >
+                        {canSort ? (
+                          <button
+                            type="button"
+                            onClick={header.column.getToggleSortingHandler()}
+                            className={`flex items-center gap-1 transition-colors hover:text-ink-100 ${sorted ? "text-gold-400" : ""}`}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <Icon size={12} aria-hidden="true" />
+                          </button>
+                        ) : (
+                          flexRender(header.column.columnDef.header, header.getContext())
+                        )}
+                      </th>
+                    );
+                  })}
+                </tr>
+              ))}
             </thead>
             <tbody className="divide-y divide-ink-800">
-              {sorted.map((lead) => (
+              {rows.map((row) => (
                 <tr
-                  key={lead.id}
-                  className="cursor-pointer transition-colors hover:bg-ink-800/60 focus-within:bg-ink-800/60"
+                  key={row.id}
+                  className="transition-colors hover:bg-ink-800/60 focus-within:bg-ink-800/60"
                 >
-                  <td className="px-4 py-3 font-medium text-ink-50">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedLead(lead)}
-                      className="text-left"
-                    >
-                      {lead.company.name}
-                      <span className="block text-xs font-normal text-ink-500">
-                        {lead.company.industry}
-                      </span>
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-ink-200">
-                    <button type="button" onClick={() => setSelectedLead(lead)} className="text-left">
-                      {lead.contact.fullName}
-                      <span className="block text-xs text-ink-500">{lead.contact.title}</span>
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={TIER_VARIANT[lead.score.tier]}>{lead.score.tier}</Badge>
-                  </td>
-                  <td className="px-4 py-3 font-mono font-semibold text-gold-300">
-                    {round1(lead.score.composite)}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-ink-300">{round1(lead.score.fit)}</td>
-                  <td className="px-4 py-3 font-mono text-ink-300">{round1(lead.score.intent)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {lead.signals.length === 0 ? (
-                        <span className="text-xs text-ink-600">None</span>
-                      ) : (
-                        lead.signals.slice(0, 2).map((s) => {
-                          const sv = (
-                            {
-                              hiring: "hiring",
-                              funding: "funding",
-                              tech_adoption: "tech_adoption",
-                              job_change: "job_change",
-                              news: "news",
-                              web_change: "web_change",
-                            } as const
-                          )[s.type];
-                          return (
-                            <Badge key={s.id} variant={sv} className="text-[10px]">
-                              {signalTypeLabel(s.type)}
-                            </Badge>
-                          );
-                        })
-                      )}
-                      {lead.signals.length > 2 && (
-                        <span className="text-xs text-ink-500">+{lead.signals.length - 2}</span>
-                      )}
-                    </div>
-                  </td>
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-3">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -174,35 +299,32 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
   );
 }
 
-function SortTh({
+function StatCard({
   label,
-  sortKey,
-  current,
-  dir,
-  onSort,
+  value,
+  accent,
 }: {
   label: string;
-  sortKey: SortKey;
-  current: SortKey;
-  dir: SortDir;
-  onSort: (k: SortKey) => void;
+  value: string;
+  accent?: "tier_a" | "tier_b" | "tier_c" | "tier_d";
 }) {
-  const isActive = current === sortKey;
-  const Icon = isActive ? (dir === "desc" ? ChevronDown : ChevronUp) : ChevronsUpDown;
+  const dot =
+    accent === "tier_a"
+      ? "bg-emerald-400"
+      : accent === "tier_b"
+        ? "bg-sky-400"
+        : accent === "tier_c"
+          ? "bg-amber-400"
+          : accent === "tier_d"
+            ? "bg-ink-500"
+            : "";
   return (
-    <th
-      scope="col"
-      aria-sort={isActive ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      className="px-4 py-3 text-left label-mono"
-    >
-      <button
-        type="button"
-        onClick={() => onSort(sortKey)}
-        className={`flex items-center gap-1 transition-colors hover:text-ink-100 ${isActive ? "text-gold-400" : ""}`}
-      >
-        {label}
-        <Icon size={12} aria-hidden="true" />
-      </button>
-    </th>
+    <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-3 shadow-card">
+      <div className="flex items-center gap-1.5">
+        {dot && <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden="true" />}
+        <span className="label-mono">{label}</span>
+      </div>
+      <div className="mt-1 font-mono text-xl font-semibold text-ink-50">{value}</div>
+    </div>
   );
 }
