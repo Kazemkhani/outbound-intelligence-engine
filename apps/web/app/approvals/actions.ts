@@ -39,8 +39,7 @@ export async function approveMessage(messageId: string): Promise<ActionResult> {
       return { ok: false, error: "Message not found or no longer awaiting approval." };
     }
   } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: `Could not save approval: ${detail}`.slice(0, 200) };
+    return { ok: false, error: pendingMigrationOr(err, "approval") };
   }
 
   revalidatePath("/approvals");
@@ -68,10 +67,24 @@ export async function rejectMessage(messageId: string): Promise<ActionResult> {
       return { ok: false, error: "Message not found or no longer awaiting approval." };
     }
   } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: `Could not save rejection: ${detail}`.slice(0, 200) };
+    return { ok: false, error: pendingMigrationOr(err, "rejection") };
   }
 
   revalidatePath("/approvals");
   return { ok: true, message: "Rejected. This message will not be sent." };
+}
+
+/**
+ * Turn a DB error into an operator-friendly message. The approved/rejected
+ * statuses are additive Postgres enum values that need a one-time `prisma db push`
+ * to Neon (an owner action). Until that runs, the write fails with an
+ * invalid-enum error; we surface that as a clear, non-alarming note rather than a
+ * raw 500, so the queue still loads and the gate is obviously intact.
+ */
+function pendingMigrationOr(err: unknown, kind: string): string {
+  const detail = err instanceof Error ? err.message : String(err);
+  if (/invalid input value for enum|MessageStatus/i.test(detail)) {
+    return `Saving the ${kind} needs a one-time database migration (owner action: pnpm --filter @oie/db exec prisma db push). Nothing was sent — the dry-run gate is active.`;
+  }
+  return `Could not save ${kind}: ${detail}`.slice(0, 200);
 }
