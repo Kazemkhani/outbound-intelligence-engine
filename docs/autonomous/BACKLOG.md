@@ -47,6 +47,14 @@ only in env/Fly; NOVA stays DEMO_MODE).
 - [ ] NX9  AgentKit on Inngest: an agent layer over the existing adapters, code router calling the scorer +
         evaluateSendGate as CODE steps (never an LLM). (Adds a dep.)
 - [ ] NX10 One read-only internal MCP server (TS SDK) for operator/Claude agents. Never the send-path.
+- [x] NX11 DONE (operator request) — 2GIS (DGIS) EnrichmentProvider for UAE business details. New
+        packages/integrations/src/dgis (index + mapper + fixture + 7 tests) over the 2GIS Catalog API
+        (GET catalog.api.2gis.com/3.0/items, key query param), mapping items to NormalisedCompany incl. the
+        business PHONE (the UAE phone-first unlock), website/domain, coords, category; country=AE. Added
+        phone? to NormalisedCompany + the waterfall merge fields; DGIS_API_KEY to config schema + .env.example.
+        Anti-corruption: 2GIS shapes confined to ./mapper. Fixture-tested offline; live calls gated on
+        DGIS_API_KEY (set it in Fly secrets, never committed). Wiring it into the live waterfall provider
+        list is the small follow-up once the key is set. typecheck 6/6, lint clean, test 399.
 
 Next-phase guardrails (in addition to the Invariants below):
 - A new npm dependency may be added ONLY if `pnpm install` succeeds AND `pnpm verify` (or typecheck+lint+test+build)

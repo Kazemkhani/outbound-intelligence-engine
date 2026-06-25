@@ -55,6 +55,7 @@ export const envSchema = z.object({
   EXPLORIUM_API_KEY: optionalSecret,
   APOLLO_API_KEY: optionalSecret,
   GOOGLE_MAPS_API_KEY: optionalSecret,
+  DGIS_API_KEY: optionalSecret, // 2GIS Catalog/Places (UAE business directory incl. phone)
   SEARCHAPI_API_KEY: optionalSecret,
   THEIRSTACK_API_KEY: optionalSecret,
   BUILTWITH_API_KEY: optionalSecret,

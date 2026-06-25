@@ -22,6 +22,9 @@ export interface NormalisedCompany {
   lng?: number | null;
   placeId?: string | null;
   localCategory?: string | null;
+  /** Main business phone (office line). The UAE phone-first data point; filled by
+   *  sources like 2GIS / Places. The contact's personal mobile lives on NormalisedContact. */
+  phone?: string | null;
   techStack?: string[];
   funding?: Record<string, unknown> | null;
   socials?: Record<string, unknown> | null;
