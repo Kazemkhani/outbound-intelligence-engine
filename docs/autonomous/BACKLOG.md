@@ -41,8 +41,12 @@ only in env/Fly; NOVA stays DEMO_MODE).
         app/api/ask (zod-validated, canon-grounded) streams the answer. KnowledgeWorkspace now streams the
         answer token-by-token via fetch + ReadableStream. Close/Dojo wiring is the follow-up (NX6b).
         Verify: web typecheck + lint (0 warnings) + test (50) + full build OK (/api/ask compiled).
-- [ ] NX7  Observability spine: one OTel GenAI span at LlmClient.complete fanning to Sentry + Langfuse +
-        cost-per-lead metadata. (No-op without the DSN env; never logs the key.)
+- [x] NX7  DONE (Sentry + cost spine) — LlmClient gained an optional onTelemetry sink emitted once per
+        complete() with {model, latencyMs, inputTokens, outputTokens, costUsd, ok}. lib/llm wires it to a
+        Sentry breadcrumb (no-op without SENTRY_DSN; never logs the key). Integrations stays vendor-free
+        (the web wires Sentry: anti-corruption preserved). +2 tests. Langfuse + a full OTel GenAI span are
+        the dep-gated FOLLOW-UP (need the langfuse dep + LANGFUSE_* keys), logged not faked.
+        typecheck 6/6, lint clean, test 401, web build OK.
 - [ ] NX8  shadcn/ui + Tremor analytics dashboard + TanStack Table for /leads + /approvals. (Adds deps.)
 - [ ] NX9  AgentKit on Inngest: an agent layer over the existing adapters, code router calling the scorer +
         evaluateSendGate as CODE steps (never an LLM). (Adds a dep.)

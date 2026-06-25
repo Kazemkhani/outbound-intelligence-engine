@@ -178,3 +178,37 @@ describe("eval harness", () => {
     expect(report.total).toBe(extractionCases.length);
   });
 });
+
+describe("LlmClient telemetry (NX7)", () => {
+  it("fires onTelemetry once per complete() with timing, tokens, and cost", async () => {
+    const events: import("./client").LlmTelemetry[] = [];
+    const transport = stubTransport([{ body: anthropicResponse([{ type: "text", text: "hi" }]) }]);
+    const client = new LlmClient({
+      apiKey: "k",
+      transport,
+      onTelemetry: (t) => events.push(t),
+    });
+    await client.complete({
+      system: "s",
+      messages: [{ role: "user", content: "q" }],
+      model: MODEL_IDS.personalise,
+      maxTokens: 100,
+    });
+    expect(events).toHaveLength(1);
+    const t = events[0];
+    expect(t?.model).toBe(MODEL_IDS.personalise);
+    expect(t?.inputTokens).toBe(100);
+    expect(t?.outputTokens).toBe(50);
+    expect(t?.ok).toBe(true);
+    expect(typeof t?.latencyMs).toBe("number");
+    expect(t?.costUsd).toBeGreaterThanOrEqual(0);
+  });
+
+  it("is a no-op when no telemetry sink is provided", async () => {
+    const transport = stubTransport([{ body: anthropicResponse([{ type: "text", text: "hi" }]) }]);
+    const client = new LlmClient({ apiKey: "k", transport });
+    await expect(
+      client.complete({ system: "s", messages: [{ role: "user", content: "q" }], model: MODEL_IDS.personalise, maxTokens: 100 }),
+    ).resolves.toBeTruthy();
+  });
+});

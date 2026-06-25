@@ -80,6 +80,22 @@ export interface CompleteResult {
 export interface LlmClientOptions {
   apiKey?: string;
   transport?: HttpTransport;
+  /**
+   * Optional telemetry sink (NX7 observability spine). Fired once per successful
+   * complete() with timing, token, and cost data. Default: none (a true no-op).
+   * The web layer wires this to Sentry; the integrations package stays free of any
+   * observability vendor, preserving the anti-corruption boundary.
+   */
+  onTelemetry?: (t: LlmTelemetry) => void;
+}
+
+export interface LlmTelemetry {
+  model: string;
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  ok: boolean;
 }
 
 const ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages";
@@ -100,10 +116,12 @@ const PROVIDER = "anthropic";
 export class LlmClient {
   private readonly apiKey: string;
   private readonly transport: HttpTransport;
+  private readonly onTelemetry?: (t: LlmTelemetry) => void;
 
   constructor(options: LlmClientOptions = {}) {
     this.apiKey = options.apiKey ?? "";
     this.transport = options.transport ?? fetchTransport;
+    this.onTelemetry = options.onTelemetry;
   }
 
   /** Returns true when an API key is present. Used by the orchestration layer
@@ -119,6 +137,7 @@ export class LlmClient {
    * have a typed failure path (brief §7 — no empty catch).
    */
   async complete(options: CompleteOptions): Promise<CompleteResult> {
+    const startedAt = Date.now();
     const body: Record<string, unknown> = {
       model: options.model,
       max_tokens: options.maxTokens,
@@ -168,6 +187,15 @@ export class LlmClient {
       response.usage.input_tokens,
       response.usage.output_tokens,
     );
+
+    this.onTelemetry?.({
+      model: options.model,
+      latencyMs: Date.now() - startedAt,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+      costUsd: cost.costUsd,
+      ok: true,
+    });
 
     return { text, toolInput, raw: response, cost };
   }

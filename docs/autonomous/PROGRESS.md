@@ -512,3 +512,15 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   anti-corruption boundary, DRY_RUN on, no secrets committed).
 - NEXT: wire DGISAdapter into the live waterfall provider list once DGIS_API_KEY is set (small follow-up);
   resume NX7 (observability spine).
+
+## NX7 DONE (Sentry + cost spine) — LLM observability
+- packages/integrations LlmClient: optional onTelemetry sink emitted once per complete() with {model,
+  latencyMs, inputTokens, outputTokens, costUsd, ok}. Default = no-op. The integrations package stays free
+  of any observability vendor (anti-corruption); the web layer wires the sink.
+- apps/web lib/llm.ts: onTelemetry -> Sentry.addBreadcrumb({category:"llm", data:{...telemetry}}), so AI
+  cost-per-call + latency attach to any later Sentry event. No-op without SENTRY_DSN; never logs the key.
+- FOLLOW-UP (dep-gated, logged not faked): Langfuse + a full OTel GenAI span need the langfuse dependency
+  + LANGFUSE_* keys. The telemetry shape is in place so adding a second sink is trivial later.
+- VERIFIED: typecheck 6/6, lint clean, test 401 pass (+2 telemetry), web build OK.
+- MILESTONE: NX7 + NX11 (2GIS) -> PR to main + merge + deploy.
+- NEXT: NX8 (shadcn/Tremor dashboards; dep-gated), NX9 (AgentKit), NX10 (read-only MCP). Window closing soon.
