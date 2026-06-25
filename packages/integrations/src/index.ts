@@ -16,6 +16,9 @@ export { ExploriumAdapter } from "./explorium/index";
 // Signal / intent adapters (SignalProvider).
 export { TheirStackAdapter } from "./theirstack/index";
 export { DLDAdapter } from "./dld/index";
+// Real DLD raw-transactions ingest: aggregate official dld_transactions-open rows
+// into intent signals (transaction_spike + off_plan_launch) via the tested mapper.
+export { aggregateTransactions, rawTransactionsToSignals, dldRawRow, type DldRawRow } from "./dld/raw";
 export { DGISAdapter } from "./dgis/index";
 export { PredictLeadsAdapter } from "./predictleads/index";
 export { ExaAdapter } from "./exa/index";
