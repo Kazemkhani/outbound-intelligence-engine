@@ -69,6 +69,8 @@ enum MessageDirection {
 enum MessageStatus {
   queued
   awaiting_approval
+  approved
+  rejected
   sent
   delivered
   opened
