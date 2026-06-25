@@ -64,7 +64,21 @@ export async function ask(opts: AskOptions): Promise<string> {
     );
   }
 
-  const client = new LlmClient({ apiKey: key });
+  // Observability spine (NX7): fan per-call telemetry (latency, tokens, cost) to
+  // Sentry as a breadcrumb so AI cost-per-call and timing are visible on any later
+  // event. A no-op when SENTRY_DSN is unset. Langfuse + a full OTel GenAI span are
+  // the dep-gated follow-up (need the langfuse dep + LANGFUSE_* keys).
+  const client = new LlmClient({
+    apiKey: key,
+    onTelemetry: (t) => {
+      Sentry.addBreadcrumb({
+        category: "llm",
+        level: "info",
+        message: "llm.complete",
+        data: { ...t },
+      });
+    },
+  });
 
   let result: Awaited<ReturnType<LlmClient["complete"]>>;
   try {

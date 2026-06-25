@@ -55,6 +55,7 @@ const COMPANY_FIELDS: (keyof NormalisedCompany)[] = [
   "lng",
   "placeId",
   "localCategory",
+  "phone",
   "techStack",
   "funding",
   "socials",

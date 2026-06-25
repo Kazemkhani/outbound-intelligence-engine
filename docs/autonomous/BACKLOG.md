@@ -41,12 +41,24 @@ only in env/Fly; NOVA stays DEMO_MODE).
         app/api/ask (zod-validated, canon-grounded) streams the answer. KnowledgeWorkspace now streams the
         answer token-by-token via fetch + ReadableStream. Close/Dojo wiring is the follow-up (NX6b).
         Verify: web typecheck + lint (0 warnings) + test (50) + full build OK (/api/ask compiled).
-- [ ] NX7  Observability spine: one OTel GenAI span at LlmClient.complete fanning to Sentry + Langfuse +
-        cost-per-lead metadata. (No-op without the DSN env; never logs the key.)
+- [x] NX7  DONE (Sentry + cost spine) — LlmClient gained an optional onTelemetry sink emitted once per
+        complete() with {model, latencyMs, inputTokens, outputTokens, costUsd, ok}. lib/llm wires it to a
+        Sentry breadcrumb (no-op without SENTRY_DSN; never logs the key). Integrations stays vendor-free
+        (the web wires Sentry: anti-corruption preserved). +2 tests. Langfuse + a full OTel GenAI span are
+        the dep-gated FOLLOW-UP (need the langfuse dep + LANGFUSE_* keys), logged not faked.
+        typecheck 6/6, lint clean, test 401, web build OK.
 - [ ] NX8  shadcn/ui + Tremor analytics dashboard + TanStack Table for /leads + /approvals. (Adds deps.)
 - [ ] NX9  AgentKit on Inngest: an agent layer over the existing adapters, code router calling the scorer +
         evaluateSendGate as CODE steps (never an LLM). (Adds a dep.)
 - [ ] NX10 One read-only internal MCP server (TS SDK) for operator/Claude agents. Never the send-path.
+- [x] NX11 DONE (operator request) — 2GIS (DGIS) EnrichmentProvider for UAE business details. New
+        packages/integrations/src/dgis (index + mapper + fixture + 7 tests) over the 2GIS Catalog API
+        (GET catalog.api.2gis.com/3.0/items, key query param), mapping items to NormalisedCompany incl. the
+        business PHONE (the UAE phone-first unlock), website/domain, coords, category; country=AE. Added
+        phone? to NormalisedCompany + the waterfall merge fields; DGIS_API_KEY to config schema + .env.example.
+        Anti-corruption: 2GIS shapes confined to ./mapper. Fixture-tested offline; live calls gated on
+        DGIS_API_KEY (set it in Fly secrets, never committed). Wiring it into the live waterfall provider
+        list is the small follow-up once the key is set. typecheck 6/6, lint clean, test 399.
 
 Next-phase guardrails (in addition to the Invariants below):
 - A new npm dependency may be added ONLY if `pnpm install` succeeds AND `pnpm verify` (or typecheck+lint+test+build)

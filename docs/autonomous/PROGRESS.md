@@ -492,3 +492,35 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   is the follow-up NX6b.
 - VERIFIED: web typecheck 6/6, lint 0 warnings, test 392, full build OK (/api/ask compiled as dynamic).
 - NEXT: deploy NX5+NX6 milestone, then NX7 (observability spine; dep-gated).
+
+## NX11 DONE (operator request) — 2GIS (DGIS) EnrichmentProvider for UAE business data
+- STRATEGY: 2GIS has a full UAE business directory (Dubai/Abu Dhabi/Sharjah) WITH phone numbers, the
+  phone-first data point global vendors cover poorly (DATA-ACQUISITION.md). So 2GIS becomes a UAE-native
+  EnrichmentProvider behind the existing anti-corruption contract, slotting into the enrichment waterfall
+  alongside Places/SearchApi: discoverCompanies (catalog search -> NormalisedCompany[]) + enrichCompany
+  (fill the business phone for a known firm). Provenance recorded; vendor shapes never leak into core.
+- BUILT: packages/integrations/src/dgis (index.ts + mapper.ts + fixtures/items.json + dgis.test.ts).
+  Endpoint GET https://catalog.api.2gis.com/3.0/items with key= query param + fields=items.point,
+  contact_groups,rubrics,address (verified against docs.2gis.com). Mapper extracts name, phone, website,
+  domain (normaliseDomain), lat/lng, localCategory (rubric); country=AE; never fabricates (missing -> null).
+  Added phone? to NormalisedCompany + "phone" to the waterfall COMPANY_FIELDS; DGIS_API_KEY to
+  packages/config schema + .env.example. Exported DGISAdapter.
+- SECURITY: the 2GIS API key is a SECRET. It is NOT in the repo. Set it as a Fly secret for prod
+  (flyctl secrets set DGIS_API_KEY=...) and in apps/web/.env.local for dev. The adapter is fixture-tested
+  offline and only calls live when DGIS_API_KEY is present.
+- VERIFIED: typecheck 6/6, lint clean, test 399 pass (+7 dgis). Invariants intact (scoring stays code,
+  anti-corruption boundary, DRY_RUN on, no secrets committed).
+- NEXT: wire DGISAdapter into the live waterfall provider list once DGIS_API_KEY is set (small follow-up);
+  resume NX7 (observability spine).
+
+## NX7 DONE (Sentry + cost spine) — LLM observability
+- packages/integrations LlmClient: optional onTelemetry sink emitted once per complete() with {model,
+  latencyMs, inputTokens, outputTokens, costUsd, ok}. Default = no-op. The integrations package stays free
+  of any observability vendor (anti-corruption); the web layer wires the sink.
+- apps/web lib/llm.ts: onTelemetry -> Sentry.addBreadcrumb({category:"llm", data:{...telemetry}}), so AI
+  cost-per-call + latency attach to any later Sentry event. No-op without SENTRY_DSN; never logs the key.
+- FOLLOW-UP (dep-gated, logged not faked): Langfuse + a full OTel GenAI span need the langfuse dependency
+  + LANGFUSE_* keys. The telemetry shape is in place so adding a second sink is trivial later.
+- VERIFIED: typecheck 6/6, lint clean, test 401 pass (+2 telemetry), web build OK.
+- MILESTONE: NX7 + NX11 (2GIS) -> PR to main + merge + deploy.
+- NEXT: NX8 (shadcn/Tremor dashboards; dep-gated), NX9 (AgentKit), NX10 (read-only MCP). Window closing soon.

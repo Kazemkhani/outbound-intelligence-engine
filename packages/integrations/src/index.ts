@@ -16,6 +16,7 @@ export { ExploriumAdapter } from "./explorium/index";
 // Signal / intent adapters (SignalProvider).
 export { TheirStackAdapter } from "./theirstack/index";
 export { DLDAdapter } from "./dld/index";
+export { DGISAdapter } from "./dgis/index";
 export { PredictLeadsAdapter } from "./predictleads/index";
 export { ExaAdapter } from "./exa/index";
 

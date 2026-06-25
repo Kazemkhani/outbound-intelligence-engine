@@ -1,0 +1,31 @@
+{
+  "result": {
+    "total": 2,
+    "items": [
+      {
+        "id": "70000001006739226",
+        "name": "Acme Real Estate Brokerage",
+        "address_name": "Marasi Drive, Business Bay",
+        "point": { "lat": 25.1853, "lon": 55.2654 },
+        "contact_groups": [
+          {
+            "contacts": [
+              { "type": "phone", "value": "+97141234567", "text": "+971 4 123 4567" },
+              { "type": "website", "value": "acme.ae", "url": "https://acme.ae" },
+              { "type": "email", "value": "info@acme.ae" }
+            ]
+          }
+        ],
+        "rubrics": [{ "name": "Real estate agency" }]
+      },
+      {
+        "id": "70000001006740111",
+        "name": "Marina Homes (no phone listed)",
+        "address_name": "Dubai Marina",
+        "point": { "lat": 25.0805, "lon": 55.1403 },
+        "contact_groups": [],
+        "rubrics": [{ "name": "Real estate agency" }]
+      }
+    ]
+  }
+}
