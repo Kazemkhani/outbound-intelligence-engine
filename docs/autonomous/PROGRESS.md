@@ -524,3 +524,24 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
 - VERIFIED: typecheck 6/6, lint clean, test 401 pass (+2 telemetry), web build OK.
 - MILESTONE: NX7 + NX11 (2GIS) -> PR to main + merge + deploy.
 - NEXT: NX8 (shadcn/Tremor dashboards; dep-gated), NX9 (AgentKit), NX10 (read-only MCP). Window closing soon.
+
+## NX8 DONE (core) — TanStack Table + analytics on /leads
+- DEP-GATE PASSED: `pnpm --filter web add @tanstack/react-table` (^8.21.3, headless + React-19 safe,
+  +2 pkgs, no peer conflicts); the full `next build` stayed green afterward, so the dep is kept.
+- BUILT: apps/web/components/leads/leads-view.tsx rebuilt on useReactTable (getCore/Sorted/Filtered row
+  models). New operator value vs the old hand-rolled table: a GLOBAL SEARCH box (matches company name,
+  industry, contact name, title), column sorting (composite default desc) with preserved aria-sort, and
+  tier filtering wired through TanStack columnFilters (single source of truth for the pills). The lead
+  drawer, signal/tier Badges, and empty state are preserved.
+- ANALYTICS STRIP: a pure-CSS pipeline summary above the table (Leads total, Tier A/B/C/D counts with
+  colour dots, Avg composite) computed from ALL leads via useMemo. Deliberately NO Tremor: that part of
+  NX8 would pull recharts + has React-19 friction, so the strip is plain Tailwind — zero added dep risk.
+- INVARIANTS: scores are read from the deterministic engine output (ScoredLead.score), never recomputed
+  in the UI; LLM untouched; DRY_RUN/NOVA unchanged; no secrets.
+- FOLLOW-UP (logged, not faked): TanStack Table on /approvals and optional Tremor charts on /analytics
+  (the chart-lib dep needs its own dep-gate pass). shadcn/ui primitives are already in the stack
+  (class-variance-authority + clsx + tailwind-merge + lucide-react), so no shadcn install was needed.
+- VERIFIED: web typecheck clean, lint 0 warnings, test 50 pass, full `next build` OK (/leads compiled,
+  20.3 kB). Committed 7d1b5a5, pushed to security-hardening-and-searchapi.
+- NEXT: open/merge the NX8 PR to main + deploy to Fly (milestone); remaining NX9 (AgentKit) + NX10
+  (read-only MCP) are dep-gated. Window closing (~28 min to STOP_AFTER_EPOCH).
