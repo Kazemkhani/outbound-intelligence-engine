@@ -5,7 +5,6 @@ import { AlertCircle, BookOpen, Loader2, Send, Sparkles } from "lucide-react";
 import { Markdown } from "@/components/ui/markdown";
 import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState } from "@/components/ui/states";
-import { askKnowledge, type KnowledgeResult } from "@/app/knowledge/actions";
 
 const SUGGESTIONS = [
   "How do I handle 'we already have an answering service'?",
@@ -39,20 +38,34 @@ export function KnowledgeWorkspace() {
     const trimmed = q.trim();
     if (trimmed.length < 3 || isPending) return;
     setError(null);
+    const id = nextId;
     startTransition(async () => {
-      let res: KnowledgeResult;
       try {
-        res = await askKnowledge(trimmed);
-      } catch {
-        setError("Something went wrong reaching the model. Try again.");
-        return;
-      }
-      if (res.ok) {
-        setThread((prev) => [{ id: nextId, question: res.question, answer: res.answer }, ...prev]);
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: trimmed }),
+        });
+        if (!res.ok || !res.body) {
+          const msg = (await res.text().catch(() => "")) || "The model did not return an answer. Try again.";
+          setError(msg);
+          return;
+        }
+        // Seed the answer entry, then stream tokens into it as they arrive.
+        setThread((prev) => [{ id, question: trimmed, answer: "" }, ...prev]);
         setNextId((n) => n + 1);
         setQuestion("");
-      } else {
-        setError(res.error ?? "The model did not return an answer. Try again.");
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let acc = "";
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          acc += decoder.decode(value, { stream: true });
+          setThread((prev) => prev.map((qa) => (qa.id === id ? { ...qa, answer: acc } : qa)));
+        }
+      } catch {
+        setError("Something went wrong reaching the model. Try again.");
       }
     });
   };

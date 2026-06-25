@@ -11,6 +11,8 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "verify": "turbo run typecheck lint test build",
+    "eval": "npx -y promptfoo@latest eval -c evals/promptfooconfig.yaml",
+    "eval:view": "npx -y promptfoo@latest view",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",

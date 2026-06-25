@@ -30,10 +30,17 @@ only in env/Fly; NOVA stays DEMO_MODE).
         (c) New pure quiet-hours.ts: isWithinCallingWindow + UAE_CALLING_WINDOW (09-18 Asia/Dubai, Mon-Fri),
         the TDRA calling-window gate (module now; wired into live send when voice activates). +12 tests.
         typecheck 6/6, lint 6/6, test 392.
-- [ ] NX5  promptfoo eval harness + a canon-grounded eval set + a turbo task + CI gate on pass-rate.
-        (Adds a devDep: only land it if pnpm install succeeds AND the build stays green.)
-- [ ] NX6  Streaming AI UI: streamAsk() via Vercel AI SDK (@ai-sdk/anthropic) in Close/Knowledge/Dojo.
-        (Adds deps: land only if green. Keep the score path never reading model text.)
+- [x] NX5  DONE (harness) — promptfoo eval harness: evals/promptfooconfig.yaml (a canon-grounded system
+        prompt mirroring lib/canon rules + 4 cases: <CONFIRM> on pricing/proof, llm-rubric framework-cited
+        + UAE-specific, and a global no-em-dash assertion) + evals/README.md + `pnpm eval`/`eval:view`
+        scripts via npx (NO devDep added, so the build stays 100% green). LIVE RUN + CI pass-rate gate are
+        BLOCKED: promptfoo must call the model and CI has no ANTHROPIC_API_KEY (owner action to add it).
+- [x] NX6  DONE (Knowledge) — Streaming AI UI via Vercel AI SDK. Added ai ^6 + @ai-sdk/anthropic ^3 to
+        apps/web (install + full build stayed green). lib/llm streamAsk() returns a text-stream Response
+        (Anthropic provider, model tiers, key lazy + never logged, Sentry onError). New auth-gated route
+        app/api/ask (zod-validated, canon-grounded) streams the answer. KnowledgeWorkspace now streams the
+        answer token-by-token via fetch + ReadableStream. Close/Dojo wiring is the follow-up (NX6b).
+        Verify: web typecheck + lint (0 warnings) + test (50) + full build OK (/api/ask compiled).
 - [ ] NX7  Observability spine: one OTel GenAI span at LlmClient.complete fanning to Sentry + Langfuse +
         cost-per-lead metadata. (No-op without the DSN env; never logs the key.)
 - [ ] NX8  shadcn/ui + Tremor analytics dashboard + TanStack Table for /leads + /approvals. (Adds deps.)
