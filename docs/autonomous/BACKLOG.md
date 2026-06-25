@@ -23,8 +23,13 @@ only in env/Fly; NOVA stays DEMO_MODE).
         demo/dry-run path is unchanged. New pure approval.ts (SEND_APPROVED_EVENT + approvalFromEvent; timeout
         falls back to pending = never sends). +9 tests prove resume re-checks DRY_RUN: dryRun on + approved =
         simulate; reject = blocked; timeout = blocked. typecheck 6/6, lint clean, test 96 orchestration.
-- [ ] NX4  Enrichment waterfall hardening: wrap each provider in its own step.run + declarative
-        throttle/concurrency (channel caps + quiet hours) in @oie/orchestration. Verify by typecheck + test.
+- [x] NX4  DONE — Enrichment waterfall hardening + quiet hours. (a) enrichCompanyWaterfall gained an
+        optional runStep hook so each provider can be memoised under its own Inngest step.run (replay
+        re-runs only what failed); wrapped call returns a value so the cascade still falls through on error.
+        (b) runEnrolment got declarative concurrency [{key: enrolmentId, limit: 1}] + throttle {50/1m}.
+        (c) New pure quiet-hours.ts: isWithinCallingWindow + UAE_CALLING_WINDOW (09-18 Asia/Dubai, Mon-Fri),
+        the TDRA calling-window gate (module now; wired into live send when voice activates). +12 tests.
+        typecheck 6/6, lint 6/6, test 392.
 - [ ] NX5  promptfoo eval harness + a canon-grounded eval set + a turbo task + CI gate on pass-rate.
         (Adds a devDep: only land it if pnpm install succeeds AND the build stays green.)
 - [ ] NX6  Streaming AI UI: streamAsk() via Vercel AI SDK (@ai-sdk/anthropic) in Close/Knowledge/Dojo.

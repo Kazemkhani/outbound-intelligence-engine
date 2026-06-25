@@ -140,3 +140,39 @@ describe("enrichCompanyWaterfall", () => {
     expect(r.costs[0]?.costUsd).toBeCloseTo(0.02);
   });
 });
+
+describe("enrichCompanyWaterfall runStep hook (NX4 durability)", () => {
+  it("wraps each provider under its own step id and preserves results", async () => {
+    const ids: string[] = [];
+    const runStep = async <T>(id: string, fn: () => Promise<T>): Promise<T> => {
+      ids.push(id);
+      return fn();
+    };
+    const res = await enrichCompanyWaterfall(
+      query,
+      [fakeProvider("p1", { company: { industry: "Real Estate" } })],
+      ctx,
+      { runStep, isComplete: () => false },
+    );
+    expect(ids).toEqual(["enrich-p1"]);
+    expect(res.matchedBy).toEqual(["p1"]);
+    expect(res.company?.industry).toBe("Real Estate");
+  });
+
+  it("falls through on a provider error even when wrapped in runStep", async () => {
+    const runStep = async <T>(_id: string, fn: () => Promise<T>): Promise<T> => fn();
+    const res = await enrichCompanyWaterfall(
+      query,
+      [
+        fakeProvider("boom", {
+          throws: new AdapterError({ kind: "rate_limit", provider: "boom", message: "429" }),
+        }),
+        fakeProvider("p2", { company: { industry: "Brokerage" } }),
+      ],
+      ctx,
+      { runStep, isComplete: () => false },
+    );
+    expect(res.trace.find((t) => t.provider === "boom")?.outcome).toBe("error");
+    expect(res.matchedBy).toEqual(["p2"]);
+  });
+});

@@ -251,6 +251,12 @@ export const runEnrolment = inngest.createFunction(
     id: "sequence-enrol",
     name: "Sequence: enrol contact",
     retries: 3,
+    // Declarative safety rails (NX4): at most one live run per enrolment (no
+    // double-sends from a duplicate trigger), and a global throughput throttle so
+    // a burst of enrolments cannot exceed a sane send rate. These are belt for the
+    // send-gate's braces; the gate still decides every individual send.
+    concurrency: [{ key: "event.data.enrolmentId", limit: 1 }],
+    throttle: { limit: 50, period: "1m" },
     cancelOn: [
       {
         event: "oie/sequence.stop",

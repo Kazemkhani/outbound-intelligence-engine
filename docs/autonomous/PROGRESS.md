@@ -451,3 +451,17 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   inngest ^3.27.
 - MILESTONE: NX1+NX2+NX3 (backend hardening) -> opening a PR to main, merging on green CI, deploying.
 - NEXT: NX4 (enrichment waterfall hardening: per-provider step.run + declarative throttle/concurrency).
+
+## NX4 DONE — enrichment-waterfall hardening + quiet-hours module
+- waterfall.ts: enrichCompanyWaterfall gained an optional runStep hook (default = direct call) so each
+  provider can run under its own Inngest step.run; the wrapped call returns a discriminated value (never
+  throws) so the cascade still falls through on a provider error under replay. +2 tests.
+- sequencing/inngest.ts runEnrolment: declarative concurrency [{key:"event.data.enrolmentId", limit:1}]
+  (no double-send from a duplicate trigger) + throttle {limit:50, period:"1m"}. The send-gate still
+  decides each individual send.
+- NEW quiet-hours.ts (pure): isWithinCallingWindow(now, window) + UAE_CALLING_WINDOW (09:00-18:00
+  Asia/Dubai, Mon-Fri, weekends excluded). The TDRA calling-window gate as a deterministic predicate
+  (now injected). Module shipped now; wiring it into the live send is part of the owner/TDRA-gated voice
+  activation. +6 tests (confirmed against real Asia/Dubai instants).
+- VERIFIED: typecheck 6/6, lint 6/6 (0 warnings), test 392 total pass (+12). Invariants intact.
+- Also: NX1-NX3 milestone deployed (Fly, exit 0). NEXT: NX5 (promptfoo eval harness; dep-gated).
