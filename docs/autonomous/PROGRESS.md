@@ -545,3 +545,32 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   20.3 kB). Committed 7d1b5a5, pushed to security-hardening-and-searchapi.
 - NEXT: open/merge the NX8 PR to main + deploy to Fly (milestone); remaining NX9 (AgentKit) + NX10
   (read-only MCP) are dep-gated. Window closing (~28 min to STOP_AFTER_EPOCH).
+
+## NX8 SHIPPED LIVE + NX10 DONE (this firing)
+- NX8 milestone deployed: PR #35 (NX5-NX8 + NX11) merged (verify + gitleaks PASS), **Fly v17 complete**,
+  /api/health -> 200. The TanStack leads table + analytics strip are now live. (Deploy survived a transient
+  depot-builder deadline_exceeded then recovered; verified via `flyctl releases` + health, not the wrapper
+  exit code, per the documented lesson.)
+
+## NX10 DONE — read-only MCP server (@oie/mcp)
+- DEP-GATE PASSED: `pnpm --filter @oie/mcp add @modelcontextprotocol/sdk` (v1.29.0, zod peer satisfied,
+  +54 pkgs into the new package). Full monorepo re-verified: typecheck 7/7, lint 7/7, test 7/7 green.
+  apps/web is untouched (the SDK is not imported there), so the live web build is unaffected.
+- BUILT: packages/mcp (package.json + tsconfig + src/index.ts + src/tools.ts + src/tools.test.ts +
+  AGENTS.md + README.md). A stdio McpServer ("huscribe-revenue-os") registering 3 READ-ONLY tools:
+  * score_prospect — validates {company, contact, signals, icp} with Zod, builds a ScoringSubject, and
+    calls @oie/core scoreLead(subject, icp, now) -> the SAME deterministic fit/intent/composite/tier +
+    full rationale the product computes. The LLM never computes the number (invariant honoured).
+  * describe_engine — model version (scoring-v1), the known signal types, tier + composite-blend semantics.
+  * validate_icp — schema-validate a candidate ICP profile before scoring against it.
+- DESIGN: pure compute (computeScore/engineReference) is separated from the transport and unit-tested
+  (+4 tests: 0-100 ranges + tier, determinism for fixed (input, now), fresh signal raises intent,
+  reference reports version + signal types). `now` is injected via a clock so results are reproducible;
+  the engine never reads the clock. stdout is the MCP channel, so the server logs only to stderr.
+- INVARIANTS: read/compute ONLY — no DB, no secrets, no network, and NEVER the send-path (agent/runtime
+  surface; the production send pipeline stays REST + webhooks per CLAUDE.md). Anti-corruption boundary
+  kept (agent JSON in -> typed subject -> core scorer).
+- VERIFIED: typecheck 7/7, lint 7/7 (0 warnings), test 7/7 (mcp +4). Committed 9f38a2e, pushed to
+  security-hardening-and-searchapi. Not deployed (it is a local/runtime tool, not part of the Fly web app).
+- REMAINING NX: only NX9 (AgentKit on Inngest) is unchecked — substantial + dep-heavy + entangled with
+  orchestration; deferred to the next tick (window closing ~16:33 +04). NEXT: NX9 or self-terminate at STOP.
