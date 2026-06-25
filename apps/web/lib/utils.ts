@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { SignalType } from "@oie/core";
 
 /** Merge Tailwind classes safely. */
 export function cn(...inputs: ClassValue[]): string {
@@ -32,16 +33,16 @@ export function round1(n: number): number {
 }
 
 /** Map a signal type to a human-readable label. */
-export function signalTypeLabel(
-  type: "hiring" | "funding" | "tech_adoption" | "job_change" | "news" | "web_change",
-): string {
-  const map: Record<string, string> = {
+export function signalTypeLabel(type: SignalType): string {
+  const map: Record<SignalType, string> = {
     hiring: "Hiring",
     funding: "Funding",
     tech_adoption: "Tech adoption",
     job_change: "Job change",
     news: "News",
     web_change: "Web change",
+    off_plan_launch: "Off-plan launch",
+    transaction_spike: "Transaction spike",
   };
   return map[type] ?? type;
 }

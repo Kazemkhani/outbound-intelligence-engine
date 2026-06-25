@@ -42,3 +42,6 @@ test-results/
 .playwright-mcp/
 .scratch/
 /*.png
+
+# prospect data may contain PII; never commit it
+data/
