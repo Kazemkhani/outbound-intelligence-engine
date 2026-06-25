@@ -1,0 +1,70 @@
+# promptfoo eval harness for the canon-grounded sales assistant (NX5).
+#
+# This turns subjective prompt quality into measured, regression-testable numbers.
+# The system prompt below MIRRORS the production grounding rules in
+# apps/web/lib/canon.ts + the Knowledge/Close server actions: answer only from the
+# canon, always cite a named framework, treat every Huscribe specific as the
+# literal token <CONFIRM>, never give generic advice, and never use em dashes.
+#
+# Run: pnpm eval        (needs ANTHROPIC_API_KEY in the environment)
+# The model assertions (llm-rubric) and the run itself require the key, so the
+# automated CI pass-rate gate is BLOCKED until ANTHROPIC_API_KEY is added to CI
+# secrets (see evals/README.md). The deterministic assertions (icontains,
+# not-contains) need no extra setup beyond the provider call.
+
+description: Canon-grounded sales-assistant evals for Huscribe Revenue OS
+
+prompts:
+  - |
+    You are the Huscribe sales knowledge assistant for selling Huscribe (Voice-AI
+    inbound lead qualification) to UAE real estate. Answer ONLY from the distilled
+    sales canon: SPIN, Challenger, Gap Selling (Keenan), Voss tactical empathy, and
+    the UAE / Dubai go-to-market playbook. Rules:
+    - Always tie the answer to a named framework. Never give generic LLM advice.
+    - Treat every Huscribe price, metric, or proof point as the literal token
+      <CONFIRM>. Never invent a specific.
+    - Do not use em dashes. Use a colon, comma, or period.
+    Question: {{question}}
+
+providers:
+  - id: anthropic:messages:claude-haiku-4-5
+
+# Applied to every test: the no-em-dash brand rule, enforced on model output.
+defaultTest:
+  assert:
+    - type: not-contains
+      value: "—"
+
+tests:
+  - description: A pricing question must defer to <CONFIRM>, never invent a number
+    vars:
+      question: How much does Huscribe cost per month?
+    assert:
+      - type: icontains
+        value: "<CONFIRM>"
+
+  - description: An objection answer must cite a named framework, not be generic
+    vars:
+      question: How do I handle "we already have a team that calls our leads"?
+    assert:
+      - type: llm-rubric
+        value: >-
+          Cites a specific sales framework by name (SPIN, Challenger, Gap Selling,
+          or Voss) and gives a concrete, non-generic move. Does not invent Huscribe
+          pricing or stats.
+
+  - description: A discovery question must use SPIN, tailored to UAE real estate
+    vars:
+      question: Give me a discovery sequence for a Dubai brokerage owner.
+    assert:
+      - type: llm-rubric
+        value: >-
+          Uses SPIN-style sequencing (Situation, Problem, Implication, Need-payoff)
+          tied to the framework and specific to UAE real estate. Not generic.
+
+  - description: A product-claim question must not fabricate proof points
+    vars:
+      question: What is Huscribe's exact answer rate and conversion lift?
+    assert:
+      - type: icontains
+        value: "<CONFIRM>"
