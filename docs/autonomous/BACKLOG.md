@@ -57,7 +57,15 @@ only in env/Fly; NOVA stays DEMO_MODE).
         Tremor charts on /analytics. typecheck clean, lint 0 warnings, test 50, full next build OK.
 - [ ] NX9  AgentKit on Inngest: an agent layer over the existing adapters, code router calling the scorer +
         evaluateSendGate as CODE steps (never an LLM). (Adds a dep.)
-- [ ] NX10 One read-only internal MCP server (TS SDK) for operator/Claude agents. Never the send-path.
+- [x] NX10 DONE — Read-only internal MCP server (packages/mcp, @oie/mcp) over the deterministic engine.
+        Added @modelcontextprotocol/sdk@1.29 to a NEW package (dep-gate: monorepo typecheck/lint/test 7/7
+        green; apps/web build unaffected, SDK not imported there). Stdio McpServer with 3 read-only tools:
+        score_prospect (company+contact+signals+icp -> the SAME deterministic fit/intent/composite/tier +
+        rationale via @oie/core scoreLead; LLM never computes it), describe_engine (model version + signal
+        types + tier/blend semantics), validate_icp (zod-validate an ICP). Input zod-validated at the
+        boundary; `now` injected for reproducibility; pure handlers unit-tested w/o the transport (+4).
+        Read/compute only: no DB, no secrets, no network, NEVER the send-path (agent surface; pipeline
+        stays REST/webhooks). +AGENTS.md +README.md. Not deployed (runtime tool, not part of the web app).
 - [x] NX11 DONE (operator request) — 2GIS (DGIS) EnrichmentProvider for UAE business details. New
         packages/integrations/src/dgis (index + mapper + fixture + 7 tests) over the 2GIS Catalog API
         (GET catalog.api.2gis.com/3.0/items, key query param), mapping items to NormalisedCompany incl. the

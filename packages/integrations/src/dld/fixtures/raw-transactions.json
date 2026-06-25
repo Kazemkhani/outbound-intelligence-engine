@@ -1,0 +1,15 @@
+{
+  "_note": "Real dld_transactions-open SHAPE (subset of the 46 columns). Values illustrative, not copied records. now=2026-06-25, periodDays=30 -> current window 2026-05-26..06-25, prior 2026-04-26..05-25.",
+  "rows": [
+    { "instance_date": "2026-06-10", "trans_group_en": "Sales", "reg_type_en": "Existing Properties", "area_name_en": "Business Bay", "project_name_en": "Executive Towers", "actual_worth": 1650000, "property_type_en": "Unit" },
+    { "instance_date": "2026-06-12", "trans_group_en": "Sales", "reg_type_en": "Existing Properties", "area_name_en": "Business Bay", "project_name_en": "Executive Towers", "actual_worth": 1720000, "property_type_en": "Unit" },
+    { "instance_date": "2026-06-18", "trans_group_en": "Sales", "reg_type_en": "Existing Properties", "area_name_en": "Business Bay", "project_name_en": "The Atria", "actual_worth": 2100000, "property_type_en": "Unit" },
+    { "instance_date": "2026-05-02", "trans_group_en": "Sales", "reg_type_en": "Existing Properties", "area_name_en": "Business Bay", "project_name_en": "Executive Towers", "actual_worth": 1500000, "property_type_en": "Unit" },
+    { "instance_date": "2026-06-15", "trans_group_en": "Sales", "reg_type_en": "Off-Plan Properties", "area_name_en": "Dubai Marina", "master_project_en": "Marina Vista", "project_name_en": "Marina Vista Tower 2", "actual_worth": 3200000, "property_type_en": "Unit" },
+    { "instance_date": "2026-06-20", "trans_group_en": "Sales", "reg_type_en": "Off-Plan Properties", "area_name_en": "Dubai Marina", "master_project_en": "Marina Vista", "project_name_en": "Marina Vista Tower 2", "actual_worth": 2950000, "property_type_en": "Unit" },
+    { "instance_date": "2026-06-22", "trans_group_en": "Mortgages", "reg_type_en": "Existing Properties", "area_name_en": "Dubai Marina", "project_name_en": "Marina Heights", "actual_worth": 900000, "property_type_en": "Unit" },
+    { "instance_date": "2026-05-10", "trans_group_en": "Sales", "reg_type_en": "Existing Properties", "area_name_en": "Jumeirah Village Circle", "project_name_en": "JVC Block 12", "actual_worth": 800000, "property_type_en": "Unit" },
+    { "instance_date": "2026-03-01", "trans_group_en": "Sales", "reg_type_en": "Existing Properties", "area_name_en": "Old Area", "project_name_en": "Old Project", "actual_worth": 500000, "property_type_en": "Unit" },
+    { "instance_date": "not-a-date", "trans_group_en": "Sales", "area_name_en": "Garbage Area", "actual_worth": 1 }
+  ]
+}

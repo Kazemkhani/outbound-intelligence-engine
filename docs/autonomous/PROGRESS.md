@@ -545,3 +545,53 @@ a new cron with the AUTONOMOUS BUILD LOOP prompt if another autonomous session i
   20.3 kB). Committed 7d1b5a5, pushed to security-hardening-and-searchapi.
 - NEXT: open/merge the NX8 PR to main + deploy to Fly (milestone); remaining NX9 (AgentKit) + NX10
   (read-only MCP) are dep-gated. Window closing (~28 min to STOP_AFTER_EPOCH).
+
+## NX8 SHIPPED LIVE + NX10 DONE (this firing)
+- NX8 milestone deployed: PR #35 (NX5-NX8 + NX11) merged (verify + gitleaks PASS), **Fly v17 complete**,
+  /api/health -> 200. The TanStack leads table + analytics strip are now live. (Deploy survived a transient
+  depot-builder deadline_exceeded then recovered; verified via `flyctl releases` + health, not the wrapper
+  exit code, per the documented lesson.)
+
+## NX10 DONE — read-only MCP server (@oie/mcp)
+- DEP-GATE PASSED: `pnpm --filter @oie/mcp add @modelcontextprotocol/sdk` (v1.29.0, zod peer satisfied,
+  +54 pkgs into the new package). Full monorepo re-verified: typecheck 7/7, lint 7/7, test 7/7 green.
+  apps/web is untouched (the SDK is not imported there), so the live web build is unaffected.
+- BUILT: packages/mcp (package.json + tsconfig + src/index.ts + src/tools.ts + src/tools.test.ts +
+  AGENTS.md + README.md). A stdio McpServer ("huscribe-revenue-os") registering 3 READ-ONLY tools:
+  * score_prospect — validates {company, contact, signals, icp} with Zod, builds a ScoringSubject, and
+    calls @oie/core scoreLead(subject, icp, now) -> the SAME deterministic fit/intent/composite/tier +
+    full rationale the product computes. The LLM never computes the number (invariant honoured).
+  * describe_engine — model version (scoring-v1), the known signal types, tier + composite-blend semantics.
+  * validate_icp — schema-validate a candidate ICP profile before scoring against it.
+- DESIGN: pure compute (computeScore/engineReference) is separated from the transport and unit-tested
+  (+4 tests: 0-100 ranges + tier, determinism for fixed (input, now), fresh signal raises intent,
+  reference reports version + signal types). `now` is injected via a clock so results are reproducible;
+  the engine never reads the clock. stdout is the MCP channel, so the server logs only to stderr.
+- INVARIANTS: read/compute ONLY — no DB, no secrets, no network, and NEVER the send-path (agent/runtime
+  surface; the production send pipeline stays REST + webhooks per CLAUDE.md). Anti-corruption boundary
+  kept (agent JSON in -> typed subject -> core scorer).
+- VERIFIED: typecheck 7/7, lint 7/7 (0 warnings), test 7/7 (mcp +4). Committed 9f38a2e, pushed to
+  security-hardening-and-searchapi. Not deployed (it is a local/runtime tool, not part of the Fly web app).
+- REMAINING NX: only NX9 (AgentKit on Inngest) is unchecked — substantial + dep-heavy + entangled with
+  orchestration; deferred to the next tick (window closing ~16:33 +04). NEXT: NX9 or self-terminate at STOP.
+
+## PHASE 2 WINDOW CLOSED + INDEPENDENT AUDIT (2026-06-25 ~16:45 +04)
+- The 3h Phase-2 window passed STOP_AFTER_EPOCH (1782390829); the autonomous cron loop (job 34254406)
+  was CronDeleted. Phase-2 shipped: NX1-NX8, NX10, NX11 (NX5 + NX7-Langfuse carry honest key-BLOCKED
+  follow-ups). NX9 (AgentKit) left UNCHECKED — see audit below for why it should NOT be auto-built.
+- INDEPENDENT 5-specialist audit (workflow wf_67937edc-37b) re-verified reality (not the self-log):
+  prod /api/health 200 live (Fly v17), build honestly green (~405 tests, typecheck/lint 7/7), crown-jewel
+  invariants real (deterministic scoring, LLM-never-scores, DRY_RUN-wins send gate all enforced + tested),
+  exemplary discipline (1 justified `as any`, 0 empty catch). Claims-honesty 92/100 — progress is REAL.
+- STRATEGIST VERDICT: AT-RISK, trust 85. "Trustworthy work, WRONG TARGET." Nearly all effort went into
+  OUTBOUND plumbing (18 adapters / ~9.1k LOC, MCP, eval harness) that no customer pulls on, while NOVA
+  (the INBOUND voice qualifier actually being sold) is demo-mode only and api.novalabs.ae returns HTTP 000
+  (down). Zero customers/pilots/leads after 11 days; GTM Phase 0 unmet. Market check: voice category is
+  crowded in 2026 and the market is WhatsApp-first (70%+ of Dubai inquiries) while live PSTN is TDRA-blocked.
+- DIRECTIVE CHANGE: stop auto-grinding the NX backlog (it is gold-plating at zero customers). Reallocate to
+  SELL-FIRST: (1) get NOVA back up + record a 90s bilingual demo clip [owner], (2) book 5-10 discovery calls
+  this week [owner], (3) sign 2 demo-mode pilots [owner], (4) test a WhatsApp-first wedge before betting on
+  PSTN voice [buildable], (5) start TDRA/caller-ID/DNCR/PDPL as a parallel owner admin track [owner].
+- NEXT (autonomous, aligned): build the WhatsApp-first qualification wedge (demo-mode, behind the existing
+  anti-corruption boundary) + a founder go-to-market execution kit (discovery list, hand-sent LinkedIn DMs,
+  tightened demo script, pilot one-pager) so founder selling time is unblocked. Pending owner direction.

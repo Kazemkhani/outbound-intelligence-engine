@@ -1,41 +1,90 @@
 "use server";
 
 /**
- * Approval queue server actions — DRY_RUN stubs.
+ * Approval queue server actions.
  *
- * IMPORTANT: These actions record operator intent but do NOT contact any sending
- * provider. The send gate (packages/orchestration/src/send-gate.ts) enforces this
- * at code level — a real send requires the dry-run flag to be off AND an approved
- * state AND an explicit provider call. Neither condition is met here.
+ * These persist the operator's decision (approve / reject) to the Message row,
+ * but they do NOT contact any sending provider. The send gate
+ * (packages/orchestration/src/send-gate.ts) enforces the real boundary at code
+ * level: an actual send requires the dry-run flag to be off AND an approved
+ * state AND an explicit provider call inside the Inngest send step. Approving
+ * here only records intent and moves the message out of the queue; with DRY_RUN
+ * on (the default, and the only mode in this control plane) nothing is ever sent.
  *
  * The UI makes the gate concrete: an operator must click Approve before anything
- * could ever send. There is no affordance that bypasses this step.
+ * could ever send. There is no affordance here that bypasses the dry-run gate.
  */
+
+import { prisma } from "@oie/db";
+import { revalidatePath } from "next/cache";
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
 
+/**
+ * Mark a queued message approved. Persists status = "approved" so it leaves the
+ * awaiting_approval queue. NO send happens — the dry-run gate remains active and
+ * is the only thing that could ever authorise a real send (it does not, here).
+ */
 export async function approveMessage(messageId: string): Promise<ActionResult> {
   if (!messageId || typeof messageId !== "string") {
     return { ok: false, error: "Invalid message ID." };
   }
-  // TODO (Phase 7): persist approval state to DB via prisma and enqueue the
-  // Inngest send step. The step will re-evaluate the send gate; the dry-run flag
-  // must be explicitly disabled by the operator before any real send occurs.
-  console.info(`[STUB] Message ${messageId} approved — no send performed.`);
+
+  try {
+    const result = await prisma.message.updateMany({
+      where: { id: messageId, status: "awaiting_approval" },
+      data: { status: "approved" },
+    });
+    if (result.count === 0) {
+      return { ok: false, error: "Message not found or no longer awaiting approval." };
+    }
+  } catch (err) {
+    return { ok: false, error: pendingMigrationOr(err, "approval") };
+  }
+
+  revalidatePath("/approvals");
   return {
     ok: true,
-    message: `Message ${messageId} marked as approved. No send was performed — the dry-run gate is active.`,
+    message: "Approved. No send was performed — the dry-run gate is active, so nothing leaves the system.",
   };
 }
 
+/**
+ * Reject a queued message. Persists status = "rejected" so it leaves the queue
+ * and will never be sent.
+ */
 export async function rejectMessage(messageId: string): Promise<ActionResult> {
   if (!messageId || typeof messageId !== "string") {
     return { ok: false, error: "Invalid message ID." };
   }
-  // TODO (Phase 7): persist rejection to DB.
-  console.info(`[STUB] Message ${messageId} rejected.`);
-  return {
-    ok: true,
-    message: `Message ${messageId} rejected and will not be sent.`,
-  };
+
+  try {
+    const result = await prisma.message.updateMany({
+      where: { id: messageId, status: "awaiting_approval" },
+      data: { status: "rejected" },
+    });
+    if (result.count === 0) {
+      return { ok: false, error: "Message not found or no longer awaiting approval." };
+    }
+  } catch (err) {
+    return { ok: false, error: pendingMigrationOr(err, "rejection") };
+  }
+
+  revalidatePath("/approvals");
+  return { ok: true, message: "Rejected. This message will not be sent." };
+}
+
+/**
+ * Turn a DB error into an operator-friendly message. The approved/rejected
+ * statuses are additive Postgres enum values that need a one-time `prisma db push`
+ * to Neon (an owner action). Until that runs, the write fails with an
+ * invalid-enum error; we surface that as a clear, non-alarming note rather than a
+ * raw 500, so the queue still loads and the gate is obviously intact.
+ */
+function pendingMigrationOr(err: unknown, kind: string): string {
+  const detail = err instanceof Error ? err.message : String(err);
+  if (/invalid input value for enum|MessageStatus/i.test(detail)) {
+    return `Saving the ${kind} needs a one-time database migration (owner action: pnpm --filter @oie/db exec prisma db push). Nothing was sent — the dry-run gate is active.`;
+  }
+  return `Could not save ${kind}: ${detail}`.slice(0, 200);
 }
