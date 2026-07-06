@@ -1,3 +1,26 @@
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Local-dev convenience: load the monorepo-root .env so the web runtime sees the
+// shared secrets (AUTH_SECRET, DATABASE_URL, DRY_RUN, cost caps, provider keys).
+// Next.js only auto-loads env from THIS app directory, but the single source of
+// truth for the whole workspace is the repo-root .env (also read by the tsx
+// scripts + Prisma via dotenv-cli). On Vercel that file is absent and platform
+// env is used, so this is a safe no-op there. Never overrides an already-set
+// value, so platform/CI env always wins.
+try {
+  const rootEnv = resolve(dirname(fileURLToPath(import.meta.url)), "../../.env");
+  for (const line of readFileSync(rootEnv, "utf8").split("\n")) {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+    if (match && process.env[match[1]] === undefined) {
+      process.env[match[1]] = match[2].replace(/^["']|["']$/g, "");
+    }
+  }
+} catch {
+  // No root .env (e.g. Vercel build) — rely on platform-provided env vars.
+}
+
 /** @type {import('next').NextConfig} */
 
 // Security response headers applied to every route. force_https is handled at the
