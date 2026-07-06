@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, BookOpen, Dumbbell, Home, LogOut, PhoneCall, Settings, Signal, Sparkles, Swords, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Dumbbell, Home, LogOut, PhoneCall, Settings, Signal, Sliders, Sparkles, Swords, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/auth-actions";
 
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/close", label: "Close", icon: Swords },
   { href: "/knowledge", label: "Knowledge", icon: BookOpen },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/setup", label: "Setup", icon: Sliders },
 ] as const;
 
 export function NavSidebar() {
