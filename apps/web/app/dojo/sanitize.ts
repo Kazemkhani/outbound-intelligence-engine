@@ -29,6 +29,6 @@ export function sanitizeHistory(history: DojoTurn[]): DojoTurn[] | null {
 /** Render the running conversation for the model. */
 export function transcript(history: DojoTurn[]): string {
   return history
-    .map((t) => `${t.role === "operator" ? "OPERATOR (selling Huscribe)" : "PROSPECT"}: ${t.text}`)
+    .map((t) => `${t.role === "operator" ? "OPERATOR (selling GenRiver)" : "PROSPECT"}: ${t.text}`)
     .join("\n");
 }

@@ -7,11 +7,11 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState } from "@/components/ui/states";
 
 const SUGGESTIONS = [
-  "How do I handle 'we already have an answering service'?",
-  "Give me a SPIN discovery sequence for a Dubai brokerage owner.",
-  "What's the Gap Selling pitch for an off-plan developer drowning in portal leads?",
-  "How should I open a cold WhatsApp to a Property Finder advertiser?",
-  "What makes Huscribe different from a generic AI voice bot?",
+  "How do I handle 'we already tried outbound and it didn't work'?",
+  "Give me a SPIN discovery sequence for a UK SaaS founder.",
+  "What's the Gap Selling pitch for a B2B company burning budget on SDRs with no pipeline?",
+  "How should I open a cold LinkedIn message to a Head of Sales who just got hired?",
+  "What makes GenRiver different from a generic outbound agency?",
 ];
 
 interface QA {
@@ -88,7 +88,7 @@ export function KnowledgeWorkspace() {
             }
           }}
           rows={3}
-          placeholder="e.g. How do I reframe price when a broker says Huscribe is too expensive?"
+          placeholder="e.g. How do I reframe price when a prospect says GenRiver is too expensive?"
           className="input-field w-full resize-y"
         />
         <div className="mt-3 flex items-center justify-between gap-3">

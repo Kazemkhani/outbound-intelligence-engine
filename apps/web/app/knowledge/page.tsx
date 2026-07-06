@@ -3,7 +3,7 @@ import { KnowledgeWorkspace } from "@/components/knowledge/knowledge-workspace";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Knowledge · Huscribe Revenue OS",
+  title: "Knowledge · GenRiver Revenue OS",
 };
 
 export default function KnowledgePage() {
@@ -13,8 +13,8 @@ export default function KnowledgePage() {
         <h1 className="font-display text-2xl font-bold text-ink-50">Knowledge</h1>
         <p className="mt-1.5 text-sm text-ink-400">
           Ask the sales canon: frameworks, objection handling, the Dubai/UAE playbook, discovery,
-          closing, and the Huscribe product and competitive facts. Every answer is grounded in the
-          canon and names the framework it draws on. Huscribe specifics you must confirm show as{" "}
+          closing, and the GenRiver product and competitive facts. Every answer is grounded in the
+          canon and names the framework it draws on. GenRiver specifics you must confirm show as{" "}
           <code className="rounded bg-ink-800 px-1 py-0.5 font-mono text-[12px] text-teal-300">
             &lt;CONFIRM&gt;
           </code>

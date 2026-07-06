@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   flexRender,
   getCoreRowModel,
@@ -12,7 +13,7 @@ import {
   type FilterFn,
   type SortingState,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronsUpDown, ChevronUp, Search } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, ChevronUp, Loader2, Search, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import { LeadDrawer } from "./lead-drawer";
@@ -56,8 +57,11 @@ const searchLeads: FilterFn<ScoredLead> = (row, _columnId, value) => {
 };
 
 export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
+  const router = useRouter();
   const [selectedLead, setSelectedLead] = useState<ScoredLead | null>(null);
   const [sorting, setSorting] = useState<SortingState>([{ id: "composite", desc: true }]);
+  const [isDiscovering, startDiscovery] = useTransition();
+  const [discoverResult, setDiscoverResult] = useState<string | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -177,6 +181,28 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
 
   const rows = table.getRowModel().rows;
 
+  const handleDiscover = () => {
+    startDiscovery(async () => {
+      setDiscoverResult(null);
+      try {
+        const res = await fetch("/api/leads/discover", { method: "POST" });
+        const data = (await res.json()) as { imported?: number; skipped?: number; errors?: number; error?: string; message?: string };
+        if (!res.ok || data.error) {
+          setDiscoverResult(`Error: ${data.error ?? "Unknown error"}`);
+          return;
+        }
+        if (data.message) {
+          setDiscoverResult(data.message);
+          return;
+        }
+        setDiscoverResult(`Imported ${data.imported ?? 0} leads, skipped ${data.skipped ?? 0}${data.errors ? `, ${data.errors} errors` : ""}.`);
+        router.refresh();
+      } catch {
+        setDiscoverResult("Network error. Check the server logs.");
+      }
+    });
+  };
+
   return (
     <>
       {/* Pipeline summary (analytics strip) */}
@@ -187,6 +213,25 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
         <StatCard label="Tier C" value={String(stats.byTier.C)} accent="tier_c" />
         <StatCard label="Tier D" value={String(stats.byTier.D)} accent="tier_d" />
         <StatCard label="Avg composite" value={String(round1(stats.avg))} />
+      </div>
+
+      {/* Discover leads */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={handleDiscover}
+          disabled={isDiscovering}
+          className="inline-flex items-center gap-2 rounded-lg bg-gold-500 px-4 py-2 text-sm font-semibold text-ink-950 transition-colors hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isDiscovering ? (
+            <><Loader2 size={15} className="animate-spin" aria-hidden="true" /> Discovering…</>
+          ) : (
+            <><Sparkles size={15} aria-hidden="true" /> Discover Leads</>
+          )}
+        </button>
+        {discoverResult && (
+          <p className="text-xs text-ink-400">{discoverResult}</p>
+        )}
       </div>
 
       {/* Search + tier filters */}

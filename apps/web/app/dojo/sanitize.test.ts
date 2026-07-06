@@ -53,7 +53,7 @@ describe("transcript", () => {
   it("labels speakers and joins with newlines", () => {
     expect(
       transcript([turn("prospect", "you've got two minutes"), turn("operator", "fair enough")]),
-    ).toBe("PROSPECT: you've got two minutes\nOPERATOR (selling Huscribe): fair enough");
+    ).toBe("PROSPECT: you've got two minutes\nOPERATOR (selling GenRiver): fair enough");
   });
 
   it("returns an empty string for no turns", () => {

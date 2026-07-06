@@ -7,7 +7,7 @@ import { round1 } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Analytics · Huscribe Revenue OS",
+  title: "Analytics · GenRiver Revenue OS",
 };
 
 export default async function AnalyticsPage() {
