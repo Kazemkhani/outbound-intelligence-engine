@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, BookOpen, Dumbbell, Home, LogOut, PhoneCall, Settings, Signal, Swords, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Dumbbell, Home, LogOut, PhoneCall, Settings, Signal, Sliders, Sparkles, Swords, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/auth-actions";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/agent", label: "Agent", icon: Sparkles },
   { href: "/leads", label: "Leads", icon: Users },
   { href: "/icp", label: "ICP Editor", icon: Settings },
   { href: "/signals", label: "Signals", icon: Signal },
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/close", label: "Close", icon: Swords },
   { href: "/knowledge", label: "Knowledge", icon: BookOpen },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/setup", label: "Setup", icon: Sliders },
 ] as const;
 
 export function NavSidebar() {
@@ -40,12 +42,12 @@ export function NavSidebar() {
       {/* Brand */}
       <div className="flex h-16 items-center gap-3 border-b border-ink-800 px-5">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-500 font-display text-[11px] font-bold text-ink-950">
-          H
+          G
         </span>
         <div className="leading-tight">
-          <div className="font-display text-sm font-bold text-ink-50">Huscribe Revenue OS</div>
+          <div className="font-display text-sm font-bold text-ink-50">GenRiver Revenue OS</div>
           <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-500">
-            by HumAI
+            genriverai.com
           </div>
         </div>
       </div>

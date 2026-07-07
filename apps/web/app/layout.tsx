@@ -18,9 +18,9 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Huscribe Revenue OS",
+  title: "GenRiver Revenue OS",
   description:
-    "The Huscribe Revenue OS control plane: discover, enrich, qualify by voice, score, and close, governed end to end by a human approval gate.",
+    "GenRiver's AI-native outbound control plane: detect buying signals, enrich decision-makers, score by ICP fit, and deploy multi-channel sequences — governed by a human approval gate.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

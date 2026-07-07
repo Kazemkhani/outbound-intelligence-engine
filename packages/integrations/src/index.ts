@@ -10,6 +10,14 @@ export * from "./base/http";
 export { PlacesAdapter } from "./places/index";
 export { SearchApiAdapter } from "./searchapi/index";
 export { ApolloAdapter } from "./apollo/index";
+export {
+  apolloPeopleResponse,
+  apolloOrganizationResponse,
+  personToContact,
+  organizationToCompany,
+  mapSeniority,
+  mapEmailStatus,
+} from "./apollo/mapper";
 export { ClayAdapter, parseClayWebhook } from "./clay/index";
 export { ExploriumAdapter } from "./explorium/index";
 

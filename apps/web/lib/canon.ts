@@ -26,7 +26,7 @@ SCORING RULE: a rep over 50% of call time on Situation questions is underperform
 
 SPIN (Rackham): discovery questioning, calls 1 to 2.
 - Sequence: Situation (context, max ~2, you already know their stack) -> Problem (surface the pain) -> Implication (quantify the cost; the heavy-lifting stage, 60 to 70% of question time) -> Need-payoff (let the BUYER state the value).
-- Huscribe shape: S "how many inbound leads/month?"; P "what % do you reach on first dial? what happens to an 11pm Saturday lead?"; I "if 800 leads/month never get reached, what does that cost in viewings/units annually?"; N "if every lead got a qualifying call in 90s, 24/7, what does that mean for this quarter's number?"
+- GenRiver shape: S "how many inbound leads/month?"; P "what % do you reach on first dial? what happens to an 11pm Saturday lead?"; I "if 800 leads/month never get reached, what does that cost in viewings/units annually?"; N "if every lead got a qualifying call in 90s, 24/7, what does that mean for this quarter's number?"
 - Fail flags: S > 2 (over-qualifying); Problem with no Implication follow-up (incomplete); price before Need-payoff (premature pitch).
 
 CHALLENGER (Dixon and Adamson): Teach, Tailor, Take Control. Open call 1 with a commercial INSIGHT before any question, not a product tour.
@@ -178,37 +178,36 @@ MICRO-COMMITMENT LADDER (each advance must be explicit, not assumed): R1 Pain Co
 
 LINES (verbatim): Direct ask (all objections resolved): "we've covered everything that needed addressing; is there a reason not to move forward today?" Summary close (after pilot): "you hit [metric] on [N leads]; your goal at the start was [Z]; we're there; what do we need to do to make this official?" The Flip ("let me think about it"): "help me understand what specifically you'd be thinking through: the numbers, the integration, internal alignment, or something else? I'd rather address it now." The Advance (full close premature): "I'm not asking for a yes today; if everything checks out, is there any reason this wouldn't move forward? If there is, I'd rather know now." MAP anchor (deal quiet): "we agreed [name] would have the pilot scope back by [date]; we're past that; what shifted on your end?"`;
 
-// ── Huscribe: product and competitive canon (every specific is <CONFIRM>) ─────
+// ── GenRiver: product and competitive canon (every specific is <CONFIRM>) ──────
 
-export const HUSCRIBE_FACTS = `# HUSCRIBE PRODUCT AND COMPETITIVE CANON
+export const HUSCRIBE_FACTS = `# GENRIVER PRODUCT AND COMPETITIVE CANON
 
-DISCIPLINE: every Huscribe price, metric, proof point, and V2 feature is a <CONFIRM> placeholder. NEVER cite an invented number; discovered later it destroys trust permanently. If you lack a real figure, state the assumption explicitly or mark it <CONFIRM>. Lead with the value prop that maps to the stated pain; never recite all five.
+DISCIPLINE: every GenRiver price, metric, proof point, and delivery timeline is a <CONFIRM> placeholder. NEVER cite an invented number; discovered later it destroys trust permanently. If you lack a real figure, state the assumption explicitly or mark it <CONFIRM>. Lead with the value prop that maps to the stated pain; never recite all five.
 
-ONE-LINE: "Huscribe calls every inbound lead within 60 seconds, qualifies them against your criteria, and hands your sales team only the people ready to buy, 24/7, at a fraction of an SDR team's cost." (<CONFIRM> the marketing-approved positioning line.)
+ONE-LINE: "GenRiver builds and operates AI-native outbound systems that combine buying-signal detection, Clay-powered enrichment, and hyper-personalised multi-channel sequences to book qualified B2B meetings — across the UK, US, and MENA — within 10 days of launch." (<CONFIRM> the marketing-approved positioning line.)
 
 CORE VALUE PROPS:
-- VP1 Instant speed-to-lead: every inbound lead called within 60 seconds of form submission, 24/7. Contact rate drops 80%+ after the first 5 minutes; Huscribe closes that window.
-- VP2 100% coverage: every lead called, not just the warm ones the SDR team reaches; no Monday backlog of untouched weekend leads.
-- VP3 Consistent optimised script every call: your best SDR's script run perfectly, forever; A/B testable, variants deployed instantly.
-- VP4 CRM hand-off of sales-ready leads only: qualifies against your criteria (budget, timeline, property type, intent) and pushes only qualified leads with summary, transcript, disposition.
-- VP5 24/7 coverage, zero headcount cost: scales instantly with volume, no hiring/training/turnover; predictable fixed cost per qualified lead.
+- VP1 Signal-first targeting: monitor hiring surges, funding rounds, tech-stack changes, and expansion signals to reach buyers at the exact moment they have a problem to solve; not cold lists.
+- VP2 Clay-powered enrichment and verification: decision-maker contact data enriched and verified globally before any outreach; no bounces, no wrong titles, no wasted sends.
+- VP3 Hyper-personalised sequences: AI drafts every email, LinkedIn message, and WhatsApp opener from live signal data and the prospect's own words; copy that reads as written for them, not to them.
+- VP4 Multi-channel orchestration: email, LinkedIn, and WhatsApp coordinated in a single sequence; the right channel at the right time, respecting cadence limits and channel-specific norms.
+- VP5 Meetings in 10 days, fully managed: GenRiver owns the full stack (signals to booked meeting); the client reviews and approves messages but never manages the tooling; meetings land in the calendar.
 
-V2 (all <CONFIRM>): multi-language (Arabic + English for MENA); inbound handling; dynamic LLM-driven script branching (not an IVR tree); native CRM integrations (Salesforce, HubSpot, Zoho, webhook); real-time dashboard; warm transfer to a live closer; post-call SMS/WhatsApp follow-up.
+DELIVERY MODEL (all <CONFIRM>): fully managed service; GenRiver operates Clay, Smartlead, Unipile, and the enrichment waterfall; client provides ICP, product context, and CRM access; GenRiver handles sequences, deliverability, suppression, and reporting. Monthly retainer model; pilot available. (<CONFIRM> exact engagement terms.)
 
-PRICING (all <CONFIRM>): Starter / Growth / Enterprise tiers. Anchor to the cost of the existing setup first ("how many SDRs, all-in cost per SDR/month?"), then present Huscribe as cost-per-qualified-lead, not a monthly fee. Never give price before pain and ballpark lead volume are established; price without context becomes the objection.
+PROOF POINTS (all <CONFIRM>): meetings booked per 100 contacts, reply rate vs industry benchmark, time-to-first-meeting, cost-per-qualified-meeting, pipeline attributed. Cite the customer TYPE and region, never name without permission ("a UK SaaS company targeting mid-market ops leaders saw..."). If you lack a data point, say so honestly and offer a pilot.
 
-PROOF POINTS (all <CONFIRM>): speed-to-lead (<60s target), contact-rate lift vs human team, cost per qualified lead, qualified meetings per 100 leads, lead coverage rate, pilot-to-paid conversion. Cite the customer TYPE, not name, unless you have permission ("a Dubai developer with 300 leads/month saw..."). Attach each proof point to the prospect's specific pain. If you lack a data point, say so honestly and offer to connect them with a pilot customer.
+ICP (IDEAL CLIENT PROFILE): B2B companies with a defined sales motion and a human ACV above ~$10k. Sales-led or founder-led teams who want more qualified pipeline without hiring SDRs. Sectors: SaaS, professional services, staffing/recruitment, fintech, logistics, proptech. Geography: UK, US, MENA (UAE/KSA priority for MENA). Decision-maker has budget authority and feels the pipeline pain personally. Has a CRM and is willing to share signal data. NEGATIVE ICP (do not pitch): PLG-only products with no sales motion; e-commerce/B2C; companies with no defined ICP of their own; founder who wants leads but won't approve messages.
 
-ICP: high-volume, sales-driven businesses where lead-response speed determines revenue. Verticals: real-estate developers, property portals, mortgage brokers, high-volume B2C. Lead volume 100+/month (undeniable above 500/mo). Has a CRM (no CRM = not ready). Lead sources digital (Meta, Google, Bayut, Property Finder). Geography MENA, UAE/KSA priority (<CONFIRM>). NEGATIVE ICP (do not pitch): long-cycle B2B enterprise with no inbound volume; relationship-gated referral businesses; companies with no CRM and no willingness to adopt one.
+COMPETITION (categories only; <CONFIRM> specific vendor names, never invent brands): (A) In-house SDR team: high fixed cost ($4k to $8k+/SDR/mo), ramp time 3 to 6 months, turnover ~35%/year. Position: "GenRiver delivers a full outbound system in 10 days with zero headcount risk; your first hire can focus on closing, not cold prospecting." (B) Other outbound agencies: most send generic sequences from purchased lists. Position: "signal-first targeting means we reach buyers who have a live problem right now; reply rates 3x to 5x higher than list-blast approaches." (<CONFIRM> benchmarks.) (C) DIY Clay/tooling: powerful but requires a full-time operator and months to build. Position: "GenRiver is the operated version; you get the output without owning the stack." (D) Status quo / "our network handles it": pipeline from referrals plateaus; GenRiver opens net-new accounts that warm outreach never reaches.
 
-COMPETITION (categories only; <CONFIRM> specific vendor names, never invent brands): (A) Human SDR/BPO teams: strong on nuance, weak on cost ($3k to $8k+/SDR/mo), 9-to-5 coverage, turnover, can't scale instantly. Position: "not replacing your relationship closers, replacing the repetitive first-touch calls on a 200-lead backlog; your closers should be closing, not qualifying." (B) Other voice-AI vendors: lead with the outcome (qualified meetings in CRM), not the technology; "the buyer doesn't care if it's AI, they care if it works; the pilot tells you in two weeks." (C) Status quo / "we'll handle it" (the most common and most important): the cost is invisible because it shows up as deals that never happened, not a line item; quantify it.
-
-VOICE-AI OBJECTIONS:
-- "It'll sound robotic" -> acknowledge (old AI calling was an automated phone tree, that's terrible) -> reframe (conversational model, handles interruptions/objections, not a script menu) -> remove the theoretical (listen to a sample call, or run a 2-week pilot on a slice and stop if leads sound frustrated). NEVER say "our AI sounds completely human"; sophisticated buyers test it and you lose credibility.
-- "Our leads will hate an AI call" -> separate "being called" from "by AI" (most don't ask; they care it's relevant, fast, respectful) -> the complaint rate is <CONFIRM> -> you control script, tone, pace, disclosure -> pilot on 50 leads and listen.
-- "We have an in-house team" -> never attack the team -> reframe what they spend time on (first-touch reach/voicemail/callback) -> position as augmentation (Huscribe does first touch, the team picks up warm qualified leads) -> quantify.
-- "Compliance / recording / TCPA / PDPL" -> take it seriously, never brush past ("the right question, I'll give you a real answer") -> provide what you know (<CONFIRM> opt-out, DNC scrubbing, recording disclosure, data residency, UAE/KSA PDPL) -> offer the compliance overview and DPA, legal-to-legal call -> do not close on compliance. NEVER say "don't worry about compliance."
-- "Our leads are high-value / relationship-driven" -> validate (a $5M villa buyer with a bad first call may never return; different from 500 off-plan leads at AED 800k) -> scope the fit (AI for high-volume/lower-value portal leads; human RMs for the VIP pipeline; most run both) -> pilot on the RIGHT segment (portal leads, the 11pm Property Finder form not called by 9am), never the VIP list.`;
+GENRIVER OBJECTIONS:
+- "We already tried outbound and it didn't work" -> acknowledge (most outbound is generic, bought lists, wrong timing) -> reframe (signal-first is structurally different: you reach a CFO the week they hired a Head of Sales, not a random Tuesday) -> de-risk (pilot on 200 contacts in the segment that most recently converted inbound; results in 3 to 4 weeks).
+- "It's too expensive" -> rarely lack of money; value not yet justified. Anchor to the cost of the gap ("one enterprise deal pays for 6 months; what's your average ACV?"). Reframe as cost-per-qualified-meeting vs cost-per-SDR. Offer pilot-first to prove before committing.
+- "We don't have time to manage this" -> validate the concern -> reframe: GenRiver is fully managed; the only time required is a weekly 30-minute review and message approval; the operator never touches the tooling.
+- "Our product needs a warm intro, not cold outreach" -> validate (relationship-gated deals are real) -> scope the fit (GenRiver's signal-first sequences are read as warm because they arrive at the right moment with the right context; not a spray-and-pray cold blast) -> pilot on the signal that most closely maps to their warmest inbound trigger.
+- "Compliance / GDPR / CAN-SPAM" -> take it seriously ("the right question, I'll give you a real answer") -> provide what you know (<CONFIRM> opt-out, suppression lists, data residency, GDPR lawful basis, UK ICO, UAE PDPL) -> offer the compliance overview and DPA -> do not close on compliance. NEVER say "don't worry about compliance."
+- "We want to keep it in-house" -> validate the instinct -> reframe: most clients run GenRiver for 6 to 12 months while building internal capability; GenRiver documents everything so the client can own it later. Offer a knowledge-transfer provision. (<CONFIRM> exact terms.)`;
 
 // ── grounding(): join the requested canon blocks for a system prompt ──────────
 
@@ -263,7 +262,7 @@ export function grounding(keys: string[]): string {
   if (blocks.length === 0) return "";
   return [
     "# GROUNDING CANON",
-    "Answer ONLY from the methodology below. Never give generic LLM advice. Always tie coaching and copy to a named framework. Treat every Huscribe price, metric, and proof point as a <CONFIRM> placeholder; never invent specifics.",
+    "Answer ONLY from the methodology below. Never give generic LLM advice. Always tie coaching and copy to a named framework. Treat every GenRiver price, metric, and proof point as a <CONFIRM> placeholder; never invent specifics.",
     "",
     blocks.join("\n\n"),
   ].join("\n");

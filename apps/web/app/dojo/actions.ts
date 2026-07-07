@@ -9,7 +9,7 @@
  *
  * As everywhere here: the LLM reasons over text, it never computes a lead score
  * (the dojo "score" is qualitative coaching, not the deterministic ICP score),
- * and it never invents a Huscribe price/metric (those are <CONFIRM>). "use server".
+ * and it never invents a GenRiver price/metric (those are <CONFIRM>). "use server".
  */
 
 import { ask } from "@/lib/llm";
@@ -31,7 +31,7 @@ export interface ScoreResult {
 
 const PROSPECT_SYSTEM = (persona: string, canon: string): string =>
   [
-    "You are roleplaying as a sales PROSPECT so the operator can practise selling Huscribe (Voice-AI inbound lead qualification for UAE/MENA real estate). Stay fully in character.",
+    "You are roleplaying as a sales PROSPECT so the operator can practise selling GenRiver (AI-native outbound systems for B2B meetings). Stay fully in character.",
     "",
     "WHO YOU ARE:",
     persona,
@@ -41,7 +41,7 @@ const PROSPECT_SYSTEM = (persona: string, canon: string): string =>
     "- Be realistic and human: busy, a little distracted, not a pushover. Use the objections in your persona when they fit.",
     "- React to what the operator actually says. Reward good technique (specific implication tied to your numbers, sharp discovery questions, calibrated questions) by gradually opening up. Punish weak moves (generic compliments, feature dumps, pitching before understanding, caving on price) by staying guarded or getting impatient.",
     "- Never coach the operator or break character. Never describe what you are doing. If they earn a clear next step, you may agree to it, but only if genuinely earned.",
-    "- Keep Huscribe claims realistic; you are the buyer, you do not assert Huscribe facts.",
+    "- Keep GenRiver claims realistic; you are the buyer, you do not assert GenRiver facts.",
     "",
     "Use the canon below only to make your objections and buying behaviour realistic, never to help the operator.",
     "",
@@ -89,7 +89,7 @@ const SCORE_SYSTEM = (canon: string): string =>
     "",
     "Then a markdown section '## What to do next' with: the single highest-leverage habit to fix, and one specific line the operator could have used at the moment they lost the most ground (quote what they actually said, then the better version).",
     "",
-    "Be specific to what actually happened in this transcript. Praise sparingly, lead with the costliest leak. Do not invent turns that did not happen. Never invent Huscribe specifics; use <CONFIRM>.",
+    "Be specific to what actually happened in this transcript. Praise sparingly, lead with the costliest leak. Do not invent turns that did not happen. Never invent GenRiver specifics; use <CONFIRM>.",
     "",
     "SALES CANON (your only source of methodology and benchmarks):",
     canon,

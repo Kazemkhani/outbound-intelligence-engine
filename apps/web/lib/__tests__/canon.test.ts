@@ -32,7 +32,7 @@ describe("grounding", () => {
   it("includes multiple distinct blocks when asked", () => {
     const out = grounding(["frameworks", "huscribe", "objections"]);
     expect(out).toContain("# SALES FRAMEWORKS");
-    expect(out).toContain("# HUSCRIBE PRODUCT AND COMPETITIVE CANON");
+    expect(out).toContain("# GENRIVER PRODUCT AND COMPETITIVE CANON");
     expect(out).toContain("# OBJECTION HANDLING");
   });
 
@@ -44,7 +44,7 @@ describe("grounding", () => {
 
   it("ignores unknown keys but still includes the known ones", () => {
     const out = grounding(["nope", "huscribe", "also-bad"]);
-    expect(out).toContain("# HUSCRIBE PRODUCT AND COMPETITIVE CANON");
+    expect(out).toContain("# GENRIVER PRODUCT AND COMPETITIVE CANON");
     expect(out.startsWith(HEADER)).toBe(true);
   });
 });

@@ -15,6 +15,8 @@
  * could ever send. There is no affordance here that bypasses the dry-run gate.
  */
 
+import fs from "fs";
+import path from "path";
 import { prisma } from "@oie/db";
 import { revalidatePath } from "next/cache";
 
@@ -72,6 +74,71 @@ export async function rejectMessage(messageId: string): Promise<ActionResult> {
 
   revalidatePath("/approvals");
   return { ok: true, message: "Rejected. This message will not be sent." };
+}
+
+export interface ApprovalFeedback {
+  messageId: string;
+  editedBody: string;
+  editedSubject: string;
+  operatorStars: number; // 0 = not rated
+  operatorReason: string;
+  aiStars: number | null;
+  aiReasoning: string | null;
+  contactName: string;
+  companyName: string;
+  channel: string;
+}
+
+/**
+ * Approve a message with inline edits and operator feedback. Persists the
+ * operator's star rating and reason to an append-only JSONL feedback log so the
+ * system can learn from it. Also saves the edited body to the DB when present.
+ * The dry-run gate remains active; nothing actually sends.
+ */
+export async function approveWithFeedback(feedback: ApprovalFeedback): Promise<ActionResult> {
+  const { messageId } = feedback;
+  if (!messageId || typeof messageId !== "string") {
+    return { ok: false, error: "Invalid message ID." };
+  }
+
+  // Persist feedback to append-only JSONL for model learning.
+  try {
+    const logDir = path.join(process.cwd(), "data");
+    fs.mkdirSync(logDir, { recursive: true });
+    const entry = JSON.stringify({ ...feedback, recordedAt: new Date().toISOString() });
+    fs.appendFileSync(path.join(logDir, "approval-feedback.jsonl"), entry + "\n", "utf8");
+  } catch {
+    // Non-fatal: feedback log write failure should not block the approval.
+  }
+
+  // Try to update the body in the DB if the message exists.
+  try {
+    await prisma.message.updateMany({
+      where: { id: messageId },
+      data: { body: feedback.editedBody },
+    });
+  } catch {
+    // Non-fatal: DB may not have this fixture row.
+  }
+
+  // Mark approved.
+  try {
+    const result = await prisma.message.updateMany({
+      where: { id: messageId, status: "awaiting_approval" },
+      data: { status: "approved" },
+    });
+    if (result.count === 0) {
+      return { ok: false, error: "Message not found or no longer awaiting approval." };
+    }
+  } catch (err) {
+    return { ok: false, error: pendingMigrationOr(err, "approval") };
+  }
+
+  revalidatePath("/approvals");
+  return {
+    ok: true,
+    message: "Approved. Feedback recorded. Nothing sends while the dry-run gate is active.",
+  };
 }
 
 /**

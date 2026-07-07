@@ -4,7 +4,7 @@ import { getCallSessions } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Voice Calls · Huscribe Revenue OS",
+  title: "Voice Calls · GenRiver Revenue OS",
 };
 
 export default async function VoicePage() {

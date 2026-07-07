@@ -88,8 +88,12 @@ export const SEED_ICP: IcpProfile = {
 
 // ── Raw fixture leads (8 realistic UAE-SMB companies + contacts + signals) ────
 
+export type CrmStatus = "new" | "contacted" | "replied" | "meeting_booked" | "won" | "lost";
+
 export interface FixtureLead {
   id: string;
+  crmStatus: CrmStatus;
+  notes: string | null;
   company: {
     id: string;
     name: string;
@@ -131,6 +135,8 @@ const NOW = new Date("2026-06-14T00:00:00Z");
 export const FIXTURE_LEADS: FixtureLead[] = [
   {
     id: "lead-001",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-001",
       name: "Al Faris Jewellery LLC",
@@ -184,6 +190,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-002",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-002",
       name: "Spice Garden Restaurant Group",
@@ -236,6 +244,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-003",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-003",
       name: "Gulf Wholesale Distribution Co.",
@@ -275,6 +285,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-004",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-004",
       name: "Premium Retail Holdings",
@@ -317,6 +329,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-005",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-005",
       name: "Al Baraka Professional Services",
@@ -356,6 +370,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-006",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-006",
       name: "Noor Electronics Trading",
@@ -395,6 +411,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-007",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-007",
       name: "Horizon Food Concepts",
@@ -423,6 +441,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-008",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-008",
       name: "Alpha Consultancy FZ",
@@ -534,7 +554,7 @@ export const FIXTURE_APPROVALS: ApprovalItem[] = [
     companyName: "Al Faris Jewellery LLC",
     channel: "email",
     subject: "Supporting your SDR team growth at Al Faris Jewellery",
-    body: `Hi Khalid,\n\nI noticed Al Faris Jewellery is currently hiring a Sales Executive — a clear signal you're investing in outbound growth. We help jewellery retailers in Dubai build sales pipelines that are fully integrated with Odoo, so your SDR team spends time selling, not updating spreadsheets.\n\nWould a 20-minute call this week make sense?\n\nBest,\nOIE`,
+    body: `Hi Khalid,\n\nI noticed Al Faris Jewellery is currently hiring a Sales Executive — a clear signal you're investing in outbound growth. We help jewellery retailers in Dubai build sales pipelines that are fully integrated with Odoo, so your SDR team spends time selling, not updating spreadsheets.\n\nWould a 20-minute call this week make sense?\n\nBest,\nGenRiver`,
     sequenceName: "UAE SMB ERP — Sequence 1",
     step: 1,
     queuedAt: new Date("2026-06-14T09:00:00Z"),
@@ -547,7 +567,7 @@ export const FIXTURE_APPROVALS: ApprovalItem[] = [
     companyName: "Spice Garden Restaurant Group",
     channel: "email",
     subject: "Congratulations on the Business Bay opening, Priya",
-    body: `Hi Priya,\n\nCongratulations on Spice Garden's third location in Business Bay — impressive growth. Expanding to multiple sites is exactly when restaurant groups typically find that Zoho starts to creak.\n\nWe help food & beverage teams in Dubai consolidate their operations on a single system and hire smarter. Worth a quick conversation?\n\nBest,\nOIE`,
+    body: `Hi Priya,\n\nCongratulations on Spice Garden's third location in Business Bay — impressive growth. Expanding to multiple sites is exactly when restaurant groups typically find that Zoho starts to creak.\n\nWe help food & beverage teams in Dubai consolidate their operations on a single system and hire smarter. Worth a quick conversation?\n\nBest,\nGenRiver`,
     sequenceName: "UAE SMB ERP — Sequence 1",
     step: 1,
     queuedAt: new Date("2026-06-14T09:15:00Z"),
@@ -560,7 +580,7 @@ export const FIXTURE_APPROVALS: ApprovalItem[] = [
     companyName: "Gulf Wholesale Distribution Co.",
     channel: "email",
     subject: "Post-funding scale-up at Gulf Wholesale",
-    body: `Hi Mohammed,\n\nWell done on the Series A raise — AED 5M is a strong vote of confidence in the team. Distribution companies that raise at this stage usually need to scale their sales operation quickly without losing control of margins.\n\nWe work with Sharjah wholesale businesses on exactly this. Could we connect for 15 minutes?\n\nBest,\nOIE`,
+    body: `Hi Mohammed,\n\nWell done on the Series A raise — AED 5M is a strong vote of confidence in the team. Distribution companies that raise at this stage usually need to scale their sales operation quickly without losing control of margins.\n\nWe work with Sharjah wholesale businesses on exactly this. Could we connect for 15 minutes?\n\nBest,\nGenRiver`,
     sequenceName: "UAE SMB ERP — Sequence 1",
     step: 1,
     queuedAt: new Date("2026-06-14T09:30:00Z"),
@@ -586,7 +606,7 @@ export const FIXTURE_APPROVALS: ApprovalItem[] = [
     companyName: "Al Baraka Professional Services",
     channel: "email",
     subject: "SDR hiring at Al Baraka — a thought",
-    body: `Hi Omar,\n\nI see Al Baraka is hiring an SDR — great move for a professional services firm of your size. The biggest challenge we see at this stage is ensuring Zoho is set up to give new SDRs a clean pipeline view from day one.\n\nHappy to share a quick checklist. Worth connecting?\n\nBest,\nOIE`,
+    body: `Hi Omar,\n\nI see Al Baraka is hiring an SDR — great move for a professional services firm of your size. The biggest challenge we see at this stage is ensuring Zoho is set up to give new SDRs a clean pipeline view from day one.\n\nHappy to share a quick checklist. Worth connecting?\n\nBest,\nGenRiver`,
     sequenceName: "UAE SMB ERP — Sequence 1",
     step: 1,
     queuedAt: new Date("2026-06-14T10:00:00Z"),

@@ -8,6 +8,7 @@ import {
   PhoneCall,
   Settings,
   Signal,
+  Sparkles,
   Swords,
   Users,
 } from "lucide-react";
@@ -16,6 +17,13 @@ import { getAnalyticsTiles } from "@/lib/fixtures";
 // Ordered along the revenue flywheel: discover -> tune -> read signals -> qualify by
 // voice -> practise -> close -> learn -> govern -> measure. Every surface reachable from home.
 const SECTIONS = [
+  {
+    href: "/agent",
+    label: "Agent",
+    description:
+      "Natural language control for the entire platform. Say 'find founders of B2B SaaS companies in London' and the agent searches, enriches, and imports leads directly.",
+    icon: Sparkles,
+  },
   {
     href: "/leads",
     label: "Ranked Leads",
@@ -62,7 +70,7 @@ const SECTIONS = [
     href: "/knowledge",
     label: "Knowledge",
     description:
-      "Ask the sales canon: frameworks, objection handling, the UAE playbook, and the Huscribe product facts. Grounded answers, never generic AI advice.",
+      "Ask the sales canon: frameworks, objection handling, the B2B outbound playbook, and the GenRiver product facts. Grounded answers, never generic AI advice.",
     icon: BookOpen,
   },
   {
@@ -87,14 +95,15 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-8 py-12">
       <header className="mb-10">
-        <p className="label-mono mb-3">Huscribe Revenue OS</p>
+        <p className="label-mono mb-3">GenRiver Revenue OS</p>
         <h1 className="text-3xl font-bold tracking-tight text-ink-50 sm:text-4xl">
-          Find who buys. Qualify by conversation. <span className="text-gold-400">Then close.</span>
+          Spot the signal. Enrich the lead. <span className="text-gold-400">Book the meeting.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-base text-ink-400">
-          One control plane for the whole motion: discover and enrich, qualify by voice with NOVA,
-          score deterministically, then close. Governed end to end by a mandatory human approval gate,
-          nothing sends or dials without your review.
+          GenRiver&apos;s AI-native outbound control plane: detect buying signals, enrich decision-makers,
+          score and rank by ICP fit, then deploy hyper-personalised multi-channel sequences across
+          email, LinkedIn, and WhatsApp. Every message governed by a mandatory human approval gate —
+          nothing sends without your review.
         </p>
       </header>
 

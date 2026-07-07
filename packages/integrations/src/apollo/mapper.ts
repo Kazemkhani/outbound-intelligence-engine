@@ -28,14 +28,14 @@ export const apolloPeopleResponse = z.object({
   people: z
     .array(
       z.object({
-        name: z.string().optional(),
-        title: z.string().optional(),
-        seniority: z.string().optional(),
-        email: z.string().optional(),
-        email_status: z.string().optional(),
-        linkedin_url: z.string().optional(),
-        departments: z.array(z.string()).optional(),
-        organization: z.object({ primary_domain: z.string().optional() }).nullish(),
+        name: z.string().nullish(),
+        title: z.string().nullish(),
+        seniority: z.string().nullish(),
+        email: z.string().nullish(),
+        email_status: z.string().nullish(),
+        linkedin_url: z.string().nullish(),
+        departments: z.array(z.string()).nullish(),
+        organization: z.object({ name: z.string().nullish(), primary_domain: z.string().nullish() }).nullish(),
       }),
     )
     .optional()
@@ -122,10 +122,10 @@ export function personToContact(person: ApolloPerson): NormalisedContact {
     companyDomain: normaliseDomain(person.organization?.primary_domain),
     fullName: person.name ?? "unknown",
     title: person.title ?? null,
-    seniority: mapSeniority(person.seniority),
+    seniority: mapSeniority(person.seniority ?? undefined),
     department: person.departments?.[0] ?? null,
     email: person.email ?? null,
-    emailStatus: mapEmailStatus(person.email_status),
+    emailStatus: mapEmailStatus(person.email_status ?? undefined),
     linkedinUrl: person.linkedin_url ?? null,
   };
   // Record field provenance — every field Apollo supplied is attributed to it.

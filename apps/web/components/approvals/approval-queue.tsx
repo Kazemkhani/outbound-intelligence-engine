@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, Loader2, Star, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
 import { channelLabel, formatRelative } from "@/lib/utils";
 import type { ApprovalItem } from "@/lib/fixtures";
-import { approveMessage, rejectMessage } from "@/app/approvals/actions";
+import { approveWithFeedback, rejectMessage } from "@/app/approvals/actions";
 
 const NOW = new Date("2026-06-14T00:00:00Z");
 
@@ -27,9 +27,22 @@ export function ApprovalQueue({ items }: { items: ApprovalItem[] }) {
   );
   const [isPending, startTransition] = useTransition();
 
-  const handleApprove = (id: string) => {
+  const handleApprove = (
+    id: string,
+    data: {
+      editedBody: string;
+      editedSubject: string;
+      operatorStars: number;
+      operatorReason: string;
+      aiStars: number | null;
+      aiReasoning: string | null;
+      contactName: string;
+      companyName: string;
+      channel: string;
+    },
+  ) => {
     startTransition(async () => {
-      const result = await approveMessage(id);
+      const result = await approveWithFeedback({ messageId: id, ...data });
       setStates((prev) => ({
         ...prev,
         [id]: {
@@ -61,9 +74,9 @@ export function ApprovalQueue({ items }: { items: ApprovalItem[] }) {
       {/* Gate notice */}
       <aside role="note" className="rounded-xl border border-gold-500/25 bg-gold-500/[0.06] px-5 py-4">
         <p className="text-sm text-ink-200">
-          <strong className="font-semibold text-gold-300">Human approval required.</strong> Nothing
-          sends until you click Approve on each message. Approval records your intent; the dry-run
-          gate stays active until explicitly disabled. Rejected messages are suppressed permanently.
+          <strong className="font-semibold text-gold-300">Human approval required.</strong> Edit the
+          message, review the AI quality rating, leave your feedback, then approve or reject. Nothing
+          sends while the dry-run gate is active. Your ratings train the system to write better copy.
         </p>
       </aside>
 
@@ -85,7 +98,7 @@ export function ApprovalQueue({ items }: { items: ApprovalItem[] }) {
                 item={item}
                 state={states[item.id] ?? { status: "awaiting_approval", feedback: null }}
                 isPending={isPending}
-                onApprove={() => handleApprove(item.id)}
+                onApprove={(data) => handleApprove(item.id, data)}
                 onReject={() => handleReject(item.id)}
               />
             ))}
@@ -133,6 +146,18 @@ export function ApprovalQueue({ items }: { items: ApprovalItem[] }) {
   );
 }
 
+interface ApproveData {
+  editedBody: string;
+  editedSubject: string;
+  operatorStars: number;
+  operatorReason: string;
+  aiStars: number | null;
+  aiReasoning: string | null;
+  contactName: string;
+  companyName: string;
+  channel: string;
+}
+
 function ApprovalCard({
   item,
   state,
@@ -143,12 +168,59 @@ function ApprovalCard({
   item: ApprovalItem;
   state: ItemState;
   isPending: boolean;
-  onApprove: () => void;
+  onApprove: (data: ApproveData) => void;
   onReject: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const previewLines = item.body.split("\n").slice(0, 3).join("\n");
-  const hasMore = item.body.split("\n").length > 3;
+  const [editedSubject, setEditedSubject] = useState(item.subject ?? "");
+  const [editedBody, setEditedBody] = useState(item.body);
+  const [aiRating, setAiRating] = useState<{ stars: number; reasoning: string } | null>(null);
+  const [isRating, setIsRating] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [operatorStars, setOperatorStars] = useState(0);
+  const [operatorReason, setOperatorReason] = useState("");
+
+  const fetchAiRating = async () => {
+    setIsRating(true);
+    setRatingError(null);
+    try {
+      const res = await fetch("/api/rate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body: editedBody,
+          subject: editedSubject || undefined,
+          channel: item.channel,
+          contactName: item.contactName,
+          companyName: item.companyName,
+        }),
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        setRatingError(msg || "Could not get AI rating. Check ANTHROPIC_API_KEY.");
+        return;
+      }
+      const data = (await res.json()) as { stars: number; reasoning: string };
+      setAiRating(data);
+    } catch {
+      setRatingError("Network error fetching AI rating.");
+    } finally {
+      setIsRating(false);
+    }
+  };
+
+  const handleApprove = () => {
+    onApprove({
+      editedBody,
+      editedSubject,
+      operatorStars,
+      operatorReason,
+      aiStars: aiRating?.stars ?? null,
+      aiReasoning: aiRating?.reasoning ?? null,
+      contactName: item.contactName,
+      companyName: item.companyName,
+      channel: item.channel,
+    });
+  };
 
   return (
     <li className="overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-card">
@@ -172,40 +244,151 @@ function ApprovalCard({
           <Badge variant="awaiting">Awaiting approval</Badge>
         </div>
 
-        {/* Subject */}
+        {/* Editable subject */}
         {item.channel === "email" && (
-          <p className="mt-3 text-sm font-medium text-ink-200">
-            Subject: <span className="font-normal text-ink-400">{item.subject}</span>
-          </p>
+          <div className="mt-4">
+            <label htmlFor={`subj-${item.id}`} className="label-mono mb-1 block">
+              Subject
+            </label>
+            <input
+              id={`subj-${item.id}`}
+              type="text"
+              value={editedSubject}
+              onChange={(e) => setEditedSubject(e.target.value)}
+              className="input-field w-full"
+            />
+          </div>
         )}
 
-        {/* Body preview */}
-        <div className="mt-3 rounded-lg border border-ink-800 bg-ink-900 p-4">
-          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink-200">
-            {expanded ? item.body : previewLines}
-          </pre>
-          {hasMore && (
+        {/* Editable body */}
+        <div className="mt-3">
+          <label htmlFor={`body-${item.id}`} className="label-mono mb-1 block">
+            Message body
+          </label>
+          <textarea
+            id={`body-${item.id}`}
+            value={editedBody}
+            onChange={(e) => setEditedBody(e.target.value)}
+            rows={8}
+            className="input-field w-full resize-y font-mono text-sm"
+          />
+        </div>
+
+        {/* AI rating panel */}
+        <div className="mt-4 rounded-lg border border-ink-800 bg-ink-900/60 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="label-mono">AI quality rating</p>
             <button
               type="button"
-              onClick={() => setExpanded((e) => !e)}
-              aria-expanded={expanded}
-              className="mt-2 text-xs font-medium text-gold-400 hover:text-gold-300"
+              onClick={fetchAiRating}
+              disabled={isRating || isPending}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-ink-700 px-3 py-1.5 text-xs font-medium text-ink-300 transition-colors hover:border-gold-500/40 hover:text-gold-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {expanded ? "Show less" : "Show full message"}
+              {isRating ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                  Rating…
+                </>
+              ) : (
+                <>{aiRating ? "Re-rate" : "Rate with AI"}</>
+              )}
             </button>
+          </div>
+
+          {ratingError && (
+            <p className="mt-2 text-xs text-red-300">{ratingError}</p>
           )}
+
+          {aiRating && (
+            <div className="mt-3">
+              <div className="flex items-center gap-1" aria-label={`AI rating: ${aiRating.stars} out of 5 stars`}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={18}
+                    aria-hidden="true"
+                    className={
+                      i < aiRating.stars
+                        ? "fill-gold-400 text-gold-400"
+                        : "text-ink-700"
+                    }
+                  />
+                ))}
+                <span className="ml-2 text-sm font-semibold text-gold-400">{aiRating.stars}/5</span>
+              </div>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-400">{aiRating.reasoning}</p>
+            </div>
+          )}
+
+          {!aiRating && !isRating && !ratingError && (
+            <p className="mt-2 text-xs text-ink-600">
+              Click &quot;Rate with AI&quot; to get an automatic quality score for this message.
+            </p>
+          )}
+        </div>
+
+        {/* Operator rating */}
+        <div className="mt-4 space-y-3 rounded-lg border border-ink-800 bg-ink-900/60 p-4">
+          <p className="label-mono">Your rating</p>
+
+          <div className="flex items-center gap-1" role="group" aria-label="Your star rating">
+            {Array.from({ length: 5 }).map((_, i) => {
+              const starVal = i + 1;
+              return (
+                <button
+                  key={starVal}
+                  type="button"
+                  onClick={() => setOperatorStars(starVal === operatorStars ? 0 : starVal)}
+                  aria-label={`${starVal} star${starVal !== 1 ? "s" : ""}`}
+                  aria-pressed={operatorStars >= starVal}
+                  className="rounded p-0.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500/50"
+                >
+                  <Star
+                    size={22}
+                    className={
+                      operatorStars >= starVal
+                        ? "fill-gold-400 text-gold-400"
+                        : "text-ink-700 hover:text-ink-500"
+                    }
+                    aria-hidden="true"
+                  />
+                </button>
+              );
+            })}
+            {operatorStars > 0 && (
+              <span className="ml-2 text-sm font-semibold text-gold-400">{operatorStars}/5</span>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor={`reason-${item.id}`} className="mb-1 block text-xs text-ink-500">
+              Reason for rating (optional — used to improve future copy)
+            </label>
+            <textarea
+              id={`reason-${item.id}`}
+              value={operatorReason}
+              onChange={(e) => setOperatorReason(e.target.value)}
+              rows={2}
+              placeholder="e.g. Good opener but value prop is vague. Needs a sharper hook."
+              className="input-field w-full resize-y text-sm"
+            />
+          </div>
         </div>
 
         {/* Actions */}
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={onApprove}
+            onClick={handleApprove}
             disabled={isPending}
             aria-label={`Approve message to ${item.contactName}`}
             className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-ink-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <CheckCircle size={15} aria-hidden="true" />
+            {isPending ? (
+              <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <CheckCircle size={15} aria-hidden="true" />
+            )}
             Approve
           </button>
           <button
@@ -219,7 +402,7 @@ function ApprovalCard({
             Reject
           </button>
           <p className="text-xs text-ink-500">
-            Records intent only. Nothing sends while the dry-run gate is active.
+            Records intent only — nothing sends while the dry-run gate is active.
           </p>
         </div>
 

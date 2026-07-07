@@ -25,6 +25,7 @@ import {
   type SignalFeedItem,
   type ApprovalItem,
   type AnalyticsTiles,
+  type CrmStatus,
   scoreAndRankLeads,
 } from "./fixtures";
 
@@ -89,6 +90,8 @@ function mapDbContactToFixtureLead(
     email: string | null;
     emailStatus: string;
     linkedinUrl: string | null;
+    crmStatus: string;
+    notes: string | null;
     company: {
       id: string;
       name: string;
@@ -120,6 +123,8 @@ function mapDbContactToFixtureLead(
 
   return {
     id: `lead-db-${idx}`,
+    crmStatus: (contact.crmStatus as CrmStatus) ?? "new",
+    notes: contact.notes ?? null,
     company: {
       id: contact.company.id,
       name: contact.company.name,
@@ -161,12 +166,25 @@ function mapDbContactToFixtureLead(
  * Returns all leads scored and ranked by composite score against the active ICP.
  * Falls back to fixture data if the DB is unreachable or returns no rows.
  */
-export async function getLeads(): Promise<ScoredLead[]> {
+export async function getLeads(opts?: { segmentId?: string }): Promise<ScoredLead[]> {
   const icp = await getActiveIcp();
 
   const rows = await tryDb(() =>
     prisma.contact.findMany({
-      include: {
+      where: opts?.segmentId
+        ? { segments: { some: { segmentId: opts.segmentId } } }
+        : undefined,
+      select: {
+        id: true,
+        fullName: true,
+        title: true,
+        seniority: true,
+        department: true,
+        email: true,
+        emailStatus: true,
+        linkedinUrl: true,
+        crmStatus: true,
+        notes: true,
         company: {
           select: {
             id: true,
@@ -201,7 +219,7 @@ export async function getLeads(): Promise<ScoredLead[]> {
   );
 
   if (!rows || rows.length === 0) {
-    return scoreAndRankLeads(icp, NOW);
+    return [];
   }
 
   const fixtureLeads = rows
@@ -209,7 +227,7 @@ export async function getLeads(): Promise<ScoredLead[]> {
     .filter((l): l is FixtureLead => l !== null);
 
   if (fixtureLeads.length === 0) {
-    return scoreAndRankLeads(icp, NOW);
+    return [];
   }
 
   const scored: ScoredLead[] = fixtureLeads.map((lead) => {
@@ -243,6 +261,26 @@ export async function getLeads(): Promise<ScoredLead[]> {
   return scored.sort((a, b) => b.score.composite - a.score.composite);
 }
 
+// ── Segments ──────────────────────────────────────────────────────────────────
+
+export type SegmentSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+  _count: { contacts: number };
+};
+
+export async function getSegments(): Promise<SegmentSummary[]> {
+  const result = await tryDb(() =>
+    prisma.segment.findMany({
+      include: { _count: { select: { contacts: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+  );
+  return result ?? [];
+}
+
 // ── Signal feed ───────────────────────────────────────────────────────────────
 
 /**
@@ -262,7 +300,7 @@ export async function getSignals(): Promise<SignalFeedItem[]> {
   );
 
   if (!rows || rows.length === 0) {
-    return FIXTURE_SIGNAL_FEED;
+    return [];
   }
 
   return rows.map((s) => ({
@@ -307,7 +345,7 @@ export async function getApprovals(): Promise<ApprovalItem[]> {
   );
 
   if (!rows || rows.length === 0) {
-    return FIXTURE_APPROVALS;
+    return [];
   }
 
   return rows.map((msg, idx): ApprovalItem => {
@@ -383,7 +421,7 @@ export async function getAnalytics(): Promise<AnalyticsTiles> {
       byTier,
       signalsThisWeek,
       pendingApprovals,
-      estimatedCostUsd: 4.32,
+      estimatedCostUsd: 0,
     };
   }
 
@@ -438,7 +476,7 @@ export async function getAnalytics(): Promise<AnalyticsTiles> {
       signalCount ?? FIXTURE_SIGNAL_FEED.filter((s) => s.detectedAt >= weekAgo).length,
     pendingApprovals:
       pendingCount ?? FIXTURE_APPROVALS.filter((a) => a.status === "awaiting_approval").length,
-    estimatedCostUsd: costRows?._sum?.costUsd ?? 4.32,
+    estimatedCostUsd: costRows?._sum?.costUsd ?? 0,
   };
 }
 

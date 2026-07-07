@@ -48,12 +48,12 @@ export default function SignInPage() {
         {/* Brand mark */}
         <div className="mb-7 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500 font-display text-sm font-bold text-ink-950">
-            H
+            G
           </span>
           <div className="leading-tight">
-            <div className="font-display text-base font-bold text-ink-50">Huscribe Revenue OS</div>
+            <div className="font-display text-base font-bold text-ink-50">GenRiver Revenue OS</div>
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-500">
-              Control plane · by HumAI
+              Control plane · genriverai.com
             </div>
           </div>
         </div>
