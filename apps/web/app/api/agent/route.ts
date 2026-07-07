@@ -23,7 +23,8 @@ import { normaliseDomain } from "@oie/core";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const APOLLO_PEOPLE_URL = "https://api.apollo.io/v1/mixed_people/search";
+const APOLLO_PEOPLE_URL = "https://api.apollo.io/v1/mixed_people/api_search";
+const APOLLO_BULK_MATCH_URL = "https://api.apollo.io/v1/people/bulk_match";
 const APOLLO_ORG_URL = "https://api.apollo.io/v1/organizations/enrich";
 const EXA_SEARCH_URL = "https://api.exa.ai/search";
 
@@ -67,7 +68,8 @@ async function importFromApollo(params: {
   const apiKey = (process.env.APOLLO_API_KEY ?? "").trim();
   if (!apiKey) return { error: "APOLLO_API_KEY not configured." };
 
-  const res = await fetch(APOLLO_PEOPLE_URL, {
+  // Step 1: search for IDs (no credits consumed)
+  const searchRes = await fetch(APOLLO_PEOPLE_URL, {
     method: "POST",
     headers: apolloHeaders(apiKey),
     body: JSON.stringify({
@@ -82,13 +84,32 @@ async function importFromApollo(params: {
     }),
   });
 
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    return { error: `Apollo ${res.status}: ${detail.slice(0, 200)}` };
+  if (!searchRes.ok) {
+    const detail = await searchRes.text().catch(() => "");
+    return { error: `Apollo ${searchRes.status}: ${detail.slice(0, 200)}` };
   }
 
-  const raw = await res.json();
-  const { people } = apolloPeopleResponse.parse(raw);
+  const searchRaw = (await searchRes.json()) as { people?: Array<{ id?: string }> };
+  const searchIds = (searchRaw.people ?? []).map((p) => p.id).filter((id): id is string => Boolean(id));
+  if (!searchIds.length) return { imported: 0, total: 0, message: "Apollo returned 0 results." };
+
+  // Step 2: bulk reveal IDs in batches of 10 (Apollo limit)
+  const BATCH = 10;
+  const allMatches: unknown[] = [];
+  for (let i = 0; i < searchIds.length; i += BATCH) {
+    const batch = searchIds.slice(i, i + BATCH);
+    const revealRes = await fetch(APOLLO_BULK_MATCH_URL, {
+      method: "POST",
+      headers: apolloHeaders(apiKey),
+      body: JSON.stringify({ details: batch.map((id) => ({ id })), reveal_personal_emails: true }),
+    });
+    if (revealRes.ok) {
+      const revealRaw = (await revealRes.json()) as { matches?: unknown[] };
+      allMatches.push(...(revealRaw.matches ?? []));
+    }
+  }
+
+  const { people } = apolloPeopleResponse.parse({ people: allMatches });
   if (!people.length) return { imported: 0, total: 0, message: "Apollo returned 0 results." };
 
   let imported = 0;
@@ -100,6 +121,7 @@ async function importFromApollo(params: {
       if (!contact.email && !contact.linkedinUrl) { skipped++; continue; }
 
       const domain = contact.companyDomain ?? normaliseDomain(person.organization?.primary_domain);
+      const orgName = person.organization?.name ?? null;
       let companyId: string | null = null;
 
       if (domain) {
@@ -123,7 +145,7 @@ async function importFromApollo(params: {
           const company = await prisma.company.create({
             data: {
               domain,
-              name: orgData?.name ?? domain,
+              name: orgData?.name ?? orgName ?? domain,
               website: orgData?.website ?? null,
               industry: orgData?.industry ?? null,
               employeeCount: orgData?.employeeCount ?? null,
@@ -132,6 +154,12 @@ async function importFromApollo(params: {
           });
           companyId = company.id;
         }
+      } else if (orgName) {
+        // No domain but we have a name — find or create a domain-less company stub.
+        const existing = await prisma.company.findFirst({ where: { name: orgName, domain: null } });
+        companyId = existing
+          ? existing.id
+          : (await prisma.company.create({ data: { domain: null, name: orgName, sources: { name: "apollo" } } })).id;
       }
 
       const seniority: Seniority | null =
@@ -236,9 +264,8 @@ export async function POST(req: Request): Promise<Response> {
         inputSchema: zodSchema(findEventParams),
         execute: async (args: FindEventInput) => {
           const exaKey = (process.env.EXA_API_KEY ?? "").trim();
-          if (!exaKey) return { error: "EXA_API_KEY not configured." };
 
-          const exaRes = await fetch(EXA_SEARCH_URL, {
+          const exaRes = exaKey ? await fetch(EXA_SEARCH_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-api-key": exaKey },
             body: JSON.stringify({
@@ -247,17 +274,20 @@ export async function POST(req: Request): Promise<Response> {
               numResults: 8,
               contents: { text: { maxCharacters: 600 } },
             }),
-          });
+          }) : null;
 
-          if (!exaRes.ok) return { error: `Exa ${exaRes.status}` };
-          const exaData = (await exaRes.json()) as { results: Array<{ title?: string; url?: string }> };
-          const pages = exaData.results ?? [];
+          // Exa is optional — fall back gracefully if credits are exhausted or key missing.
+          let pages: Array<{ title?: string; url?: string }> = [];
+          if (exaRes?.ok) {
+            const exaData = (await exaRes.json()) as { results: Array<{ title?: string; url?: string }> };
+            pages = exaData.results ?? [];
+          }
 
           const importResult = await importFromApollo({
             titles: args.roles ?? ["Founder", "CEO", "Events Director", "Managing Director"],
             industries: ["events services", "entertainment", "hospitality", "marketing and advertising"],
             locations: args.location ? [args.location] : ["United Kingdom", "United States", "United Arab Emirates"],
-            perPage: 20,
+            perPage: 10,
             keywords: [args.query, "conference", "events"],
           });
 
@@ -349,6 +379,13 @@ export async function POST(req: Request): Promise<Response> {
             // AI SDK v6: field is `output`, not `result`
             const tr = part as unknown as { toolCallId: string; toolName: string; output: unknown };
             emit({ type: "tool_result", toolCallId: tr.toolCallId, toolName: tr.toolName, result: tr.output });
+          } else if (part.type === "finish") {
+            const f = part as unknown as { usage?: { promptTokens?: number; completionTokens?: number } };
+            const input = f.usage?.promptTokens ?? 0;
+            const output = f.usage?.completionTokens ?? 0;
+            // claude-opus-4-8: $15/M input, $75/M output
+            const costUsd = (input / 1_000_000) * 15 + (output / 1_000_000) * 75;
+            emit({ type: "usage", inputTokens: input, outputTokens: output, costUsd });
           }
         }
         emit({ type: "done" });

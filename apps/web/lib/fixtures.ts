@@ -88,8 +88,12 @@ export const SEED_ICP: IcpProfile = {
 
 // ── Raw fixture leads (8 realistic UAE-SMB companies + contacts + signals) ────
 
+export type CrmStatus = "new" | "contacted" | "replied" | "meeting_booked" | "won" | "lost";
+
 export interface FixtureLead {
   id: string;
+  crmStatus: CrmStatus;
+  notes: string | null;
   company: {
     id: string;
     name: string;
@@ -131,6 +135,8 @@ const NOW = new Date("2026-06-14T00:00:00Z");
 export const FIXTURE_LEADS: FixtureLead[] = [
   {
     id: "lead-001",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-001",
       name: "Al Faris Jewellery LLC",
@@ -184,6 +190,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-002",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-002",
       name: "Spice Garden Restaurant Group",
@@ -236,6 +244,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-003",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-003",
       name: "Gulf Wholesale Distribution Co.",
@@ -275,6 +285,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-004",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-004",
       name: "Premium Retail Holdings",
@@ -317,6 +329,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-005",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-005",
       name: "Al Baraka Professional Services",
@@ -356,6 +370,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-006",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-006",
       name: "Noor Electronics Trading",
@@ -395,6 +411,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-007",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-007",
       name: "Horizon Food Concepts",
@@ -423,6 +441,8 @@ export const FIXTURE_LEADS: FixtureLead[] = [
   },
   {
     id: "lead-008",
+    crmStatus: "new",
+    notes: null,
     company: {
       id: "co-008",
       name: "Alpha Consultancy FZ",

@@ -23,7 +23,8 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const APOLLO_PEOPLE_URL = "https://api.apollo.io/v1/mixed_people/search";
+const APOLLO_PEOPLE_URL = "https://api.apollo.io/v1/mixed_people/api_search";
+const APOLLO_BULK_MATCH_URL = "https://api.apollo.io/v1/people/bulk_match";
 const APOLLO_ORG_URL = "https://api.apollo.io/v1/organizations/enrich";
 
 const DEFAULT_TITLES = [
@@ -92,8 +93,8 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  // 1. Search Apollo for people matching the ICP.
-  let peopleRaw: unknown;
+  // 1. Search Apollo for people IDs matching the ICP (no credits consumed).
+  let searchIds: string[] = [];
   try {
     const res = await fetch(APOLLO_PEOPLE_URL, {
       method: "POST",
@@ -106,7 +107,6 @@ export async function POST(req: Request): Promise<Response> {
         q_organization_industries: body.industries ?? DEFAULT_INDUSTRIES,
         person_locations: body.locations ?? DEFAULT_LOCATIONS,
         organization_num_employees_ranges: ["10,5000"],
-        contact_email_status_v2: ["verified", "unverified"],
       }),
     });
     if (!res.ok) {
@@ -116,16 +116,45 @@ export async function POST(req: Request): Promise<Response> {
         { status: 502 },
       );
     }
-    peopleRaw = await res.json();
+    const raw = (await res.json()) as { people?: Array<{ id?: string }> };
+    searchIds = (raw.people ?? []).map((p) => p.id).filter((id): id is string => Boolean(id));
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     return Response.json({ error: `Apollo request failed: ${detail}` }, { status: 502 });
   }
 
-  const { people } = apolloPeopleResponse.parse(peopleRaw);
-  if (people.length === 0) {
+  if (searchIds.length === 0) {
     return Response.json({ imported: 0, skipped: 0, errors: 0, message: "Apollo returned 0 results. Try broader filters." });
   }
+
+  // 2. Bulk-reveal IDs in batches of 10 (Apollo limit) to get full contact details.
+  const BATCH_SIZE = 10;
+  const allMatches: unknown[] = [];
+  for (let i = 0; i < searchIds.length; i += BATCH_SIZE) {
+    const batch = searchIds.slice(i, i + BATCH_SIZE);
+    try {
+      const res = await fetch(APOLLO_BULK_MATCH_URL, {
+        method: "POST",
+        headers: apolloHeaders(apiKey),
+        body: JSON.stringify({ details: batch.map((id) => ({ id })), reveal_personal_emails: true }),
+      });
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        return Response.json(
+          { error: `Apollo bulk reveal failed (${res.status}): ${detail.slice(0, 200)}` },
+          { status: 502 },
+        );
+      }
+      const raw = (await res.json()) as { matches?: unknown[] };
+      allMatches.push(...(raw.matches ?? []));
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      return Response.json({ error: `Apollo bulk reveal failed: ${detail}` }, { status: 502 });
+    }
+  }
+  const peopleRaw = { people: allMatches };
+
+  const { people } = apolloPeopleResponse.parse(peopleRaw);
 
   let imported = 0;
   let skipped = 0;
@@ -143,7 +172,8 @@ export async function POST(req: Request): Promise<Response> {
         continue;
       }
 
-      // 2a. Ensure company row exists (upsert on domain if we have one).
+      // 2a. Ensure company row exists (upsert on domain if we have one, else by name).
+      const orgName = person.organization?.name ?? null;
       let companyId: string | null = null;
       if (domain) {
         // Try to find existing row first.
@@ -172,7 +202,7 @@ export async function POST(req: Request): Promise<Response> {
           const company = await prisma.company.create({
             data: {
               domain,
-              name: orgData?.name ?? person.organization?.primary_domain ?? domain,
+              name: orgData?.name ?? orgName ?? domain,
               website: orgData?.website ?? null,
               industry: orgData?.industry ?? null,
               employeeCount: orgData?.employeeCount ?? null,
@@ -180,6 +210,17 @@ export async function POST(req: Request): Promise<Response> {
               region: null,
               sources: orgData?.sources ?? { domain: "apollo" },
             },
+          });
+          companyId = company.id;
+        }
+      } else if (orgName) {
+        // No domain but we have a name — find or create a domain-less company stub.
+        const existing = await prisma.company.findFirst({ where: { name: orgName, domain: null } });
+        if (existing) {
+          companyId = existing.id;
+        } else {
+          const company = await prisma.company.create({
+            data: { domain: null, name: orgName, sources: { name: "apollo" } },
           });
           companyId = company.id;
         }

@@ -85,6 +85,15 @@ enum SequenceStatus {
   archived
 }
 
+enum CrmStatus {
+  new
+  contacted
+  replied
+  meeting_booked
+  won
+  lost
+}
+
 /// Versioned ICP configuration. The full ICPProfile (brief §10.1) is stored as
 /// validated JSON in `config`; (name, version) is unique.
 model IcpProfile {
@@ -145,6 +154,8 @@ model Contact {
   phone       String?
   whatsapp    String?
   sources     Json?
+  crmStatus   CrmStatus  @default(new)
+  notes       String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 

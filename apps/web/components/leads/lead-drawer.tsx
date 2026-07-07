@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { Drawer } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { formatDate, formatRelative, round1, signalTypeLabel } from "@/lib/utils";
-import type { ScoredLead } from "@/lib/fixtures";
+import type { ScoredLead, CrmStatus } from "@/lib/fixtures";
+import { updateLeadCrm } from "@/app/leads/actions";
 
 const NOW = new Date("2026-06-14T00:00:00Z");
 
@@ -21,6 +23,7 @@ export function LeadDrawer({ lead, onClose }: LeadDrawerProps) {
   ];
 
   const tabs = [
+    { id: "crm", label: "CRM" },
     { id: "enrichment", label: "Enrichment" },
     { id: "signals", label: `Signals (${lead.signals.length})` },
     { id: "rationale", label: "Score rationale" },
@@ -44,14 +47,78 @@ export function LeadDrawer({ lead, onClose }: LeadDrawerProps) {
         </div>
       </div>
 
-      <Tabs tabs={tabs} defaultTab="enrichment">
+      <Tabs tabs={tabs} defaultTab="crm">
         {(activeTab) => {
+          if (activeTab === "crm") return <CrmTab lead={lead} />;
           if (activeTab === "enrichment") return <EnrichmentTab lead={lead} />;
           if (activeTab === "signals") return <SignalsTab lead={lead} />;
           return <RationaleTab lead={lead} />;
         }}
       </Tabs>
     </Drawer>
+  );
+}
+
+const CRM_STATUSES: { value: CrmStatus; label: string; color: string }[] = [
+  { value: "new",            label: "New",            color: "bg-ink-700 text-ink-300" },
+  { value: "contacted",      label: "Contacted",      color: "bg-sky-500/20 text-sky-300" },
+  { value: "replied",        label: "Replied",        color: "bg-purple-500/20 text-purple-300" },
+  { value: "meeting_booked", label: "Meeting booked", color: "bg-amber-500/20 text-amber-300" },
+  { value: "won",            label: "Won",            color: "bg-emerald-500/20 text-emerald-300" },
+  { value: "lost",           label: "Lost",           color: "bg-red-500/20 text-red-400" },
+];
+
+function CrmTab({ lead }: { lead: ScoredLead }) {
+  const [status, setStatus] = useState<CrmStatus>(lead.crmStatus ?? "new");
+  const [notes, setNotes] = useState(lead.notes ?? "");
+  const [saved, setSaved] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const save = (nextStatus: CrmStatus, nextNotes: string) => {
+    startTransition(async () => {
+      await updateLeadCrm({ contactId: lead.contact.id, crmStatus: nextStatus, notes: nextNotes });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <section>
+        <h3 className="label-mono mb-3">Stage</h3>
+        <div className="flex flex-wrap gap-2">
+          {CRM_STATUSES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => { setStatus(s.value); save(s.value, notes); }}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ring-1 ring-inset ${
+                status === s.value
+                  ? `${s.color} ring-current`
+                  : "bg-ink-800 text-ink-400 ring-ink-700 hover:bg-ink-700 hover:text-ink-200"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="label-mono mb-2">Notes</h3>
+        <textarea
+          rows={6}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          onBlur={() => save(status, notes)}
+          placeholder="Add notes about this lead — conversation history, context, next steps…"
+          className="input-field w-full resize-none text-sm"
+        />
+        <p className="mt-1.5 text-[11px] text-ink-600">
+          {isPending ? "Saving…" : saved ? "Saved" : "Auto-saves on blur"}
+        </p>
+      </section>
+    </div>
   );
 }
 

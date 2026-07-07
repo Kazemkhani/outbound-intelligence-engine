@@ -62,6 +62,7 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "composite", desc: true }]);
   const [isDiscovering, startDiscovery] = useTransition();
   const [discoverResult, setDiscoverResult] = useState<string | null>(null);
+  const [discoverPage, setDiscoverPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -185,7 +186,12 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
     startDiscovery(async () => {
       setDiscoverResult(null);
       try {
-        const res = await fetch("/api/leads/discover", { method: "POST" });
+        const res = await fetch("/api/leads/discover", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ page: discoverPage }),
+        });
+        setDiscoverPage((p) => p + 1);
         const data = (await res.json()) as { imported?: number; skipped?: number; errors?: number; error?: string; message?: string };
         if (!res.ok || data.error) {
           setDiscoverResult(`Error: ${data.error ?? "Unknown error"}`);
@@ -195,7 +201,7 @@ export function LeadsView({ initialLeads }: { initialLeads: ScoredLead[] }) {
           setDiscoverResult(data.message);
           return;
         }
-        setDiscoverResult(`Imported ${data.imported ?? 0} leads, skipped ${data.skipped ?? 0}${data.errors ? `, ${data.errors} errors` : ""}.`);
+        setDiscoverResult(`Page ${discoverPage}: imported ${data.imported ?? 0} leads, skipped ${data.skipped ?? 0}${data.errors ? `, ${data.errors} errors` : ""}.`);
         router.refresh();
       } catch {
         setDiscoverResult("Network error. Check the server logs.");

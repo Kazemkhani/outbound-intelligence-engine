@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -39,6 +39,7 @@ type AgentEvent =
   | { type: "text"; text: string }
   | { type: "tool_start"; toolCallId: string; toolName: string; args: Record<string, unknown> }
   | { type: "tool_result"; toolCallId: string; toolName: string; result: unknown }
+  | { type: "usage"; inputTokens: number; outputTokens: number; costUsd: number }
   | { type: "done" }
   | { type: "error"; message: string };
 
@@ -124,7 +125,16 @@ function getResultSummary(toolName: string, result: unknown): ResultSummary | nu
 
 // ── ToolCallCard ──────────────────────────────────────────────────────────────
 
-function ToolCallCard({ call }: { call: ToolCall }) {
+function ElapsedTimer() {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSecs((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="ml-auto font-mono text-[10px] text-ink-600">{secs}s</span>;
+}
+
+function ToolCallCard({ call, onNav }: { call: ToolCall; onNav: (path: string) => void }) {
   const meta = TOOL_META[call.toolName] ?? { label: call.toolName, Icon: Zap, color: "text-ink-400" };
   const argSummary = getArgSummary(call.toolName, call.args);
   const resultSummary = call.result ? getResultSummary(call.toolName, call.result) : null;
@@ -142,6 +152,7 @@ function ToolCallCard({ call }: { call: ToolCall }) {
         <meta.Icon size={13} className={meta.color} aria-hidden="true" />
         <span className="font-semibold text-ink-200">{meta.label}</span>
         {argSummary && <span className="truncate max-w-xs text-ink-500">{argSummary}</span>}
+        {call.state === "running" && <ElapsedTimer />}
       </div>
 
       {resultSummary && (
@@ -154,12 +165,13 @@ function ToolCallCard({ call }: { call: ToolCall }) {
             {resultSummary.text}
           </p>
           {resultSummary.nav && (
-            <a
-              href={resultSummary.nav}
+            <button
+              type="button"
+              onClick={() => onNav(resultSummary.nav!)}
               className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/10"
             >
               View <ArrowRight size={10} />
-            </a>
+            </button>
           )}
         </div>
       )}
@@ -175,8 +187,14 @@ export function AgentWorkspace() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionCost, setSessionCost] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const handleNav = useCallback((path: string) => {
+    router.refresh();
+    router.push(path);
+  }, [router]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -274,6 +292,9 @@ export function AgentWorkspace() {
               if (event.type === "error") {
                 setError(event.message);
               }
+              if (event.type === "usage") {
+                setSessionCost((prev) => prev + event.costUsd);
+              }
               return m;
             }),
           );
@@ -362,7 +383,7 @@ export function AgentWorkspace() {
               ) : (
                 <div className="space-y-1">
                   {m.toolCalls.map((tc) => (
-                    <ToolCallCard key={tc.id} call={tc} />
+                    <ToolCallCard key={tc.id} call={tc} onNav={handleNav} />
                   ))}
                   {m.text && (
                     <div className="rounded-2xl rounded-tl-sm border border-ink-800 bg-ink-850 px-4 py-3 text-sm">
@@ -419,9 +440,20 @@ export function AgentWorkspace() {
             {isLoading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
           </button>
         </form>
-        <p className="mt-2 text-[11px] text-ink-600">
-          <kbd className="font-mono">Cmd/Ctrl + Enter</kbd> to send. DRY_RUN active — no messages sent.
-        </p>
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <p className="text-[11px] text-ink-600">
+            <kbd className="font-mono">Cmd/Ctrl + Enter</kbd> to send. DRY_RUN active — no messages sent.
+          </p>
+          <p className="shrink-0 text-[11px] text-ink-600">
+            <span className="text-ink-500">claude-opus-4-8</span>
+            <span className="mx-1.5 text-ink-700">·</span>
+            {sessionCost > 0 ? (
+              <span className="text-ink-400">session: <span className="text-gold-400 font-mono">${sessionCost.toFixed(4)}</span></span>
+            ) : (
+              <span>~$0.02–0.08 / message</span>
+            )}
+          </p>
+        </div>
       </div>
     </div>
   );
