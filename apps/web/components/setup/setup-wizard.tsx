@@ -196,7 +196,7 @@ function StepIdentity({ data, onChange }: { data: FormData; onChange: (d: Partia
       <div>
         <label htmlFor="oneLiner" className="label-mono mb-1 block">One-line pitch *</label>
         <p className="mb-2 text-xs text-ink-500">
-          The single sentence that goes in every cold email. "We help [who] [achieve what] [how] [timeframe]."
+          The single sentence that goes in every cold email. &quot;We help [who] [achieve what] [how] [timeframe].&quot;
         </p>
         <textarea
           id="oneLiner"

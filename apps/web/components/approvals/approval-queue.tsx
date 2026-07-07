@@ -322,7 +322,7 @@ function ApprovalCard({
 
           {!aiRating && !isRating && !ratingError && (
             <p className="mt-2 text-xs text-ink-600">
-              Click "Rate with AI" to get an automatic quality score for this message.
+              Click &quot;Rate with AI&quot; to get an automatic quality score for this message.
             </p>
           )}
         </div>

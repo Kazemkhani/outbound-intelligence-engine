@@ -100,7 +100,7 @@ export default function HomePage() {
           Spot the signal. Enrich the lead. <span className="text-gold-400">Book the meeting.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-base text-ink-400">
-          GenRiver's AI-native outbound control plane: detect buying signals, enrich decision-makers,
+          GenRiver&apos;s AI-native outbound control plane: detect buying signals, enrich decision-makers,
           score and rank by ICP fit, then deploy hyper-personalised multi-channel sequences across
           email, LinkedIn, and WhatsApp. Every message governed by a mandatory human approval gate —
           nothing sends without your review.
