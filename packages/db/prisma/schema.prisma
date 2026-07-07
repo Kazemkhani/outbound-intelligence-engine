@@ -159,14 +159,35 @@ model Contact {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  company      Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
   signals      Signal[]
   scores       Score[]
   enrolments   Enrolment[]
   callSessions CallSession[]
+  segments     ContactSegment[]
 
   @@index([companyId])
   @@index([seniority])
+}
+
+model Segment {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+  contacts    ContactSegment[]
+}
+
+model ContactSegment {
+  contactId String
+  segmentId String
+  addedAt   DateTime @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  segment Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, segmentId])
+  @@index([segmentId])
 }
 
 model Signal {

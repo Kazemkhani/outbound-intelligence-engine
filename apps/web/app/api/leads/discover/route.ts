@@ -159,6 +159,7 @@ export async function POST(req: Request): Promise<Response> {
   let imported = 0;
   let skipped = 0;
   let errors = 0;
+  const importedContactIds: string[] = [];
 
   // 2. For each person: ensure their company exists, then upsert the contact.
   for (const person of people) {
@@ -249,20 +250,23 @@ export async function POST(req: Request): Promise<Response> {
         sources: contact.sources ?? {},
       };
 
+      let row: { id: string } | undefined;
       if (contact.email) {
-        await prisma.contact.upsert({
+        row = await prisma.contact.upsert({
           where: { email: contact.email },
           create: { email: contact.email, ...contactData },
           update: { title: contactData.title, seniority: contactData.seniority },
+          select: { id: true },
         });
       } else if (contact.linkedinUrl) {
-        await prisma.contact.upsert({
+        row = await prisma.contact.upsert({
           where: { linkedinUrl: contact.linkedinUrl },
           create: { ...contactData },
           update: { title: contactData.title, seniority: contactData.seniority },
+          select: { id: true },
         });
       }
-
+      if (row) importedContactIds.push(row.id);
       imported++;
     } catch (err) {
       // Log but don't abort — partial import is better than none.
@@ -271,5 +275,22 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
-  return Response.json({ imported, skipped, errors, total: people.length });
+  // Create a named segment so these leads appear grouped in the Leads tab.
+  let segmentId: string | undefined;
+  if (importedContactIds.length > 0) {
+    try {
+      const dateStr = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      const seg = await prisma.segment.create({
+        data: { name: `Discover · Page ${body.page} · ${dateStr}` },
+        select: { id: true },
+      });
+      await prisma.contactSegment.createMany({
+        data: importedContactIds.map((contactId) => ({ contactId, segmentId: seg.id })),
+        skipDuplicates: true,
+      });
+      segmentId = seg.id;
+    } catch { /* non-fatal */ }
+  }
+
+  return Response.json({ imported, skipped, errors, total: people.length, segmentId });
 }

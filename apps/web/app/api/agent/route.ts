@@ -64,6 +64,7 @@ async function importFromApollo(params: {
   locations: string[];
   perPage: number;
   keywords?: string[];
+  segmentName?: string;
 }) {
   const apiKey = (process.env.APOLLO_API_KEY ?? "").trim();
   if (!apiKey) return { error: "APOLLO_API_KEY not configured." };
@@ -114,6 +115,7 @@ async function importFromApollo(params: {
 
   let imported = 0;
   let skipped = 0;
+  const importedContactIds: string[] = [];
 
   for (const person of people) {
     try {
@@ -180,24 +182,44 @@ async function importFromApollo(params: {
         sources: contact.sources ?? {},
       };
 
+      let row: { id: string } | undefined;
       if (contact.email) {
-        await prisma.contact.upsert({
+        row = await prisma.contact.upsert({
           where: { email: contact.email },
           create: { email: contact.email, ...data },
           update: { title: data.title, seniority: data.seniority },
+          select: { id: true },
         });
       } else if (contact.linkedinUrl) {
-        await prisma.contact.upsert({
+        row = await prisma.contact.upsert({
           where: { linkedinUrl: contact.linkedinUrl },
           create: data,
           update: { title: data.title, seniority: data.seniority },
+          select: { id: true },
         });
       }
+      if (row) importedContactIds.push(row.id);
       imported++;
     } catch { skipped++; }
   }
 
-  return { imported, skipped, total: people.length };
+  // Create a segment so imported leads appear as a named group in the Leads tab.
+  let segmentId: string | undefined;
+  if (importedContactIds.length > 0 && params.segmentName) {
+    try {
+      const seg = await prisma.segment.create({
+        data: { name: params.segmentName },
+        select: { id: true },
+      });
+      await prisma.contactSegment.createMany({
+        data: importedContactIds.map((contactId) => ({ contactId, segmentId: seg.id })),
+        skipDuplicates: true,
+      });
+      segmentId = seg.id;
+    } catch { /* non-fatal */ }
+  }
+
+  return { imported, skipped, total: people.length, segmentId };
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────
@@ -256,6 +278,7 @@ export async function POST(req: Request): Promise<Response> {
             industries: args.industries,
             locations: args.locations ?? ["United Kingdom", "United States", "United Arab Emirates"],
             perPage: args.perPage ?? 15,
+            segmentName: [args.titles[0], (args.locations ?? [])[0]].filter(Boolean).join(" · ") || "Agent Import",
           }),
       }),
 
@@ -289,6 +312,7 @@ export async function POST(req: Request): Promise<Response> {
             locations: args.location ? [args.location] : ["United Kingdom", "United States", "United Arab Emirates"],
             perPage: 10,
             keywords: [args.query, "conference", "events"],
+            segmentName: [args.query, args.location, args.timeframe].filter(Boolean).join(" · "),
           });
 
           return {

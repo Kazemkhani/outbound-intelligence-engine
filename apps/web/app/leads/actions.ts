@@ -5,6 +5,21 @@ import { prisma } from "@oie/db";
 import { z } from "zod";
 import type { CrmStatus } from "@/lib/fixtures";
 
+export async function createSegment(name: string, description?: string): Promise<{ id: string }> {
+  const seg = await prisma.segment.create({ data: { name, description: description ?? null } });
+  revalidatePath("/leads");
+  return { id: seg.id };
+}
+
+export async function addContactsToSegment(segmentId: string, contactIds: string[]): Promise<void> {
+  if (!contactIds.length) return;
+  await prisma.contactSegment.createMany({
+    data: contactIds.map((contactId) => ({ contactId, segmentId })),
+    skipDuplicates: true,
+  });
+  revalidatePath("/leads");
+}
+
 const updateCrmSchema = z.object({
   contactId: z.string().min(1),
   crmStatus: z.enum(["new", "contacted", "replied", "meeting_booked", "won", "lost"]).optional(),

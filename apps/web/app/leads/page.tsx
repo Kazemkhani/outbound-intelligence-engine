@@ -1,5 +1,5 @@
 import { LeadsView } from "@/components/leads/leads-view";
-import { getLeads } from "@/lib/data";
+import { getLeads, getSegments } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -7,8 +7,16 @@ export const metadata = {
   title: "Ranked Leads · GenRiver Revenue OS",
 };
 
-export default async function LeadsPage() {
-  const leads = await getLeads();
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ segment?: string }>;
+}) {
+  const { segment: segmentId } = await searchParams;
+  const [leads, segments] = await Promise.all([
+    getLeads(segmentId ? { segmentId } : undefined),
+    getSegments(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
@@ -19,7 +27,7 @@ export default async function LeadsPage() {
           enrichment, the signal timeline, and the score rationale.
         </p>
       </header>
-      <LeadsView initialLeads={leads} />
+      <LeadsView initialLeads={leads} segments={segments} activeSegmentId={segmentId} />
     </div>
   );
 }

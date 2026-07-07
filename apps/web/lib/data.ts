@@ -166,11 +166,14 @@ function mapDbContactToFixtureLead(
  * Returns all leads scored and ranked by composite score against the active ICP.
  * Falls back to fixture data if the DB is unreachable or returns no rows.
  */
-export async function getLeads(): Promise<ScoredLead[]> {
+export async function getLeads(opts?: { segmentId?: string }): Promise<ScoredLead[]> {
   const icp = await getActiveIcp();
 
   const rows = await tryDb(() =>
     prisma.contact.findMany({
+      where: opts?.segmentId
+        ? { segments: { some: { segmentId: opts.segmentId } } }
+        : undefined,
       select: {
         id: true,
         fullName: true,
@@ -256,6 +259,26 @@ export async function getLeads(): Promise<ScoredLead[]> {
   });
 
   return scored.sort((a, b) => b.score.composite - a.score.composite);
+}
+
+// ── Segments ──────────────────────────────────────────────────────────────────
+
+export type SegmentSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+  _count: { contacts: number };
+};
+
+export async function getSegments(): Promise<SegmentSummary[]> {
+  const result = await tryDb(() =>
+    prisma.segment.findMany({
+      include: { _count: { select: { contacts: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+  );
+  return result ?? [];
 }
 
 // ── Signal feed ───────────────────────────────────────────────────────────────

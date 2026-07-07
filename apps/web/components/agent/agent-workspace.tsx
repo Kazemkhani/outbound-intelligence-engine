@@ -98,8 +98,10 @@ function getResultSummary(toolName: string, result: unknown): ResultSummary | nu
 
   if (r.error) return { type: "error", text: String(r.error) };
 
-  if ("imported" in r)
-    return { type: "success", text: `Imported ${r.imported as number} leads`, nav: "/leads" };
+  if ("imported" in r) {
+    const nav = r.segmentId ? `/leads?segment=${r.segmentId as string}` : "/leads";
+    return { type: "success", text: `Imported ${r.imported as number} leads`, nav };
+  }
 
   if ("total" in r && "byTier" in r) {
     const bt = r.byTier as Record<string, number>;
@@ -113,10 +115,11 @@ function getResultSummary(toolName: string, result: unknown): ResultSummary | nu
   }
 
   if ("companiesFound" in r) {
+    const nav = r.segmentId ? `/leads?segment=${r.segmentId as string}` : "/leads";
     return {
       type: "success",
       text: `Found ${r.companiesFound as number} companies, imported ${(r.imported as number) ?? 0} leads`,
-      nav: "/leads",
+      nav,
     };
   }
 
