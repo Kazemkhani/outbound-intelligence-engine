@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@oie/core": "workspace:*",
-    "@prisma/client": "^6.2.1"
+    "@prisma/client": "^7.8.0"
   },
   "devDependencies": {
     "dotenv-cli": "^8.0.0",
