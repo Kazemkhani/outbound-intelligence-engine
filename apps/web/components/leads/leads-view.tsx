@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   flexRender,
@@ -21,6 +21,7 @@ import {
   Loader2,
   Search,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/states";
@@ -245,6 +246,9 @@ export function LeadsView({
   const [isDiscovering, startDiscovery] = useTransition();
   const [discoverResult, setDiscoverResult] = useState<string | null>(null);
   const [discoverPage, setDiscoverPage] = useState(1);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -363,6 +367,40 @@ export function LeadsView({
 
   const rows = table.getRowModel().rows;
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setUploadResult(null);
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/leads/upload", { method: "POST", body: fd });
+      const data = (await res.json()) as {
+        imported?: number;
+        skipped?: number;
+        total?: number;
+        error?: string;
+        segmentId?: string;
+      };
+      if (!res.ok || data.error) {
+        setUploadResult(`Error: ${data.error ?? "Upload failed"}`);
+        return;
+      }
+      setUploadResult(`Imported ${data.imported ?? 0} of ${data.total ?? 0} rows.`);
+      if (data.segmentId) {
+        router.push(`/leads?segment=${data.segmentId}`);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setUploadResult("Network error. Check server logs.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleDiscover = () => {
     startDiscovery(async () => {
       setDiscoverResult(null);
@@ -474,7 +512,7 @@ export function LeadsView({
               <StatCard label="Avg composite" value={String(round1(stats.avg))} />
             </div>
 
-            {/* Discover leads */}
+            {/* Discover leads + Upload */}
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <button
                 type="button"
@@ -492,7 +530,33 @@ export function LeadsView({
                   </>
                 )}
               </button>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="inline-flex items-center gap-2 rounded-lg border border-ink-600 bg-ink-800 px-4 py-2 text-sm font-semibold text-ink-200 transition-colors hover:bg-ink-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" aria-hidden="true" /> Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Upload size={15} aria-hidden="true" /> Upload CSV / XLSX
+                  </>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+
               {discoverResult && <p className="text-xs text-ink-400">{discoverResult}</p>}
+              {uploadResult && <p className="text-xs text-ink-400">{uploadResult}</p>}
             </div>
 
             {/* Search + tier filters */}
