@@ -170,6 +170,16 @@ model Contact {
   @@index([seniority])
 }
 
+model ChatSession {
+  id        String   @id @default(cuid())
+  title     String
+  messages  Json     // AgentMessage[] serialised
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([updatedAt])
+}
+
 model Segment {
   id          String           @id @default(cuid())
   name        String
