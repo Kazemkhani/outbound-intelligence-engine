@@ -7,6 +7,8 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
 ![Licence](https://img.shields.io/badge/licence-proprietary-lightgrey)
 
+> **Want to run it yourself?** → [`docs/SELF-HOST.md`](docs/SELF-HOST.md) — Codespaces, local, or your own Vercel, with your own API keys, in a few minutes. Nothing sends until you open the gate.
+
 ---
 
 ## The core idea
