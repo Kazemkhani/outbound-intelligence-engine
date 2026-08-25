@@ -4,7 +4,7 @@ import { loadConfig } from "./actions";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Setup · GenRiver Revenue OS",
+  title: "Setup · OIE Control Plane",
 };
 
 export default async function SetupPage() {

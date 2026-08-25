@@ -3,7 +3,7 @@ import { loadEnv, EnvValidationError, providerKeyStatus } from "./index";
 
 const validBase: Record<string, string> = {
   DATABASE_URL: "postgresql://oie:oie@localhost:5432/oie?schema=public",
-  AUTH_SECRET: "0123456789abcdef-dev",
+  AUTH_SECRET: "test-secret".repeat(4),
 };
 
 describe("loadEnv", () => {

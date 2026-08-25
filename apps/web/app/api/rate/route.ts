@@ -20,7 +20,7 @@ const requestSchema = z.object({
   companyName: z.string(),
 });
 
-const SYSTEM = `You are an expert B2B outbound copywriter reviewing cold outreach messages for GenRiver (AI-native outbound for B2B meetings).
+const SYSTEM = `You are an expert B2B outbound copywriter reviewing cold outreach messages for the configured product (AI-native outbound for B2B meetings).
 
 Rate the message quality on a scale of 1-5 stars using these criteria:
 - Personalisation: does it reference specific details about the company or person?

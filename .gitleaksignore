@@ -1,0 +1,4 @@
+# Verified synthetic test fixtures retained in historical commits. Each entry is
+# scoped to one commit, file, rule, and line; no path- or rule-wide suppression.
+948021f13f2a502391532250f7b932dc856fd5a3:packages/integrations/src/smartlead/smartlead.test.ts:generic-api-key:29
+e82f701880f58ad835a918dea81615ed755c9821:packages/config/src/index.test.ts:generic-api-key:6

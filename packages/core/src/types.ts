@@ -15,7 +15,7 @@ export const signalTypeValues = [
   "web_change",
   // UAE-native intent signals (Dubai Land Department / Dubai Pulse). The enum seam
   // ships now; the producing DLD adapter + live ingestion are Next-gated (see
-  // packages/integrations/PLAN.md), so nothing emits these at runtime yet.
+  // provider contracts), so nothing emits these at runtime yet.
   "off_plan_launch",
   "transaction_spike",
 ] as const;

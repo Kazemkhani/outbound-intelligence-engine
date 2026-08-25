@@ -2,7 +2,7 @@
 
 This directory records the locked architectural decisions for OIE. Each ADR captures one decision in a standard format — Title, Status, Context, Decision, Consequences — so a future reader (or a fresh agent session) understands not just what was chosen, but why, and what it costs.
 
-The decisions themselves are locked in [`PROJECT_BRIEF.md`](../../PROJECT_BRIEF.md) §13. These records expand on them. A decision is changed by writing a new ADR that supersedes the old one, never by editing history.
+These records capture decisions that shape OIE's public contracts. Change a decision by writing a new ADR that supersedes the old one, never by editing history.
 
 ## Index
 

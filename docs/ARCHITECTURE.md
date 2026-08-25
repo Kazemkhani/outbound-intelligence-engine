@@ -2,7 +2,7 @@
 
 > The Outbound Intelligence Engine (OIE) is a conductor, a brain, and a cockpit over an orchestra of specialist tools. This document explains the system at depth: the core idea, the build-vs-buy split, the five owned pillars, the end-to-end data flow, the module map, the anti-corruption layer and its stable interfaces, the unified data model, and the principle that holds it all together.
 
-For the locked programme decisions and their rationale, see [`PROJECT_BRIEF.md`](../PROJECT_BRIEF.md) (§13). Every architectural decision is recorded as an ADR under [`docs/adr/`](./adr/README.md).
+Architecture decisions and their rationale are recorded under [`docs/adr/`](./adr/README.md). Supersede a decision with a new ADR instead of rewriting its history.
 
 ---
 

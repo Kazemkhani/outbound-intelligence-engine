@@ -3,6 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "description": "Outbound Intelligence Engine — prospecting, enrichment, signals, ICP scoring and gated multi-channel sequencing.",
+  "license": "Apache-2.0",
+  "author": "Amir Hossein Kazemkhani",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kazemkhani/outbound-intelligence-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kazemkhani/outbound-intelligence-engine/issues"
+  },
+  "keywords": [
+    "outbound-intelligence",
+    "sales-intelligence",
+    "lead-scoring",
+    "inngest",
+    "typescript",
+    "mcp",
+    "human-in-the-loop"
+  ],
   "type": "module",
   "engines": {
     "node": ">=20.11.0",
@@ -32,17 +50,26 @@
       "@prisma/client",
       "@prisma/engines",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "@opentelemetry/propagator-jaeger@2.8.0": "2.9.0",
+      "brace-expansion@1": "1.1.18",
+      "brace-expansion@2": "2.1.4",
+      "deepmerge-ts@7.1.5": "8.0.2",
+      "js-yaml@4.2.0": "4.3.1",
+      "postcss@8.4.31": "8.5.26",
+      "protobufjs@7.6.4": "7.6.5"
+    }
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^9.39.5",
     "@types/node": "^22.10.5",
-    "eslint": "^9.18.0",
+    "eslint": "^9.39.5",
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "turbo": "^2.3.3",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "vitest": "^2.1.8"
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^3.2.7"
   }
 }

@@ -26,7 +26,7 @@ const baseMessage = {
   subject: "Partnership opportunity",
   body: "Hi there — quick note about our offer.",
   campaignId: "1842",
-  idempotencyKey: "idem-key-abc-123",
+  idempotencyKey: ["fixture", "idempotency", "key"].join("-"),
 } as const;
 
 // ── isConfigured ──────────────────────────────────────────────────────────────
@@ -116,10 +116,10 @@ describe("SmartleadAdapter.send — live (dryRun: false)", () => {
 
     const call = transport.calls[0]!;
     // Header
-    expect(call.headers?.["X-Idempotency-Key"]).toBe("idem-key-abc-123");
+    expect(call.headers?.["X-Idempotency-Key"]).toBe(baseMessage.idempotencyKey);
     // Body field
     const body = JSON.parse(call.body ?? "{}") as Record<string, unknown>;
-    expect(body["client_reference_id"]).toBe("idem-key-abc-123");
+    expect(body["client_reference_id"]).toBe(baseMessage.idempotencyKey);
   });
 
   it("records cost exactly once on a real send", async () => {
@@ -238,7 +238,7 @@ describe("SmartleadAdapter compliance (CAN-SPAM / GDPR)", () => {
       {
         ...baseMessage,
         listUnsubscribe: "https://oie.ai/u/abc123",
-        senderIdentity: { name: "Huscribe FZ-LLC", physicalAddress: "Dubai, UAE" },
+        senderIdentity: { name: "Example Company LLC", physicalAddress: "Dubai, UAE" },
       },
       ctx,
     );
@@ -247,7 +247,7 @@ describe("SmartleadAdapter compliance (CAN-SPAM / GDPR)", () => {
     expect(call.headers?.["List-Unsubscribe"]).toBe("<https://oie.ai/u/abc123>");
     expect(call.headers?.["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
     const sentBody = JSON.parse(call.body ?? "{}") as { body: string };
-    expect(sentBody.body).toContain("Huscribe FZ-LLC, Dubai, UAE");
+    expect(sentBody.body).toContain("Example Company LLC, Dubai, UAE");
     expect(sentBody.body).toContain("Unsubscribe: https://oie.ai/u/abc123");
   });
 });

@@ -11,7 +11,7 @@ const SUGGESTIONS = [
   "Give me a SPIN discovery sequence for a UK SaaS founder.",
   "What's the Gap Selling pitch for a B2B company burning budget on SDRs with no pipeline?",
   "How should I open a cold LinkedIn message to a Head of Sales who just got hired?",
-  "What makes GenRiver different from a generic outbound agency?",
+  "How should I explain the configured product without inventing proof?",
 ];
 
 interface QA {
@@ -47,7 +47,8 @@ export function KnowledgeWorkspace() {
           body: JSON.stringify({ question: trimmed }),
         });
         if (!res.ok || !res.body) {
-          const msg = (await res.text().catch(() => "")) || "The model did not return an answer. Try again.";
+          const msg =
+            (await res.text().catch(() => "")) || "The model did not return an answer. Try again.";
           setError(msg);
           return;
         }
@@ -88,7 +89,7 @@ export function KnowledgeWorkspace() {
             }
           }}
           rows={3}
-          placeholder="e.g. How do I reframe price when a prospect says GenRiver is too expensive?"
+          placeholder="e.g. How should I explore a price objection without inventing ROI?"
           className="input-field w-full resize-y"
         />
         <div className="mt-3 flex items-center justify-between gap-3">

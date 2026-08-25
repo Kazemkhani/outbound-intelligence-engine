@@ -199,7 +199,7 @@ async function main(): Promise<void> {
     stepIndex: 0,
     enrolmentId: "enrol-top",
     recipientEmail: top.lead.contact.email ?? "",
-    fromEmail: "rep@huscribe.com",
+    fromEmail: "rep@product.com",
     subject: "Quick question",
     body: opener,
     dryRun: true,

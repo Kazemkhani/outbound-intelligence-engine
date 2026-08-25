@@ -39,7 +39,7 @@ export interface SuppressionRecord {
    * The channel this suppression applies to. When null/undefined the record is
    * global and suppresses EVERY channel (e.g. a hard opt-out). When set, it only
    * suppresses that one channel. The DB column for this is a deferred migration
-   * (see packages/db/PLAN.md); the field is optional so existing rows stay valid.
+   * the field is optional so existing rows stay valid.
    */
   channel?: Channel | null;
   reason: string;

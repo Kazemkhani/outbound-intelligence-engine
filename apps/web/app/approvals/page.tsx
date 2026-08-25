@@ -4,7 +4,7 @@ import { getApprovals } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Approval Queue · GenRiver Revenue OS",
+  title: "Approval Queue · OIE Control Plane",
 };
 
 export default async function ApprovalsPage() {

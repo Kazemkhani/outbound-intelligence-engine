@@ -9,7 +9,7 @@ import {
 } from "@oie/integrations";
 
 /**
- * Lead discovery endpoint. Searches Apollo for people matching GenRiver's ICP,
+ * Lead discovery endpoint. Searches Apollo for people matching the active ICP,
  * enriches their companies, and upserts everything to the DB. The leads page
  * reads from DB so they appear immediately after the call completes.
  *
@@ -124,7 +124,12 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   if (searchIds.length === 0) {
-    return Response.json({ imported: 0, skipped: 0, errors: 0, message: "Apollo returned 0 results. Try broader filters." });
+    return Response.json({
+      imported: 0,
+      skipped: 0,
+      errors: 0,
+      message: "Apollo returned 0 results. Try broader filters.",
+    });
   }
 
   // 2. Bulk-reveal IDs in batches of 10 (Apollo limit) to get full contact details.
@@ -136,7 +141,10 @@ export async function POST(req: Request): Promise<Response> {
       const res = await fetch(APOLLO_BULK_MATCH_URL, {
         method: "POST",
         headers: apolloHeaders(apiKey),
-        body: JSON.stringify({ details: batch.map((id) => ({ id })), reveal_personal_emails: true }),
+        body: JSON.stringify({
+          details: batch.map((id) => ({ id })),
+          reveal_personal_emails: true,
+        }),
       });
       if (!res.ok) {
         const detail = await res.text().catch(() => "");
@@ -185,10 +193,10 @@ export async function POST(req: Request): Promise<Response> {
           // Enrich via Apollo org endpoint, fall back to stub if it fails.
           let orgData = null;
           try {
-            const orgRes = await fetch(
-              `${APOLLO_ORG_URL}?domain=${encodeURIComponent(domain)}`,
-              { method: "GET", headers: apolloHeaders(apiKey) },
-            );
+            const orgRes = await fetch(`${APOLLO_ORG_URL}?domain=${encodeURIComponent(domain)}`, {
+              method: "GET",
+              headers: apolloHeaders(apiKey),
+            });
             if (orgRes.ok) {
               const orgRaw = await orgRes.json();
               const parsed = apolloOrganizationResponse.safeParse(orgRaw);
@@ -235,7 +243,8 @@ export async function POST(req: Request): Promise<Response> {
           : null;
 
       const emailStatus: EmailStatus =
-        contact.emailStatus && Object.values(EmailStatus).includes(contact.emailStatus as EmailStatus)
+        contact.emailStatus &&
+        Object.values(EmailStatus).includes(contact.emailStatus as EmailStatus)
           ? (contact.emailStatus as EmailStatus)
           : EmailStatus.unknown;
 
@@ -270,7 +279,10 @@ export async function POST(req: Request): Promise<Response> {
       imported++;
     } catch (err) {
       // Log but don't abort — partial import is better than none.
-      console.error("[discover] Failed to upsert contact:", err instanceof Error ? err.message : err);
+      console.error(
+        "[discover] Failed to upsert contact:",
+        err instanceof Error ? err.message : err,
+      );
       errors++;
     }
   }
@@ -289,7 +301,9 @@ export async function POST(req: Request): Promise<Response> {
         skipDuplicates: true,
       });
       segmentId = seg.id;
-    } catch { /* non-fatal */ }
+    } catch {
+      /* non-fatal */
+    }
   }
 
   return Response.json({ imported, skipped, errors, total: people.length, segmentId });

@@ -1,6 +1,6 @@
 # AGENTS.md: `@oie/db`
 
-Operating guide for an AI agent changing the data layer of Huscribe Revenue OS. Read this fully before editing. It overrides generic Prisma habits.
+Operating guide for an AI agent changing the data layer of Outbound Intelligence Engine. Read this fully before editing. It overrides generic Prisma habits.
 
 ## Purpose
 
@@ -10,16 +10,16 @@ System fit: bought rails (enrichment, signals, senders, the NOVA voice agent) wr
 
 ## Key files and where things live
 
-| Path | What it is |
-| --- | --- |
-| `prisma/schema.prisma` | The unified model. Single source of truth for entities, enums, indexes, relations. |
-| `prisma/migrations/` | Forward-only SQL migrations. Generated, never hand-edited. `migration_lock.toml` pins provider = postgresql. |
-| `src/client.ts` | The singleton `prisma` instance (hot-reload safe). |
-| `src/index.ts` | The public surface. Re-exports `prisma`, `seedIcp`, and everything from `@prisma/client`. |
-| `src/seed.ts` | The idempotent seed runner (validates, upserts, audits, enforces single-active-profile). |
-| `src/seed-data.ts` | `seedIcp`: the committed seed ICP object (brief §13.2). |
-| `src/seed-data.test.ts` | Vitest checks that `seedIcp` parses against the canonical `@oie/core` ICP schema. |
-| `package.json` | Scripts. `exports["."] = "./src/index.ts"` (consumed as TS source, no JS emit). |
+| Path                    | What it is                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `prisma/schema.prisma`  | The unified model. Single source of truth for entities, enums, indexes, relations.                           |
+| `prisma/migrations/`    | Forward-only SQL migrations. Generated, never hand-edited. `migration_lock.toml` pins provider = postgresql. |
+| `src/client.ts`         | The singleton `prisma` instance (hot-reload safe).                                                           |
+| `src/index.ts`          | The public surface. Re-exports `prisma`, `seedIcp`, and everything from `@prisma/client`.                    |
+| `src/seed.ts`           | The idempotent seed runner (validates, upserts, audits, enforces single-active-profile).                     |
+| `src/seed-data.ts`      | `seedIcp`: the committed seed ICP object (brief §13.2).                                                      |
+| `src/seed-data.test.ts` | Vitest checks that `seedIcp` parses against the canonical `@oie/core` ICP schema.                            |
+| `package.json`          | Scripts. `exports["."] = "./src/index.ts"` (consumed as TS source, no JS emit).                              |
 
 ## Public contracts and exports
 
@@ -36,6 +36,7 @@ The schema is a contract too. Renaming or dropping a field, enum value, or model
 `IcpProfile`, `Company`, `Contact`, `Signal`, `Score`, `Sequence`, `Enrolment`, `Message`, `Mailbox`, `ChannelAccount`, `Suppression`, `AuditLog`, `ProviderCost`, `CallSession`, `CallFinding`.
 
 Identity and dedupe (enforced by `@unique`):
+
 - `Company`: dedupe on `domain` (unique) plus `placeId` (unique).
 - `Contact`: dedupe on `email` (unique) and `linkedinUrl` (unique).
 - `Score`: one per `(contactId, icpProfileId)`.
@@ -49,6 +50,7 @@ Provenance: per-row `sources` JSON records which provider supplied which field. 
 ## Invariants: YOU MUST / NEVER
 
 YOU MUST:
+
 - Change the schema by editing `prisma/schema.prisma` and then generating a migration. The schema is the source of truth.
 - Keep migrations forward-only. Recover a bad migration from a Neon backup or branch, never by rewriting history.
 - Keep the seed idempotent: validate against the `@oie/core` Zod schema before any write, and upsert on the unique key. Re-running `db:seed` must leave exactly one row, not duplicates.
@@ -59,6 +61,7 @@ YOU MUST:
 - Keep `DATABASE_URL` the only datasource input, supplied via env. Migration and seed scripts load it with `dotenv -e ../../.env`.
 
 NEVER:
+
 - Compute or store a score derived by an LLM. `Score.fit`, `Score.intent`, `Score.composite`, `Score.tier` come from the deterministic engine in `packages/core`.
 - Instantiate a second `PrismaClient`. Always import `{ prisma } from "@oie/db"`.
 - Hand-edit a file under `prisma/migrations/` or change applied SQL.
@@ -69,6 +72,7 @@ NEVER:
 ## How to make a change safely
 
 Schema change (add a field, model, enum value, or index):
+
 1. Grep consumers first: `grep -rln "@oie/db" --include="*.ts" packages apps | grep -v node_modules`. Read the call sites for any model you are changing.
 2. Edit `prisma/schema.prisma`. Keep new send/dial fields gated-safe (defaults that do not enable a channel or bypass approval).
 3. Ensure Postgres is up locally: `pnpm infra:up`.
@@ -79,22 +83,26 @@ Schema change (add a field, model, enum value, or index):
 8. Production applies migrations with `prisma migrate deploy` (script `migrate:deploy`) at release. Never `migrate dev` against production.
 
 Seed change:
+
 1. Edit `src/seed-data.ts` only for the data; the runner logic in `src/seed.ts` rarely changes.
 2. Keep `seedIcp` valid against `@oie/core`'s `icpProfile` schema. The composite blend must sum to 1; component weights are independent.
 3. Run `pnpm --filter @oie/db test` (parses the seed) then `pnpm db:seed` (idempotent upsert).
 
 Client change:
+
 - `src/client.ts` is intentionally minimal. Only touch it for connection-pool or logging concerns. Keep the global-singleton guard so dev hot reload does not exhaust Postgres connections.
 
 ## Do / Don't
 
 Do:
+
 - Add `@@index` for any new query path the orchestration or web layers will use.
 - Use `cuid()` ids and `@default(now())` / `@updatedAt` timestamps, matching existing models.
 - Store validated structured config as `Json` (e.g. `IcpProfile.config`, `Sequence.steps`) and validate it with a `@oie/core` Zod schema before writing.
 - Use `onDelete: SetNull` for optional ownership (e.g. `Contact.company`, `CallSession.contact`) and `onDelete: Cascade` for owned children (e.g. `Signal`, `Score`, `CallFinding`).
 
 Don't:
+
 - Let a vendor field name into the schema. Map it to a normalised column in the adapter and record provenance in `sources`.
 - Add a column that defaults a channel to enabled or a call to live (non-demo).
 - Bypass the seed validation to "just write the row".
@@ -103,17 +111,19 @@ Don't:
 ## Worked examples
 
 Example 1, add a `region` filter index for fast lead ranking by area:
+
 1. `grep -rln "@oie/db" --include="*.ts" packages apps | grep -v node_modules` to find readers of `Company`.
 2. In `prisma/schema.prisma`, `Company` already has `@@index([country, region])`. If you need region alone, add `@@index([region])`.
 3. `pnpm infra:up` then `pnpm db:migrate` and name it `company_region_index`.
 4. `pnpm --filter @oie/db typecheck && pnpm verify`.
 
 Example 2, record a NOVA call outcome (consumer-side pattern, the moat "verify-by-conversation"):
+
 ```ts
 import { prisma } from "@oie/db";
 
 await prisma.callSession.upsert({
-  where: { novaCallId },                 // idempotency anchor
+  where: { novaCallId }, // idempotency anchor
   create: { novaCallId, contactId, companyId, demoMode: true, consent: true, status: "completed" },
   update: { status: "completed", outcome, summary, transcript, raw },
 });
@@ -121,6 +131,7 @@ await prisma.callFinding.create({
   data: { callSessionId, key: "identity_confirmed", value: "true", source: "nova" }, // canonical key, consented only
 });
 ```
+
 Then mirror enrichment to `Company` / `Contact` only for facts the call actually confirmed; leave the rest null.
 
 ## Gotchas

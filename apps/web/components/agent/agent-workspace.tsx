@@ -83,12 +83,20 @@ function getArgSummary(toolName: string, args: Record<string, unknown>): string 
       industries?: string[];
       locations?: string[];
     };
-    return [titles?.slice(0, 2).join(", "), industries?.slice(0, 1).join(""), locations?.slice(0, 2).join(", ")]
+    return [
+      titles?.slice(0, 2).join(", "),
+      industries?.slice(0, 1).join(""),
+      locations?.slice(0, 2).join(", "),
+    ]
       .filter(Boolean)
       .join(" · ");
   }
   if (toolName === "findEventCompanies") {
-    const { query, timeframe, location } = args as { query?: string; timeframe?: string; location?: string };
+    const { query, timeframe, location } = args as {
+      query?: string;
+      timeframe?: string;
+      location?: string;
+    };
     return [query, timeframe, location].filter(Boolean).join(" · ");
   }
   if (toolName === "searchWeb") {
@@ -116,7 +124,9 @@ function getResultSummary(toolName: string, result: unknown): ResultSummary | nu
 
   if ("total" in r && "byTier" in r) {
     const bt = r.byTier as Record<string, number>;
-    const parts = Object.entries(bt).map(([k, v]) => `Tier ${k}: ${v}`).join(", ");
+    const parts = Object.entries(bt)
+      .map(([k, v]) => `Tier ${k}: ${v}`)
+      .join(", ");
     return { type: "success", text: `${r.total as number} total leads. ${parts}`, nav: "/leads" };
   }
 
@@ -151,7 +161,11 @@ function ElapsedTimer() {
 // ── ToolCallCard ──────────────────────────────────────────────────────────────
 
 function ToolCallCard({ call, onNav }: { call: ToolCall; onNav: (path: string) => void }) {
-  const meta = TOOL_META[call.toolName] ?? { label: call.toolName, Icon: Zap, color: "text-ink-400" };
+  const meta = TOOL_META[call.toolName] ?? {
+    label: call.toolName,
+    Icon: Zap,
+    color: "text-ink-400",
+  };
   const argSummary = getArgSummary(call.toolName, call.args);
   const resultSummary = call.result ? getResultSummary(call.toolName, call.result) : null;
 
@@ -177,7 +191,9 @@ function ToolCallCard({ call, onNav }: { call: ToolCall; onNav: (path: string) =
             resultSummary.type === "error" ? "bg-red-500/5" : "bg-emerald-500/5"
           }`}
         >
-          <p className={`text-xs ${resultSummary.type === "error" ? "text-red-300" : "text-emerald-300"}`}>
+          <p
+            className={`text-xs ${resultSummary.type === "error" ? "text-red-300" : "text-emerald-300"}`}
+          >
             {resultSummary.text}
           </p>
           {resultSummary.nav && (
@@ -244,12 +260,18 @@ function SessionSidebar({
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-medium leading-tight">{s.title}</p>
               <p className="mt-0.5 text-[10px] text-ink-600">
-                {new Date(s.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                {new Date(s.updatedAt).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                })}
               </p>
             </div>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(s.id);
+              }}
               title="Delete"
               className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
             >
@@ -280,10 +302,13 @@ export function AgentWorkspace() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   }, []);
 
-  const handleNav = useCallback((path: string) => {
-    router.refresh();
-    router.push(path);
-  }, [router]);
+  const handleNav = useCallback(
+    (path: string) => {
+      router.refresh();
+      router.push(path);
+    },
+    [router],
+  );
 
   // Load session list on mount
   useEffect(() => {
@@ -305,7 +330,7 @@ export function AgentWorkspace() {
       });
       const data = (await res.json()) as { id: string };
       // Refresh sidebar
-      const list = await fetch("/api/agent/sessions").then((r) => r.json()) as ChatSessionMeta[];
+      const list = (await fetch("/api/agent/sessions").then((r) => r.json())) as ChatSessionMeta[];
       setSessions(list);
       return data.id;
     } catch {
@@ -335,11 +360,14 @@ export function AgentWorkspace() {
     setInput("");
   }, []);
 
-  const deleteSession = useCallback(async (id: string) => {
-    await fetch(`/api/agent/sessions/${id}`, { method: "DELETE" });
-    setSessions((prev) => prev.filter((s) => s.id !== id));
-    if (sessionId === id) startNewChat();
-  }, [sessionId, startNewChat]);
+  const deleteSession = useCallback(
+    async (id: string) => {
+      await fetch(`/api/agent/sessions/${id}`, { method: "DELETE" });
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      if (sessionId === id) startNewChat();
+    },
+    [sessionId, startNewChat],
+  );
 
   const send = useCallback(
     async (text: string) => {
@@ -373,9 +401,7 @@ export function AgentWorkspace() {
 
       try {
         const history = messages.flatMap<{ role: "user" | "assistant"; content: string }>((m) =>
-          m.role === "user" || m.text
-            ? [{ role: m.role, content: m.text || "(tool calls)" }]
-            : [],
+          m.role === "user" || m.text ? [{ role: m.role, content: m.text || "(tool calls)" }] : [],
         );
         history.push({ role: "user", content: trimmed });
 
@@ -415,7 +441,12 @@ export function AgentWorkspace() {
                   ...m,
                   toolCalls: [
                     ...m.toolCalls,
-                    { id: event.toolCallId, toolName: event.toolName, args: event.args, state: "running" },
+                    {
+                      id: event.toolCallId,
+                      toolName: event.toolName,
+                      args: event.args,
+                      state: "running",
+                    },
                   ],
                 };
               }
@@ -497,7 +528,7 @@ export function AgentWorkspace() {
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gold-500/10 ring-1 ring-inset ring-gold-500/20">
                   <Sparkles size={24} className="text-gold-400" aria-hidden="true" />
                 </div>
-                <h2 className="font-display text-xl font-bold text-ink-50">GenRiver Agent</h2>
+                <h2 className="font-display text-xl font-bold text-ink-50">OIE Agent</h2>
                 <p className="mt-2 text-sm text-ink-400">
                   Describe what you want in plain English. The agent searches, enriches, and imports
                   leads directly into the platform — no manual setup needed.
@@ -525,7 +556,10 @@ export function AgentWorkspace() {
           )}
 
           {messages.map((m) => (
-            <div key={m.id} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={m.id}
+              className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+            >
               {m.role === "assistant" && (
                 <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold-500/10 ring-1 ring-inset ring-gold-500/20">
                   <Bot size={14} className="text-gold-400" aria-hidden="true" />
@@ -607,13 +641,17 @@ export function AgentWorkspace() {
           </form>
           <div className="mt-2 flex items-center justify-between gap-4">
             <p className="text-[11px] text-ink-600">
-              <kbd className="font-mono">Cmd/Ctrl + Enter</kbd> to send. DRY_RUN active — no messages sent.
+              <kbd className="font-mono">Cmd/Ctrl + Enter</kbd> to send. DRY_RUN active — no
+              messages sent.
             </p>
             <p className="shrink-0 text-[11px] text-ink-600">
               <span className="text-ink-500">claude-opus-4-8</span>
               <span className="mx-1.5 text-ink-700">·</span>
               {sessionCost > 0 ? (
-                <span className="text-ink-400">session: <span className="text-gold-400 font-mono">${sessionCost.toFixed(4)}</span></span>
+                <span className="text-ink-400">
+                  session:{" "}
+                  <span className="text-gold-400 font-mono">${sessionCost.toFixed(4)}</span>
+                </span>
               ) : (
                 <span>~$0.02–0.08 / message</span>
               )}

@@ -42,4 +42,4 @@ Sequencing and send tests prove a multi-step cadence runs in dry-run, respects i
 
 ## How it fits
 
-OIE (Outbound Intelligence Engine) is the data layer of Huscribe Revenue OS, the control plane for Huscribe.com (Voice-AI inbound lead-qualification for UAE/MENA real estate; HumAI, Dubai). This package is the conductor inside OIE: it calls the `@oie/integrations` adapters in priority order, scores via the deterministic engine in `@oie/core` (the LLM never scores), persists through `@oie/db`, and exposes durable functions that Inngest runs in production. The send gate is wired first on every send path; never weaken it. See [AGENTS.md](./AGENTS.md) for the full operating contract.
+This package is OIE's conductor: it calls `@oie/integrations` adapters in priority order, maps validated facts into the deterministic engine in `@oie/core`, persists through `@oie/db`, and exposes durable Inngest functions. The send gate is wired first on every send path; never weaken it. See [AGENTS.md](./AGENTS.md) for the full operating contract.

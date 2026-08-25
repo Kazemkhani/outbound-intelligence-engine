@@ -20,16 +20,16 @@ There is no `dist/`. Internal packages are consumed as TypeScript source; `tsx` 
 
 ## Public contracts / exports (do not break signatures without updating all callers)
 
-| Export | Shape | Notes |
-| --- | --- | --- |
-| `loadEnv(source?)` | `(Record<string,string\|undefined>) => Env` | Defaults to `process.env`. Pure, no side effects. Throws `EnvValidationError` on failure. |
-| `getEnv()` | `() => Env` | Memoised wrapper over `loadEnv()`. Throws on first use if invalid. |
-| `resetEnvCache()` | `() => void` | Clears the memo. Tests only. |
-| `providerKeyStatus(env)` | `(Env) => { present: ProviderKey[]; missing: ProviderKey[] }` | Never throws, never logs or returns values. |
-| `EnvValidationError` | `Error & { problems: string[] }` | One entry per failed field, formatted `path: message`. |
-| `envSchema` | `ZodObject` | Source of `Env`. |
-| `PROVIDER_KEYS` | `readonly ProviderKey[]` | Optional credential keys that gate live adapter verification. |
-| `Env`, `ProviderKey` | types | `Env = z.infer<typeof envSchema>`. |
+| Export                   | Shape                                                         | Notes                                                                                     |
+| ------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `loadEnv(source?)`       | `(Record<string,string\|undefined>) => Env`                   | Defaults to `process.env`. Pure, no side effects. Throws `EnvValidationError` on failure. |
+| `getEnv()`               | `() => Env`                                                   | Memoised wrapper over `loadEnv()`. Throws on first use if invalid.                        |
+| `resetEnvCache()`        | `() => void`                                                  | Clears the memo. Tests only.                                                              |
+| `providerKeyStatus(env)` | `(Env) => { present: ProviderKey[]; missing: ProviderKey[] }` | Never throws, never logs or returns values.                                               |
+| `EnvValidationError`     | `Error & { problems: string[] }`                              | One entry per failed field, formatted `path: message`.                                    |
+| `envSchema`              | `ZodObject`                                                   | Source of `Env`.                                                                          |
+| `PROVIDER_KEYS`          | `readonly ProviderKey[]`                                      | Optional credential keys that gate live adapter verification.                             |
+| `Env`, `ProviderKey`     | types                                                         | `Env = z.infer<typeof envSchema>`.                                                        |
 
 ### The contract today (verify against `src/schema.ts`, this is a summary)
 
@@ -45,6 +45,7 @@ There is no `dist/`. Internal packages are consumed as TypeScript source; `tsx` 
 ## Invariants
 
 YOU MUST:
+
 - Keep `loadEnv` pure and side-effect free (no logging, no network, no mutation of `source`). It is unit-tested as a pure function.
 - Keep `DRY_RUN`'s default `true`. This is a program-wide safety invariant (nothing sends or dials without an explicit human gate). Never change the default to `false` and never remove `DRY_RUN`.
 - Keep the safety keys (`DATABASE_URL`, `AUTH_SECRET`) required so misconfiguration fails fast at boot rather than mid-run.
@@ -53,7 +54,8 @@ YOU MUST:
 - When you add a new credential to the schema, also add it to `PROVIDER_KEYS` (the `satisfies readonly (keyof Env)[]` guard will fail to compile otherwise if the name is wrong) AND add it to the repo-root `.env.example` (do not put a real value).
 
 NEVER:
-- Read or hardcode secret values here, print them, or commit them. This package handles secret *names* and *presence*, not contents.
+
+- Read or hardcode secret values here, print them, or commit them. This package handles secret _names_ and _presence_, not contents.
 - Add side effects to module top level (no `loadEnv()` at import time). Callers decide when to validate.
 - Make a provider key required. Provider keys are optional by design so adapters build and fixture-test before credentials arrive (Human Gate 1).
 - Introduce a dependency other than `zod`. This package must stay at the base of the graph.
@@ -77,11 +79,13 @@ NEVER:
 ## Do / Don't
 
 Do:
+
 - Use `numFromEnv` / `boolFromEnv` for new numeric/boolean keys so string env values coerce consistently.
 - Use `optionalSecret` (which is `z.string().optional().default("")`) for new credential keys.
 - Keep messages in required-field validators human-readable (they surface verbatim in `EnvValidationError`).
 
 Don't:
+
 - Don't have other packages read `process.env` for keys that belong in this contract; route them through `@oie/config`.
 - Don't reorder or rename existing keys casually; `.env.example`, Fly secrets, and scripts depend on the exact names.
 - Don't memoise inside `loadEnv`; memoisation lives only in `getEnv` and is reset by `resetEnvCache`.
@@ -91,6 +95,7 @@ Don't:
 ### 1) Add a new optional provider key (e.g. a new enrichment vendor `ACME_API_KEY`)
 
 In `src/schema.ts`, add the field under the enrichment block and to the tuple:
+
 ```ts
 // in envSchema, enrichment section:
 ACME_API_KEY: optionalSecret,
@@ -98,6 +103,7 @@ ACME_API_KEY: optionalSecret,
 // in PROVIDER_KEYS:
 "ACME_API_KEY",
 ```
+
 Then add `ACME_API_KEY=` to the repo-root `.env.example`, and a `providerKeyStatus` assertion to `src/index.test.ts`. Run the test + typecheck filters. No required-key test is needed because it is optional.
 
 ### 2) Add a new required safety key (e.g. `REDIS_URL` that the system cannot boot without)
@@ -106,11 +112,12 @@ Then add `ACME_API_KEY=` to the repo-root `.env.example`, and a `providerKeyStat
 // in envSchema, core/safety section:
 REDIS_URL: z.string().url("REDIS_URL must be a valid connection URL"),
 ```
+
 This is NOT a provider key, so do not add it to `PROVIDER_KEYS`. Add a placeholder to `.env.example`, add a failing-validation test (an invalid `REDIS_URL` must throw `EnvValidationError` and appear in `problems`), and confirm the existing `validBase` test fixture in `index.test.ts` still passes (you will need to add `REDIS_URL` to `validBase`, or every test breaks).
 
 ## Gotchas
 
-- **Not every env var the app uses is in this schema.** Several vars in `.env.example` are read directly via `process.env`, bypassing `@oie/config`: `AUTH_OPERATOR_EMAIL`, `AUTH_OPERATOR_PASSWORD_HASH`, `ALLOW_DEV_LOGIN` (in `apps/web/auth.ts`); `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY` (orchestration runtime); `NOVA_API_BASE`, `NOVA_API_KEY`, `NOVA_OWNER_EMAIL` (`scripts/nova-call.ts`); `NEXT_PUBLIC_SENTRY_DSN`. If you are asked to "validate all env" or "add X to the schema," check whether the key is currently read elsewhere and whether centralizing it would change behavior (e.g. Next.js `NEXT_PUBLIC_*` inlining). Do not assume the schema is exhaustive.
+- **Not every env var the app uses is in this schema.** Several vars in `.env.example` are read directly via `process.env`, including auth, Inngest, and public Sentry configuration. If asked to validate all environment input, first check whether centralising a key would change framework behaviour such as Next.js public-variable inlining.
 - **No declared workspace consumers yet.** No other package lists `@oie/config` in `dependencies`. The live consumer, `scripts/gate1-credentials.ts`, imports by relative source path (`../packages/config/src/index`), not the `@oie/config` alias. If you add an import in another package, add `"@oie/config": "workspace:*"` to that package's `package.json`.
 - **`noUncheckedIndexedAccess` is on** (repo tsconfig). Indexing `env[key]` yields `T | undefined`; `providerKeyStatus` already guards with `env[key] && String(env[key]).trim().length > 0`. Keep that pattern.
 - **`verbatimModuleSyntax` is on.** Use `import type { ... }` for type-only imports (see `index.ts`).

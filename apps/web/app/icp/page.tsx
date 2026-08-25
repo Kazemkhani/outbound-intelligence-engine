@@ -5,7 +5,7 @@ import { loadConfig } from "@/app/setup/actions";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "ICP Editor · GenRiver Revenue OS",
+  title: "ICP Editor · OIE Control Plane",
 };
 
 export default async function IcpPage() {

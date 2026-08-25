@@ -741,7 +741,7 @@ Their tech stack includes Salesforce and HubSpot.`,
   {
     id: "ec-06-provenance-for-non-null-fields",
     description: "Every non-null field must have a provenance entry",
-    sourceText: `Nova Labs (novalabs.ae) is a Dubai-based AI startup with 30 employees.`,
+    sourceText: `Example Labs (example.com) is a Dubai-based software company with 30 employees.`,
     assertions: [
       {
         name: "provenance.domain is populated",

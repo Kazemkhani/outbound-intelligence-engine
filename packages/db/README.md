@@ -1,6 +1,6 @@
 # @oie/db
 
-The unified data model for Huscribe Revenue OS: the Prisma schema, the shared client, migrations, and the seed. One normalised source of truth across every provider.
+The unified data model for Outbound Intelligence Engine: the Prisma schema, the shared client, migrations, and the seed. One normalised source of truth across every provider.
 
 > Working in this package with an AI agent? Read [AGENTS.md](./AGENTS.md) first. It has the invariants, the safe-change steps, and the known gotchas (including current migration drift).
 
@@ -19,11 +19,11 @@ Dedupe rules: `Company` on `domain` (+ `placeId`); `Contact` on `email` / `linke
 
 ## Exports
 
-| Export | Purpose |
-| --- | --- |
-| `prisma` | the shared Prisma client (import this, never `new PrismaClient()`) |
-| `seedIcp` | the committed seed ICP data object |
-| `* from "@prisma/client"` | generated model types and enums |
+| Export                    | Purpose                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `prisma`                  | the shared Prisma client (import this, never `new PrismaClient()`) |
+| `seedIcp`                 | the committed seed ICP data object                                 |
+| `* from "@prisma/client"` | generated model types and enums                                    |
 
 ## Install and use
 

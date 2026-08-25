@@ -1,4 +1,4 @@
 # Code owners for OIE.
-# Every change requires review by the owner. OIE is a private commercial product.
+# The maintainer reviews changes to safety-critical boundaries.
 
 * @Kazemkhani

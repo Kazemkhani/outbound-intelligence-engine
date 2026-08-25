@@ -12,7 +12,7 @@ import {
 } from "@oie/core";
 
 /**
- * Read-only MCP tools for the Huscribe Revenue OS engine.
+ * Read-only MCP tools for Outbound Intelligence Engine.
  *
  * These expose the engine's DETERMINISTIC scoring (the crown jewel) to operator
  * and Claude agents over MCP, without re-implementing scoring in the agent and
@@ -118,13 +118,16 @@ const textResult = (data: unknown) => ({
  * the scoring "now" is deterministic in tests; defaults to wall-clock at call
  * time in production (the request boundary supplies `now`, not the engine).
  */
-export function registerReadOnlyTools(server: McpServer, clock: () => Date = () => new Date()): void {
+export function registerReadOnlyTools(
+  server: McpServer,
+  clock: () => Date = () => new Date(),
+): void {
   server.registerTool(
     "score_prospect",
     {
       title: "Score a prospect (deterministic)",
       description:
-        "Compute the Huscribe deterministic fit/intent/composite score and tier for a prospect " +
+        "Compute a deterministic fit/intent/composite score and tier for a prospect " +
         "(company + contact + signals) against an ICP profile. Returns the same number the product " +
         "computes, with a full rationale. The LLM never computes this score; code does.",
       inputSchema: scoreProspectInput,

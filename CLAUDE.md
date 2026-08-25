@@ -1,60 +1,34 @@
-# OIE — Project memory
+# OIE project memory
 
-> Outbound Intelligence Engine. Read PROJECT_BRIEF.md for the full decisions-locked program; this file is the lean operating memory that loads every session. Keep it short — only what cannot be inferred from code.
+Outbound Intelligence Engine is a TypeScript monorepo for explainable lead intelligence and human-approved outbound workflows.
 
 ## Commands
 
-- Install: `pnpm install`
-- Verify (run before claiming done): `pnpm verify` # typecheck + lint + test + build
-- Typecheck / lint / test / build individually: `pnpm typecheck` | `pnpm lint` | `pnpm test` | `pnpm build`
-- Infra (Postgres on Colima/Docker): `pnpm infra:up` | `pnpm infra:down`
-- DB: `pnpm db:migrate` | `pnpm db:seed` | `pnpm db:studio` | `pnpm db:generate`
-- Single test: `pnpm --filter @oie/core test <path>`
+- Install: `pnpm install --frozen-lockfile`
+- Verify: `pnpm verify`
+- Format check: `pnpm format:check`
+- Local database: `pnpm infra:up`, `pnpm db:migrate`, `pnpm db:seed`
+- Web app: `pnpm --filter web dev`
 
-## Architecture (where things live)
+## Architecture
 
-- Domain types, Zod schemas, scoring engine: `packages/core` — scores computed HERE, never by the LLM.
-- Unified data model / Prisma schema / migrations / seed: `packages/db`.
-- Vendor adapters (anti-corruption): `packages/integrations/<vendor>` — vendor shapes NEVER leak into core; the waterfall/fallback logic lives in OUR core, not the vendor.
-- Stable internal interfaces every adapter implements: `packages/integrations/src/contracts` (EnrichmentProvider, SignalProvider, EmailSender, MessagingChannel, CrmStore).
-- Orchestration brain + waterfall + send gate: `packages/orchestration` — DRY_RUN defaults true; approval queue mandatory.
-- Env loading + validation (fail fast on missing keys): `packages/config`.
+- `packages/core`: pure domain schemas and deterministic scoring. An LLM never computes a score.
+- `packages/config`: environment validation.
+- `packages/db`: Prisma schema, migrations, seed, and shared client.
+- `packages/integrations`: provider adapters behind stable internal contracts.
+- `packages/orchestration`: waterfall, signal fan-in, send gate, sequencing, and durable workflows.
+- `packages/mcp`: read-only scoring tools; never part of the send path.
+- `apps/web`: operator-facing evidence and approval control plane.
 
-## Autonomy & integration rules (YOU MUST)
+## Hard rules
 
-- Auto mode builds + verifies. NEVER auto-approve a send, auto-disable DRY_RUN, or enter secrets. Live send = human gate.
-- MCP = agent/runtime + build-time. REST/webhooks = the production pipeline. Never put the send-path behind MCP.
-- Every external service sits behind an adapter; we own the cascade, the cost ceiling, and the swap.
-- Verify every provider's CURRENT API/limits/auth against official docs before integrating; do not assume from memory.
+- A real action requires dry-run to be deliberately disabled and that exact action to be approved by a human.
+- LinkedIn and WhatsApp are off by default and require explicit channel enablement.
+- Missing values stay unknown. Do not invent facts, scores, proof, or customer data.
+- Validate external and model-shaped input at the boundary with Zod.
+- Keep vendor payloads inside their adapters and scoring free from I/O, environment, randomness, and wall-clock reads.
+- Read secrets only from the environment; never commit or log values.
+- Use synthetic fixtures and keep tests offline.
+- Run `pnpm verify`, `pnpm format:check`, and `git diff --check` before claiming completion.
 
-## Hard rules (YOU MUST)
-
-- Plan with deep thinking before multi-file changes. Verify before claiming done; show evidence.
-- TS strict; no `any` without a one-line reason. Validate all external/LLM input with Zod at the boundary.
-- Secrets only via env; never commit secrets; update `.env.example` when adding a key.
-- Nothing sends on ANY channel without explicit human approval AND a passing dry-run.
-- LinkedIn & WhatsApp OFF by default, behind the approval queue, within conservative limits (LinkedIn well within ~100 connects/week).
-- Prefer the simplest approach. No speculative abstraction. Delete dead code.
-
-## Model tiering (addendum §7, June 2026 IDs)
-
-- `claude-opus-4-8` — hard judgement, planning, verifier + security review.
-- `claude-sonnet-4-6` — personalisation, scoring rationale.
-- `claude-haiku-4-5` — high-volume parsing/classification.
-
-## Environment
-
-- Node 22+, pnpm 10. Internal packages are consumed as TS source (no JS emit) — `tsx`/Vitest transpile.
-- Postgres runs locally via Colima + Docker (`pnpm infra:up`). Free disk is tight (~17 GB) — keep deps lean; `apps/web` (Next.js) is deferred to Phase 6.
-
-## Docs (read when continuing or onboarding)
-
-- `docs/HANDOFF.md` — complete build history + current state + how to continue (read this first on a fresh session).
-- `docs/PRODUCTION-CHECKLIST.md` — the sequenced path to live (owners + status).
-- `docs/ARCHITECTURE.md` + `docs/adr/` — system design + locked decisions. `RUNBOOK.md` — operations.
-
-## Gotchas
-
-- `apps/web` typecheck excludes `.next` (Next rewrites the tsconfig include on build).
-- The guard hook is content-based: it refuses text containing the literal disable-flag token, even in docs. Reword, never bypass.
-- `@oie/db` has a `postinstall` that runs `prisma generate`, so a fresh clone/Codespace/Vercel build has the client.
+Read the nearest `AGENTS.md` before changing a package. Architecture and safety decisions live in `docs/ARCHITECTURE.md` and `docs/adr/`.

@@ -1,14 +1,14 @@
 "use server";
 
 /**
- * Close Room server actions: the APEX closing tools, folded into the OIE
+ * Close Room server actions: the OIE closing tools, folded into the OIE
  * control plane.
  *
  * Each action returns { ok, title, body, error? } where body is markdown the
  * client renders in a styled prose block. Every LLM call is grounded in the
- * distilled APEX sales canon (lib/canon) and routed through lib/llm.ask().
+ * distilled product-neutral sales canon (lib/canon) and routed through lib/llm.ask().
  *
- * Faithful ports of the APEX prompts:
+ * Faithful ports of the OIE prompts:
  *   - generatePrep      <- prompts/prep.md          (battlecard, SPIN + Challenger)
  *   - generateOutreach  <- prompts/outreach.md      (implication-first outbound pack)
  *   - coachTranscript   <- prompts/coach.md         (scorecard + next action, deep)
@@ -103,12 +103,12 @@ function leadBrief(lead: ScoredLead): string {
 
 const PREP_SYSTEM = (canon: string): string =>
   [
-    "You are an elite B2B sales strategist preparing the operator to sell Huscribe to a specific prospect.",
+    "You are an elite B2B sales strategist preparing the operator to sell the configured product to a specific prospect.",
     "You think in SPIN, Challenger, and Gap Selling. You never invent facts about the prospect: if context is thin, state your assumptions explicitly.",
-    "Ground every GenRiver claim in the canon below; never fabricate features or pricing. Where a GenRiver metric is unknown, write the literal token <CONFIRM> rather than guessing.",
+    "Ground every product claim in the canon below; never fabricate features or pricing. Where a product metric is unknown, write the literal token <CONFIRM> rather than guessing.",
     "",
     "Given the prospect details, output exactly these sections in markdown, each under a ## heading:",
-    "1. Value hypothesis: the gap you believe exists for this company and how Huscribe closes it, in their likely numbers (state assumptions).",
+    "1. Value hypothesis: the gap you believe exists for this company and how the configured product closes it, in their likely numbers (state assumptions).",
     "2. Teaching insight: one Challenger-style insight that reframes how they think about their lead and sales process.",
     "3. Discovery set: 6 to 8 questions sequenced SPIN-style (label each S, P, I, or N), tailored to this company.",
     "4. Likely objections: the 5 most probable, each with the real concern beneath it, a calibrated-question opener, and a gap or value reframe.",
@@ -116,7 +116,7 @@ const PREP_SYSTEM = (canon: string): string =>
     "",
     "Be specific to this prospect. No filler. No preamble before the first heading.",
     "",
-    "SALES CANON (your only source of methodology and GenRiver facts):",
+    "SALES CANON (your only source of methodology and configured-product facts):",
     canon,
   ].join("\n");
 
@@ -135,7 +135,7 @@ export async function generatePrep(leadId: string): Promise<CloseResult> {
     const canon = grounding([
       "FRAMEWORKS",
       "OBJECTIONS",
-      "HUSCRIBE_FACTS",
+      "PRODUCT_FACTS",
       "DUBAI_PLAYBOOK",
       "DISCOVERY",
     ]);
@@ -165,7 +165,7 @@ export async function generatePrep(leadId: string): Promise<CloseResult> {
 
 const OUTREACH_SYSTEM = (canon: string): string =>
   [
-    "You are APEX's outbound copy operator. You draft the human layer of outbound copy on top of a buying signal OIE has already detected, for the operator to send while selling Huscribe.",
+    "You are the operator assistant's outbound copy operator. You draft the human layer of outbound copy on top of a buying signal OIE has already detected, for the operator to send while selling the configured product.",
     "You think in Fanatical Prospecting (Blount), Cold Calling 2.0 (Ross), the Challenger teaching insight, Hormozi's value equation, and Dubai/UAE go-to-market norms. You write copy a busy developer actually replies to: short, signal-specific, one ask, never a pitch dump.",
     "This market is phone-, WhatsApp-, and voice-note-first. Email and LinkedIn exist but are de-emphasised: lead your effort on phone and WhatsApp.",
     "",
@@ -178,7 +178,7 @@ const OUTREACH_SYSTEM = (canon: string): string =>
     "",
     "GENERATION GATE: apply the 1,000-others test and the so-what test. Score the WhatsApp 0-2 on Specificity, Implication/so-what, Relevance/why-now, Brevity+one-ask, Feels-understood-not-researched-at (max 10). Any opener scoring 0 on Specificity or Implication, or total under 7/10, MUST be regenerated before you output it. Put the final WhatsApp self-score in Notes.",
     "",
-    "Refuse to fabricate GenRiver specifics: use the token <CONFIRM> for any unknown GenRiver metric. Never write 'sounds completely human.' Prove by customer type and locality, never an invented name or stat.",
+    "Refuse to fabricate product specifics: use <CONFIRM> for any unknown product metric. Never write 'sounds completely human.' Cite only evidence supplied with permission.",
     "For the Arabic artifacts: natural Gulf register, the implication delivered as a respectful question, correct titles and courtesy; honour quiet hours, prayer times, and Ramadan; clumsy Arabic is worse than plain.",
     "Consent: phone is the lead motion; WhatsApp is earned after a reply or call; flag consent in Notes; no Friday, prayer, or Ramadan pressure.",
     "",
@@ -195,7 +195,7 @@ const OUTREACH_SYSTEM = (canon: string): string =>
     "## Email (de-emphasised): a short signal-specific lowercase-natural subject, then a 25 to 75 word body at a 3rd-to-5th-grade reading level with a single CTA and a soft opt-out.",
     "## Notes: the WhatsApp self-score; any <CONFIRM> items; the consent flag; Ramadan / quiet-hours caveats; and any thin-signal assumptions.",
     "",
-    "SALES CANON (your only source of methodology and GenRiver facts):",
+    "SALES CANON (your only source of methodology and configured-product facts):",
     canon,
   ].join("\n");
 
@@ -216,7 +216,7 @@ export async function generateOutreach(leadId: string): Promise<CloseResult> {
       "OBJECTIONS",
       "VOSS",
       "PERSONALIZATION",
-      "HUSCRIBE_FACTS",
+      "PRODUCT_FACTS",
       "DUBAI_PLAYBOOK",
     ]);
 
@@ -252,7 +252,7 @@ export async function generateOutreach(leadId: string): Promise<CloseResult> {
 
 const COACH_SYSTEM = (canon: string): string =>
   [
-    "You are the operator's personal call reviewer for Huscribe deals. Given a real call transcript or notes, return two things in order.",
+    "You are the operator's personal call reviewer for the configured product deals. Given a real call transcript or notes, return two things in order.",
     "",
     "First, a JSON scorecard inside a single ```json fenced block, with exactly these keys:",
     '{ "talk_listen_estimate": "e.g. 60/40", "pain_quantified": true/false, "discovery_depth": 1-5, "objection_handling": 1-5, "close_attempted": true/false, "strongest_moment": "...", "biggest_leak": "...", "three_fixes": ["...","...","..."], "verdict": "one line" }',
@@ -279,13 +279,7 @@ export async function coachTranscript(transcript: string): Promise<CloseResult> 
       };
     }
 
-    const canon = grounding([
-      "FRAMEWORKS",
-      "OBJECTIONS",
-      "VOSS",
-      "CLOSING",
-      "DISCOVERY",
-    ]);
+    const canon = grounding(["FRAMEWORKS", "OBJECTIONS", "VOSS", "CLOSING", "DISCOVERY"]);
 
     const body = await ask({
       system: COACH_SYSTEM(canon),
@@ -312,37 +306,35 @@ export async function coachTranscript(transcript: string): Promise<CloseResult> 
 // ── 4. ROI: deterministic math + Gap Selling narrative (port of roi_narrative.md) ─
 // The arithmetic lives in ./roi-math (pure + unit-tested); this section only frames it.
 
-const AED = (n: number): string =>
-  `AED ${n.toLocaleString("en-AE", { maximumFractionDigits: 0 })}`;
+const AED = (n: number): string => `AED ${n.toLocaleString("en-AE", { maximumFractionDigits: 0 })}`;
 
-const NUM = (n: number): string =>
-  n.toLocaleString("en-AE", { maximumFractionDigits: 1 });
+const NUM = (n: number): string => n.toLocaleString("en-AE", { maximumFractionDigits: 1 });
 
 const ROI_SYSTEM = (canon: string): string =>
   [
-    "You are APEX's ROI narrative builder. The operator has already computed a current-state to Huscribe-state gap on this prospect's own numbers; your job is to turn that arithmetic into a Gap Selling narrative the operator can say on a call and a credible one-pager they can leave behind.",
+    "You are the operator assistant's ROI narrative builder. The operator has already computed the current-state to configured-product gap from the prospect's own numbers; frame that arithmetic as a checkable Gap Selling narrative and one-page summary.",
     "You think in Gap Selling (Keenan), the 2-week pilot as JOLT risk-reversal, and SPIN Need-payoff. You frame numbers; you never invent them.",
     "",
-    "THE CARDINAL RULE: frame, never invent. Use ONLY the numbers supplied below or a transparent arithmetic combination of them. Show the arithmetic so the buyer can check it. If a number needed to complete a frame is missing, write the literal token <CONFIRM> in its place and name what the operator must capture; never guess. Never invent GenRiver proof points, prices, customer names, or competitor claims; reference proof by customer type and locality only. Never write 'sounds completely human.' Round honestly and label assumptions.",
+    "THE CARDINAL RULE: frame, never invent. Use ONLY the numbers supplied below or a transparent arithmetic combination of them. Show the arithmetic so the buyer can check it. If a number needed to complete a frame is missing, write the literal token <CONFIRM> in its place and name what the operator must capture; never guess. Never invent the configured product proof points, prices, customer names, or competitor claims; reference proof by customer type and locality only. Never write 'sounds completely human.' Round honestly and label assumptions.",
     "",
-    "Localise it: the developer pays full price for every portal lead and reaches only a fraction. The gap is wasted spend they have ALREADY made, not a new cost. Frame: 'Huscribe doesn't get you more leads; it makes the leads you already paid for actually pick up, the cheapest pipeline you'll ever buy.' Pitch the high-volume portal / off-plan funnel, not the VIP relationship pipeline, and say so, because naming that boundary builds trust.",
+    "Localise it: the developer pays full price for every portal lead and reaches only a fraction. The gap is wasted spend they have ALREADY made, not a new cost. Frame: 'the configured product doesn't get you more leads; it makes the leads you already paid for actually pick up, the cheapest pipeline you'll ever buy.' Pitch the high-volume portal / off-plan funnel, not the VIP relationship pipeline, and say so, because naming that boundary builds trust.",
     "",
     "Output markdown only, in exactly these two parts in this order, no preamble.",
     "",
     "## Part 1: The narrative (how to say it on the call)",
     "Under it, exactly these sub-sections as ### headings:",
     "### The gap, in one breath: 2 to 3 sentences the operator can say aloud, current state -> desired state -> the AED cost of the gap, in the buyer's numbers.",
-    "### The gap math (say it / write it live): a short fenced code block reproducing the arithmetic from current to Huscribe, ending in the AED delta. Use only the supplied numbers; mark any missing input <CONFIRM>. Make it checkable.",
+    "### The gap math (say it / write it live): a short fenced code block reproducing the arithmetic from current to the configured product, ending in the AED delta. Use only the supplied numbers; mark any missing input <CONFIRM>. Make it checkable.",
     "### Why this is spend you've already made: the local reframe (paid-for leads never reached = wasted spend; cheapest pipeline), 2 to 3 sentences.",
     "### The Need-payoff question: one calibrated question that makes the buyer state the value themselves. Do not answer it for them.",
     "### Bridge to the pilot: 1 to 2 sentences offering the 2-week pilot as the fair way to prove this on their leads (one recommended shape, not a menu; risk-reversal, not a discount).",
     "",
     "## Part 2: The one-pager (leave-behind)",
-    "A tight, credible one-page body titled for the prospect, including in order: a one-line framing of the situation tied to the gap; a clean Current state / With Huscribe / Delta comparison table built strictly from the supplied numbers (any blank cell = <CONFIRM>); the headline AED outcome annualised, showing the multiplication; a short 'What this is / isn't' line scoping it to the high-volume funnel, not the VIP pipeline; a single next step (the 2-week pilot with a pre-agreed success metric and a captured baseline) phrased as one recommendation; and a footer line: 'Figures based on numbers you provided on this call; <CONFIRM> items to be validated against your CRM.'",
+    "A tight, credible one-page body titled for the prospect, including in order: a one-line framing of the situation tied to the gap; a clean Current state / With the configured product / Delta comparison table built strictly from the supplied numbers (any blank cell = <CONFIRM>); the headline AED outcome annualised, showing the multiplication; a short 'What this is / isn't' line scoping it to the high-volume funnel, not the VIP pipeline; a single next step (the 2-week pilot with a pre-agreed success metric and a captured baseline) phrased as one recommendation; and a footer line: 'Figures based on numbers you provided on this call; <CONFIRM> items to be validated against your CRM.'",
     "",
     "Keep it to roughly one page. Specific to this prospect, no filler, no feature dump. Every number traceable to the input.",
     "",
-    "SALES CANON (your only source of methodology and GenRiver facts):",
+    "SALES CANON (your only source of methodology and configured-product facts):",
     canon,
   ].join("\n");
 
@@ -374,12 +366,7 @@ export async function computeRoi(input: RoiInput): Promise<CloseResult> {
       "Note: this is the high-volume portal / off-plan funnel, not the VIP relationship pipeline.",
     ].join("\n");
 
-    const canon = grounding([
-      "FRAMEWORKS",
-      "HUSCRIBE_FACTS",
-      "DUBAI_PLAYBOOK",
-      "CLOSING",
-    ]);
+    const canon = grounding(["FRAMEWORKS", "PRODUCT_FACTS", "DUBAI_PLAYBOOK", "CLOSING"]);
 
     const narrative = await ask({
       system: ROI_SYSTEM(canon),

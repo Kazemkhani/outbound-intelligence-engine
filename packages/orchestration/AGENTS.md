@@ -4,7 +4,7 @@ Operating guide for an AI agent making changes in this package. Read this fully 
 
 ## Purpose
 
-This is the orchestration brain of OIE (Outbound Intelligence Engine), the data layer of Huscribe Revenue OS (HumAI, Dubai; operator gp@humai.ae). It owns three things the rest of the system depends on:
+This is the orchestration brain of OIE (Outbound Intelligence Engine). It owns three things the rest of the system depends on:
 
 1. The enrichment waterfall and the signal fan-in (we own the cascade, the cost ceiling, the swap; vendor logic never leaks in here).
 2. The deterministic sequencing state machine plus the durable Inngest functions that run multi-day cadences.
@@ -14,24 +14,25 @@ Nothing in this package computes a score. Scoring is pure and lives in `@oie/cor
 
 ## Key files and where things live
 
-| Path | What it is |
-| --- | --- |
-| `src/index.ts` | The barrel. Re-exports every sub-module plus the top-level `inngest` client and the `inngestFunctions` array the web app serves. |
-| `src/send-gate.ts` | `evaluateSendGate` and friends. The pure, total send decision. The single most important file here. |
-| `src/waterfall.ts` | `enrichCompanyWaterfall`, `mergeCompany`. Priority-ordered provider cascade, fill-missing with per-field attribution, early stop on completeness. |
-| `src/collect-signals.ts` | `collectSignals`. Cross-provider fan-in, keep-stronger dedup, central decay-window assignment. |
-| `src/scoring-bridge.ts` | `toScoringSubject` and the `*FromNormalised` mappers. Maps `@oie/integrations` DTOs into the `@oie/core` `ScoringSubject`. Lives here so `@oie/core` never depends on the integration layer. |
-| `src/sequencing/state-machine.ts` | Pure cadence machine: `nextDueAt`, `advance`, `shouldStop`, `applyBranch`. No I/O. `now` is always injected. |
-| `src/sequencing/send-step.ts` | `executeSendStep`, `buildIdempotencyKey`. The ONLY place that may call an adapter `.send()`, and only when the gate returns `allowSend: true`. |
-| `src/sequencing/inngest.ts` | Durable functions `runEnrolment` and `stopEnrolment`; the shared `inngest` client; `registerAdapters`; DB reads for stop-events/suppression/cost. |
-| `src/sequencing/index.ts` | The sole permitted re-export surface for `sequencing/*`. Nothing outside should reach into the sub-folder directly. |
-| `src/enrolment/auto-enrol.ts` | `qualifiesForEnrolment`. Pure decision: fresh signal + at-or-above-bar tier + qualifying type. |
-| `src/enrolment/cost-caps.ts` | `costCapStatus`, `assertWithinCaps`, `CostCapExceededError`. Pure cap evaluation. |
-| `src/enrolment/inngest.ts` | Durable functions `autoEnrolOnSignal` and `handleSuppression` (bounce/unsubscribe). |
-| `src/enrolment/index.ts` | Re-export surface for `enrolment/*`. |
-| `src/*.test.ts`, `src/**/**.test.ts` | Vitest specs. `pipeline.test.ts` is the e2e. Read the relevant spec before changing behaviour. |
+| Path                                 | What it is                                                                                                                                                                                   |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/index.ts`                       | The barrel. Re-exports every sub-module plus the top-level `inngest` client and the `inngestFunctions` array the web app serves.                                                             |
+| `src/send-gate.ts`                   | `evaluateSendGate` and friends. The pure, total send decision. The single most important file here.                                                                                          |
+| `src/waterfall.ts`                   | `enrichCompanyWaterfall`, `mergeCompany`. Priority-ordered provider cascade, fill-missing with per-field attribution, early stop on completeness.                                            |
+| `src/collect-signals.ts`             | `collectSignals`. Cross-provider fan-in, keep-stronger dedup, central decay-window assignment.                                                                                               |
+| `src/scoring-bridge.ts`              | `toScoringSubject` and the `*FromNormalised` mappers. Maps `@oie/integrations` DTOs into the `@oie/core` `ScoringSubject`. Lives here so `@oie/core` never depends on the integration layer. |
+| `src/sequencing/state-machine.ts`    | Pure cadence machine: `nextDueAt`, `advance`, `shouldStop`, `applyBranch`. No I/O. `now` is always injected.                                                                                 |
+| `src/sequencing/send-step.ts`        | `executeSendStep`, `buildIdempotencyKey`. The ONLY place that may call an adapter `.send()`, and only when the gate returns `allowSend: true`.                                               |
+| `src/sequencing/inngest.ts`          | Durable functions `runEnrolment` and `stopEnrolment`; the shared `inngest` client; `registerAdapters`; DB reads for stop-events/suppression/cost.                                            |
+| `src/sequencing/index.ts`            | The sole permitted re-export surface for `sequencing/*`. Nothing outside should reach into the sub-folder directly.                                                                          |
+| `src/enrolment/auto-enrol.ts`        | `qualifiesForEnrolment`. Pure decision: fresh signal + at-or-above-bar tier + qualifying type.                                                                                               |
+| `src/enrolment/cost-caps.ts`         | `costCapStatus`, `assertWithinCaps`, `CostCapExceededError`. Pure cap evaluation.                                                                                                            |
+| `src/enrolment/inngest.ts`           | Durable functions `autoEnrolOnSignal` and `handleSuppression` (bounce/unsubscribe).                                                                                                          |
+| `src/enrolment/index.ts`             | Re-export surface for `enrolment/*`.                                                                                                                                                         |
+| `src/*.test.ts`, `src/**/**.test.ts` | Vitest specs. `pipeline.test.ts` is the e2e. Read the relevant spec before changing behaviour.                                                                                               |
 
 Cross-package anchors (read but do not edit from here):
+
 - Domain enums: `@oie/core` `Channel` = `email | linkedin | whatsapp`; `SignalType` = `hiring | funding | tech_adoption | job_change | news | web_change`; `Tier` = `A | B | C | D`.
 - Helpers consumed: `signalDedupeKey`, `signalExpiry` from `@oie/core`.
 - Adapter contracts: `EnrichmentProvider`, `SignalProvider`, `EmailSender`, `MessagingChannel`, plus `NormalisedCompany`, `AdapterContext`, `CostRecord`, `AdapterError` from `@oie/integrations`.
@@ -56,6 +57,7 @@ The web app wires this as: `serve({ client: inngest, functions: inngestFunctions
 ## Invariants
 
 YOU MUST:
+
 - Route every send-path through `evaluateSendGate`. A real send requires BOTH conditions independently: `dryRun === false` AND `approval === "approved"`. These are deliberately separate so flipping one can never imply the other.
 - Keep `evaluateSendGate` pure and total: every branch returns a decision; there is no implicit allow. The default posture (`dryRun: true`, `approval: "pending"`) must return `simulate` / `allowSend: false`.
 - Keep `executeSendStep` the only function that calls an adapter `.send()`, and only after `decision.allowSend === true`.
@@ -67,6 +69,7 @@ YOU MUST:
 - Treat missing data as unknown, never guessed (null/empty stays null/empty; `isPresent` governs fill-missing).
 
 NEVER:
+
 - Never default `dryRun` to false, never read or write any disable-flag for DRY_RUN, and never add a code path that sends when the gate did not return `allowSend: true`. (A content-based guard hook rejects the literal disable-flag token even inside docs; reword, never bypass.)
 - Never let the LLM compute a score or a tier here. This package consumes tiers; it does not produce them.
 - Never let a vendor shape leak across the boundary. Inputs are `Normalised*` DTOs from `@oie/integrations`; outputs are core types. Vendor-specific branching belongs in the adapter, not here.
@@ -92,12 +95,14 @@ NEVER:
 ## Do / Don't
 
 Do:
+
 - Keep gate logic in one place and call it from every path.
 - Inject `now`, adapters, caps, and suppressions; assert on the returned `trace` / `decision` in tests.
 - Persist a `Message` row AND an `AuditLog` entry for every send-step outcome, including blocked/simulated ones (this is how the approval queue and audit trail are populated).
 - Use `upsert` for enrolment and suppression writes so Inngest replay is idempotent.
 
 Don't:
+
 - Don't add hidden defaults that weaken the gate.
 - Don't memoise the gate or approval check across an Inngest replay; they must re-evaluate on every execution. Only persistence/IO is memoised in `step.run`.
 - Don't compute `nextActionAt` or `dueAt` with the wall clock inside the pure machine; pass `from`/`now`.
@@ -111,8 +116,8 @@ Don't:
 import { evaluateSendGate } from "@oie/orchestration";
 
 evaluateSendGate({
-  dryRun: true,          // system default
-  approval: "pending",   // nothing approved yet
+  dryRun: true, // system default
+  approval: "pending", // nothing approved yet
   channel: "email",
   channelEnabled: true,
 });

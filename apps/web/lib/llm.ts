@@ -1,11 +1,11 @@
 /**
- * Server-only LLM helper for the Close Room (the ported APEX sales cockpit).
+ * Server-only LLM helper for the Close Room (the ported OIE sales cockpit).
  *
  * This is the single chokepoint every closing-tool server action calls. It
  * wraps the engine's @oie/integrations LlmClient so the control plane has ONE
  * Anthropic client, ONE set of model ids, and ONE place that reads the key.
  *
- * Mirrors the APEX app/llm.py contract: a cached system prompt carrying the
+ * Mirrors the OIE app/llm.py contract: a cached system prompt carrying the
  * grounding canon, a default (Sonnet) tier and a deep (Opus) tier, and a clear
  * error when the key is missing. Scores are never computed here; the engine's
  * deterministic scoring owns that. This file only does reasoning and copy.
@@ -19,7 +19,7 @@ import { streamText } from "ai";
 import { LlmClient, MODEL_IDS } from "@oie/integrations";
 
 /**
- * Model tiers, matching APEX: DEFAULT_MODEL claude-sonnet-4-6 for prep /
+ * Model tiers, matching OIE: DEFAULT_MODEL claude-sonnet-4-6 for prep /
  * outreach / coach, DEEP_MODEL claude-opus-4-8 for deep post-call review.
  * Sourced from the engine's verified MODEL_IDS so the ids stay in lockstep.
  */
@@ -33,7 +33,7 @@ export interface AskOptions {
   user: string;
   /** Route to the deep (Opus) tier for hard judgement / post-call review. */
   deep?: boolean;
-  /** Output ceiling. Defaults to a generous 2000, matching APEX. */
+  /** Output ceiling. Defaults to a generous 2000, matching OIE. */
   maxTokens?: number;
 }
 

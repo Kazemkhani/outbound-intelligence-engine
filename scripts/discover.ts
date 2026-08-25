@@ -1,7 +1,7 @@
 /**
- * LIVE phone-first discovery → real leads in the control plane (DRY_RUN).
+ * Provider-backed discovery into the control plane. DRY_RUN is mandatory.
  *
- * Runs the real pipeline against LIVE providers and persists to Neon:
+ * Runs the configured discovery pipeline and persists to Postgres:
  *   SearchApi.discoverCompanies → Apollo.enrichCompany (free: company-level) →
  *   TheirStack signals → deterministic score (@oie/core; the LLM NEVER scores) →
  *   Claude opener (tier A/B w/ a real signal) → awaiting_approval Message + the
@@ -12,7 +12,7 @@
  * non-deliverable @unknown.invalid email, and the company switchboard phone.
  * Paid Apollo later layers a real named contact on top.
  *
- * Run:  pnpm exec tsx --env-file=.env scripts/discover-live.ts "real estate developers in Dubai" [limit]
+ * Run: pnpm exec tsx --env-file=.env scripts/discover.ts "B2B companies in Dubai" [limit]
  */
 import {
   SearchApiAdapter,
@@ -29,20 +29,33 @@ import {
   type NormalisedContact,
 } from "../packages/integrations/src/index";
 import { collectSignals, toScoringSubject } from "../packages/orchestration/src/index";
-import { icpProfile, scoreLead, SCORING_MODEL_VERSION, type IcpProfile } from "../packages/core/src/index";
+import {
+  icpProfile,
+  scoreLead,
+  SCORING_MODEL_VERSION,
+  type IcpProfile,
+} from "../packages/core/src/index";
 import { prisma, Prisma } from "../packages/db/src/index";
 
 /* eslint-disable no-console -- operator discovery script */
 const NOW = new Date();
-const query = process.argv[2] ?? "real estate developers in Dubai";
+const query = process.argv[2] ?? "B2B companies in Dubai";
 const limit = Number(process.argv[3] ?? 12);
+const productName = process.env.OIE_PRODUCT_NAME?.trim();
+const productOneLiner = process.env.OIE_PRODUCT_ONE_LINER?.trim();
+const productProofPoints = (process.env.OIE_PRODUCT_PROOF_POINTS ?? "")
+  .split("|")
+  .map((item) => item.trim())
+  .filter(Boolean);
 
 function buildDiscoveryProvider(): EnrichmentProvider {
   const sk = process.env.SEARCHAPI_API_KEY?.trim();
   if (sk) return new SearchApiAdapter({ apiKey: sk });
   const gm = process.env.GOOGLE_MAPS_API_KEY?.trim();
   if (gm) return new PlacesAdapter({ apiKey: gm });
-  throw new Error("No discovery provider configured (set SEARCHAPI_API_KEY or GOOGLE_MAPS_API_KEY).");
+  throw new Error(
+    "No discovery provider configured (set SEARCHAPI_API_KEY or GOOGLE_MAPS_API_KEY).",
+  );
 }
 
 function syntheticContact(company: NormalisedCompany): NormalisedContact {
@@ -60,13 +73,19 @@ function syntheticContact(company: NormalisedCompany): NormalisedContact {
     emailStatus: "invalid",
     phone: phone ?? null,
     whatsapp: phone ?? null,
-    sources: { fullName: "synthetic", email: "synthetic", phone: "searchapi", whatsapp: "searchapi" },
+    sources: {
+      fullName: "synthetic",
+      email: "synthetic",
+      phone: "searchapi",
+      whatsapp: "searchapi",
+    },
   } as NormalisedContact;
 }
 
 /** Derive an accurate locale from the company's address/region/name, falling back to the search query, then the UAE. */
 function localeFor(company: NormalisedCompany): string {
-  const blob = `${company.region ?? ""} ${company.country ?? ""} ${company.name ?? ""} ${query}`.toLowerCase();
+  const blob =
+    `${company.region ?? ""} ${company.country ?? ""} ${company.name ?? ""} ${query}`.toLowerCase();
   const cities: [string, string][] = [
     ["abu dhabi", "Abu Dhabi, UAE"],
     ["sharjah", "Sharjah, UAE"],
@@ -81,7 +100,14 @@ function localeFor(company: NormalisedCompany): string {
 
 async function main() {
   if ((process.env.DRY_RUN ?? "true").toLowerCase() !== "true") {
-    throw new Error("Refusing to run: DRY_RUN must be true. Discovery never runs with the send-gate down.");
+    throw new Error(
+      "Refusing to run: DRY_RUN must be true. Discovery never runs with the send-gate down.",
+    );
+  }
+  if (!productName || !productOneLiner) {
+    throw new Error(
+      "Set OIE_PRODUCT_NAME and OIE_PRODUCT_ONE_LINER before generating outreach drafts.",
+    );
   }
   const costs: CostRecord[] = [];
   const ctx: AdapterContext = { dryRun: true, recordCost: (c) => costs.push(c) };
@@ -91,7 +117,12 @@ async function main() {
   const icp: IcpProfile = icpProfile.parse(profileRow.config);
 
   const discovery = buildDiscoveryProvider();
-  console.log(`\n=== LIVE discovery: "${query}" via ${discovery.name} (limit ${limit}) ===`);
+  if (!discovery.discoverCompanies) {
+    throw new Error(`${discovery.name} does not implement company discovery.`);
+  }
+  console.log(
+    `\n=== Provider-backed discovery: "${query}" via ${discovery.name} (limit ${limit}) ===`,
+  );
   const discovered = (await discovery.discoverCompanies({ text: query }, ctx))
     .filter((c) => c.domain) // need a domain for dedup/enrich
     .slice(0, limit);
@@ -102,12 +133,14 @@ async function main() {
   const llm = new LlmClient({ apiKey: process.env.ANTHROPIC_API_KEY ?? "" });
 
   const sequence = await prisma.sequence.upsert({
-    where: { id: "discover-live-uae" },
+    where: { id: "discover-default" },
     create: {
-      id: "discover-live-uae",
-      name: "UAE developers — phone-first (WhatsApp + call)",
+      id: "discover-default",
+      name: "Configured discovery sequence",
       status: "active",
-      steps: [{ channel: "whatsapp", delayHours: 0, templateId: "opener" }] as unknown as Prisma.InputJsonValue,
+      steps: [
+        { channel: "whatsapp", delayHours: 0, templateId: "opener" },
+      ] as unknown as Prisma.InputJsonValue,
     },
     update: {},
   });
@@ -117,14 +150,19 @@ async function main() {
     const company = { ...disc };
     // Company enrich (free Apollo organizations/enrich); fills gaps, never overwrites discovery (keeps phone).
     try {
-      const a = await apollo.enrichCompany({ domain: company.domain ?? undefined, name: company.name }, ctx);
+      const a = await apollo.enrichCompany(
+        { domain: company.domain ?? undefined, name: company.name },
+        ctx,
+      );
       if (a.matched && a.data) {
         company.industry = company.industry ?? a.data.industry ?? null;
         company.employeeCount = company.employeeCount ?? a.data.employeeCount ?? null;
         company.revenueBand = company.revenueBand ?? a.data.revenueBand ?? null;
       }
     } catch (e) {
-      console.log(`  (apollo enrich skipped for ${company.name}: ${(e as Error).message.slice(0, 60)})`);
+      console.log(
+        `  (apollo enrich skipped for ${company.name}: ${(e as Error).message.slice(0, 60)})`,
+      );
     }
 
     const { signals } = await collectSignals(
@@ -223,24 +261,26 @@ async function main() {
               locale: localeFor(company),
               channel: "whatsapp",
               product: {
-                name: "Huscribe",
-                oneLiner:
-                  "A Voice-AI receptionist that instantly answers and qualifies inbound property enquiries 24/7 in Arabic and English, books viewings, and hands agents only ready buyers — so no enquiry goes cold.",
-                proofPoints: [
-                  "Captures and qualifies after-hours and weekend enquiries that would otherwise be missed",
-                  "Replies in seconds — speed-to-lead wins the buyer in a competitive market",
-                  "Frees agents from repetitive qualifying calls to focus on closing",
-                ],
+                name: productName,
+                oneLiner: productOneLiner,
+                proofPoints: productProofPoints,
               },
             })
           ).opener;
       const enrolment = await prisma.enrolment.upsert({
         where: { contactId_sequenceId: { contactId: dbContact.id, sequenceId: sequence.id } },
-        create: { contactId: dbContact.id, sequenceId: sequence.id, status: "active", currentStep: 0 },
+        create: {
+          contactId: dbContact.id,
+          sequenceId: sequence.id,
+          status: "active",
+          currentStep: 0,
+        },
         update: {},
       });
       await prisma.message.upsert({
-        where: { channel_externalId: { channel: "whatsapp", externalId: `live-${dbContact.id}` } },
+        where: {
+          channel_externalId: { channel: "whatsapp", externalId: `discover-${dbContact.id}` },
+        },
         create: {
           enrolmentId: enrolment.id,
           channel: "whatsapp",
@@ -248,26 +288,30 @@ async function main() {
           status: "awaiting_approval",
           body: opener,
           templateId: "opener",
-          externalId: `live-${dbContact.id}`,
+          externalId: `discover-${dbContact.id}`,
         },
         update: { status: "awaiting_approval", body: opener },
       });
       approvals++;
       openerNote = `  ☎ ${contact.phone ?? "no phone"}  ·  "${opener.slice(0, 70)}…"`;
     }
-    console.log(`  ${score.tier}  composite=${score.composite.toFixed(0)}  ${company.name}${openerNote ? "\n" + openerNote : ""}`);
+    console.log(
+      `  ${score.tier}  composite=${score.composite.toFixed(0)}  ${company.name}${openerNote ? "\n" + openerNote : ""}`,
+    );
   }
 
   // Persist provider spend for the run.
   for (const c of costs) {
-    await prisma.providerCost.create({
-      data: { provider: c.provider, task: c.task, units: c.units, costUsd: c.costUsd, at: c.at },
-    }).catch(() => {});
+    await prisma.providerCost
+      .create({
+        data: { provider: c.provider, task: c.task, units: c.units, costUsd: c.costUsd, at: c.at },
+      })
+      .catch(() => {});
   }
   await prisma.auditLog.create({
     data: {
-      actor: "system:discover-live",
-      action: "pipeline.discover_live",
+      actor: "system:discover",
+      action: "pipeline.discover",
       entity: "Company",
       payload: { query, discovered: discovered.length, approvals },
     },
@@ -277,13 +321,15 @@ async function main() {
     companies: await prisma.company.count(),
     awaitingApproval: await prisma.message.count({ where: { status: "awaiting_approval" } }),
   };
-  console.log(`\n=== Done. ${counts.companies} companies in DB · ${counts.awaitingApproval} messages awaiting approval. ===`);
+  console.log(
+    `\n=== Done. ${counts.companies} companies in DB · ${counts.awaitingApproval} messages awaiting approval. ===`,
+  );
   console.log("Nothing sent — everything is gated. Review at http://localhost:3000/approvals");
 }
 
 main()
   .catch((e) => {
-    console.error("discover-live failed:", e);
+    console.error("discover failed:", e);
     process.exitCode = 1;
   })
   .finally(() => prisma.$disconnect());
