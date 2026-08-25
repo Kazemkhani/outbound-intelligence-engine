@@ -15,12 +15,7 @@ import { EmptyState } from "@/components/ui/states";
 import type { ScoredLead } from "@/lib/fixtures";
 import { Markdown, stripInline } from "@/components/ui/markdown";
 import { CopyButton } from "@/components/ui/copy-button";
-import {
-  coachTranscript,
-  computeRoi,
-  generateOutreach,
-  generatePrep,
-} from "@/app/close/actions";
+import { coachTranscript, computeRoi, generateOutreach, generatePrep } from "@/app/close/actions";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,14 +36,12 @@ const TIER_VARIANT = {
 } as const;
 
 const BLURBS: Record<TabId, string> = {
-  prep:
-    "An elite battlecard for this prospect: value hypothesis, a Challenger teaching insight, a SPIN discovery set, the five likely objections, and the single next step to push for.",
+  prep: "An elite battlecard for this prospect: value hypothesis, a Challenger teaching insight, a SPIN discovery set, the five likely objections, and the single next step to push for.",
   outreach:
     "A ready-to-send outbound pack: cold-call opener, WhatsApp in English and Gulf Arabic, a voice-note script, and an email. Phone- and WhatsApp-first, implication over compliment.",
   coach:
     "Paste a call transcript or your notes. Get a post-call scorecard, the biggest leak, three concrete fixes, and the single highest-leverage next action for this deal.",
-  roi:
-    "Turn the prospect's own numbers into a Gap Selling narrative and a credible one-pager. The arithmetic is computed here; the LLM only frames it. Numbers are never invented.",
+  roi: "Turn the prospect's own numbers into a Gap Selling narrative and a credible one-pager. The arithmetic is computed here; the LLM only frames it. Numbers are never invented.",
 };
 
 const TABS: Array<{ id: TabId; label: string; icon: typeof Swords }> = [
@@ -229,12 +222,7 @@ function ActionPanel({
       <div className="surface p-5">
         <p className="text-sm text-ink-300">{blurb}</p>
         <div className="mt-4 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleRun}
-            disabled={isPending}
-            className="btn-primary"
-          >
+          <button type="button" onClick={handleRun} disabled={isPending} className="btn-primary">
             {isPending ? (
               <Loader2 size={16} className="animate-spin" aria-hidden="true" />
             ) : (
@@ -387,9 +375,7 @@ function RoiPanel({ blurb }: { blurb: string }) {
     [values],
   );
 
-  const allValid = (Object.values(parsed) as number[]).every(
-    (n) => Number.isFinite(n) && n >= 0,
-  );
+  const allValid = (Object.values(parsed) as number[]).every((n) => Number.isFinite(n) && n >= 0);
 
   const handleRun = () => {
     setError(null);
@@ -432,9 +418,7 @@ function RoiPanel({ blurb }: { blurb: string }) {
                 max={field.max}
                 step={field.step}
                 value={values[field.key]}
-                onChange={(e) =>
-                  setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
-                }
+                onChange={(e) => setValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
                 className="input-field"
               />
               <p className="mt-1.5 text-xs text-ink-500">{field.hint}</p>
@@ -493,7 +477,7 @@ function ResultArea({
         <Loader2 size={32} className="animate-spin text-gold-500" aria-hidden="true" />
         <p className="text-sm text-ink-400">{pendingLabel}</p>
         <p className="max-w-sm text-center text-xs text-ink-600">
-          Grounded in the APEX sales canon. This can take a moment on the deep model.
+          Grounded in the product-neutral sales canon. This can take a moment on the deep model.
         </p>
       </div>
     );
@@ -561,7 +545,9 @@ function extractPayback(body: string): string | null {
   const lines = body.split("\n");
   const paybackLine = lines.find((l) => /payback/i.test(l));
   if (paybackLine) {
-    const cleaned = stripInline(paybackLine).replace(/^[#>*\-\s]+/, "").trim();
+    const cleaned = stripInline(paybackLine)
+      .replace(/^[#>*\-\s]+/, "")
+      .trim();
     if (cleaned) return cleaned;
   }
   const aedMatch = body.match(/AED\s*[\d.,]+(?:\s*(?:per|\/)\s*\w+)?/i);

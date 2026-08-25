@@ -7,7 +7,7 @@ import { round1 } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Analytics · GenRiver Revenue OS",
+  title: "Analytics · OIE Control Plane",
 };
 
 export default async function AnalyticsPage() {
@@ -18,16 +18,34 @@ export default async function AnalyticsPage() {
       <header className="mb-6">
         <h1 className="font-display text-2xl font-bold text-ink-50">Analytics</h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          Pipeline health at a glance. Derived from the live database and the active ICP scoring run.
+          Pipeline health at a glance. Derived from the live database and the active ICP scoring
+          run.
         </p>
       </header>
 
       {/* KPI tiles */}
       <section aria-label="Key metrics" className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiTile label="Total leads" value={tiles.totalLeads} icon={<Users size={16} aria-hidden="true" />} />
-        <KpiTile label="Signals this week" value={tiles.signalsThisWeek} icon={<Signal size={16} aria-hidden="true" />} />
-        <KpiTile label="Pending approvals" value={tiles.pendingApprovals} icon={<Bell size={16} aria-hidden="true" />} accent={tiles.pendingApprovals > 0} />
-        <KpiTile label="Est. cost (USD)" value={`$${tiles.estimatedCostUsd.toFixed(2)}`} icon={<TrendingUp size={16} aria-hidden="true" />} />
+        <KpiTile
+          label="Total leads"
+          value={tiles.totalLeads}
+          icon={<Users size={16} aria-hidden="true" />}
+        />
+        <KpiTile
+          label="Signals this week"
+          value={tiles.signalsThisWeek}
+          icon={<Signal size={16} aria-hidden="true" />}
+        />
+        <KpiTile
+          label="Pending approvals"
+          value={tiles.pendingApprovals}
+          icon={<Bell size={16} aria-hidden="true" />}
+          accent={tiles.pendingApprovals > 0}
+        />
+        <KpiTile
+          label="Est. cost (USD)"
+          value={`$${tiles.estimatedCostUsd.toFixed(2)}`}
+          icon={<TrendingUp size={16} aria-hidden="true" />}
+        />
       </section>
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -41,7 +59,9 @@ export default async function AnalyticsPage() {
               {(["A", "B", "C", "D"] as const).map((tier) => {
                 const count = tiles.byTier[tier];
                 const pct = tiles.totalLeads > 0 ? (count / tiles.totalLeads) * 100 : 0;
-                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[tier];
+                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[
+                  tier
+                ];
                 return (
                   <li key={tier} className="flex items-center gap-3">
                     <Badge variant={variant} className="w-14 justify-center">
@@ -86,10 +106,14 @@ export default async function AnalyticsPage() {
           <CardContent>
             <ol aria-label="Top scored leads" className="space-y-3">
               {scoredLeads.slice(0, 5).map((lead, i) => {
-                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[lead.score.tier];
+                const variant = ({ A: "tier_a", B: "tier_b", C: "tier_c", D: "tier_d" } as const)[
+                  lead.score.tier
+                ];
                 return (
                   <li key={lead.id} className="flex items-center gap-3 text-sm">
-                    <span className="w-5 text-center font-mono text-xs font-bold text-ink-500">{i + 1}</span>
+                    <span className="w-5 text-center font-mono text-xs font-bold text-ink-500">
+                      {i + 1}
+                    </span>
                     <span className="flex-1 font-medium text-ink-100">{lead.company.name}</span>
                     <Badge variant={variant}>Tier {lead.score.tier}</Badge>
                     <span className="w-10 text-right font-mono text-xs text-gold-300">
@@ -113,7 +137,11 @@ export default async function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div role="list" aria-label="Score distribution chart" className="flex h-32 items-end gap-2">
+            <div
+              role="list"
+              aria-label="Score distribution chart"
+              className="flex h-32 items-end gap-2"
+            >
               {scoredLeads.map((lead) => {
                 const heightPct = Math.max(4, lead.score.composite);
                 const colour =
@@ -163,7 +191,9 @@ function KpiTile({
         {icon}
         <span className="label-mono">{label}</span>
       </div>
-      <p className={`mt-2 font-display text-3xl font-bold ${accent ? "text-gold-400" : "text-ink-50"}`}>
+      <p
+        className={`mt-2 font-display text-3xl font-bold ${accent ? "text-gold-400" : "text-ink-50"}`}
+      >
         {value}
       </p>
     </div>

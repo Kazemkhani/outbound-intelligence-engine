@@ -156,34 +156,46 @@ function TagInput({
 
 // ── Step components ───────────────────────────────────────────────────────────
 
-function StepIdentity({ data, onChange }: { data: FormData; onChange: (d: Partial<FormData>) => void }) {
+function StepIdentity({
+  data,
+  onChange,
+}: {
+  data: FormData;
+  onChange: (d: Partial<FormData>) => void;
+}) {
   return (
     <div className="space-y-5">
       <div>
-        <label htmlFor="businessName" className="label-mono mb-1 block">Business name *</label>
+        <label htmlFor="businessName" className="label-mono mb-1 block">
+          Business name *
+        </label>
         <input
           id="businessName"
           type="text"
           value={data.businessName}
           onChange={(e) => onChange({ businessName: e.target.value })}
-          placeholder="e.g. GenRiver"
+          placeholder="e.g. Example Labs"
           className="input-field w-full"
           required
         />
       </div>
       <div>
-        <label htmlFor="website" className="label-mono mb-1 block">Website</label>
+        <label htmlFor="website" className="label-mono mb-1 block">
+          Website
+        </label>
         <input
           id="website"
           type="text"
           value={data.website ?? ""}
           onChange={(e) => onChange({ website: e.target.value })}
-          placeholder="e.g. genriverai.com"
+          placeholder="e.g. example.com"
           className="input-field w-full"
         />
       </div>
       <div>
-        <label htmlFor="tagline" className="label-mono mb-1 block">Tagline</label>
+        <label htmlFor="tagline" className="label-mono mb-1 block">
+          Tagline
+        </label>
         <input
           id="tagline"
           type="text"
@@ -194,16 +206,19 @@ function StepIdentity({ data, onChange }: { data: FormData; onChange: (d: Partia
         />
       </div>
       <div>
-        <label htmlFor="oneLiner" className="label-mono mb-1 block">One-line pitch *</label>
+        <label htmlFor="oneLiner" className="label-mono mb-1 block">
+          One-line pitch *
+        </label>
         <p className="mb-2 text-xs text-ink-500">
-          The single sentence that goes in every cold email. &quot;We help [who] [achieve what] [how] [timeframe].&quot;
+          The single sentence that goes in every cold email. &quot;We help [who] [achieve what]
+          [how] [timeframe].&quot;
         </p>
         <textarea
           id="oneLiner"
           rows={2}
           value={data.oneLiner}
           onChange={(e) => onChange({ oneLiner: e.target.value })}
-          placeholder="e.g. GenRiver builds Clay-powered outbound systems that book B2B meetings in 10 days — fully managed."
+          placeholder="e.g. We help revenue teams identify in-market accounts using verified buying signals."
           className="input-field w-full resize-none"
           required
         />
@@ -222,12 +237,23 @@ function StepIcp({ data, onChange }: { data: FormData; onChange: (d: Partial<For
         values={data.targetIndustries}
         onChange={(v) => onChange({ targetIndustries: v })}
         placeholder="e.g. SaaS"
-        suggestions={["SaaS", "Staffing", "Professional services", "Fintech", "Logistics", "Real estate", "Healthcare", "E-commerce"]}
+        suggestions={[
+          "SaaS",
+          "Staffing",
+          "Professional services",
+          "Fintech",
+          "Logistics",
+          "Real estate",
+          "Healthcare",
+          "E-commerce",
+        ]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="sizeMin" className="label-mono mb-1 block">Min employees</label>
+          <label htmlFor="sizeMin" className="label-mono mb-1 block">
+            Min employees
+          </label>
           <input
             id="sizeMin"
             type="number"
@@ -238,7 +264,9 @@ function StepIcp({ data, onChange }: { data: FormData; onChange: (d: Partial<For
           />
         </div>
         <div>
-          <label htmlFor="sizeMax" className="label-mono mb-1 block">Max employees</label>
+          <label htmlFor="sizeMax" className="label-mono mb-1 block">
+            Max employees
+          </label>
           <input
             id="sizeMax"
             type="number"
@@ -257,7 +285,15 @@ function StepIcp({ data, onChange }: { data: FormData; onChange: (d: Partial<For
         values={data.targetGeographies}
         onChange={(v) => onChange({ targetGeographies: v })}
         placeholder="e.g. United Kingdom"
-        suggestions={["United Kingdom", "United States", "United Arab Emirates", "Saudi Arabia", "Australia", "Canada", "Europe"]}
+        suggestions={[
+          "United Kingdom",
+          "United States",
+          "United Arab Emirates",
+          "Saudi Arabia",
+          "Australia",
+          "Canada",
+          "Europe",
+        ]}
       />
 
       <TagInput
@@ -267,17 +303,35 @@ function StepIcp({ data, onChange }: { data: FormData; onChange: (d: Partial<For
         values={data.targetTitles}
         onChange={(v) => onChange({ targetTitles: v })}
         placeholder="e.g. Head of Sales"
-        suggestions={["CEO", "Founder", "Head of Sales", "VP Sales", "Sales Director", "Managing Director", "CRO", "COO", "Head of Growth"]}
+        suggestions={[
+          "CEO",
+          "Founder",
+          "Head of Sales",
+          "VP Sales",
+          "Sales Director",
+          "Managing Director",
+          "CRO",
+          "COO",
+          "Head of Growth",
+        ]}
       />
     </div>
   );
 }
 
-function StepOffer({ data, onChange }: { data: FormData; onChange: (d: Partial<FormData>) => void }) {
+function StepOffer({
+  data,
+  onChange,
+}: {
+  data: FormData;
+  onChange: (d: Partial<FormData>) => void;
+}) {
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="whatYouSell" className="label-mono mb-1 block">What you sell *</label>
+        <label htmlFor="whatYouSell" className="label-mono mb-1 block">
+          What you sell *
+        </label>
         <p className="mb-2 text-xs text-ink-500">
           Full description: what it is, how it works, what the outcome is.
         </p>
@@ -286,7 +340,7 @@ function StepOffer({ data, onChange }: { data: FormData; onChange: (d: Partial<F
           rows={4}
           value={data.whatYouSell}
           onChange={(e) => onChange({ whatYouSell: e.target.value })}
-          placeholder="e.g. GenRiver builds end-to-end outbound systems using Clay for enrichment and AI for personalisation. We identify buying signals, enrich decision-makers, and deploy multi-channel sequences across email, LinkedIn, and WhatsApp..."
+          placeholder="Describe the configured product, supported capabilities, limitations, and evidence. Use only approved claims."
           className="input-field w-full resize-y"
           required
         />
@@ -299,7 +353,14 @@ function StepOffer({ data, onChange }: { data: FormData; onChange: (d: Partial<F
         values={data.keyBenefits}
         onChange={(v) => onChange({ keyBenefits: v })}
         placeholder="e.g. Booked meetings in 10 days"
-        suggestions={["Booked meetings", "Reduced CAC", "Faster pipeline", "More qualified leads", "Higher reply rates", "Saved SDR costs"]}
+        suggestions={[
+          "Booked meetings",
+          "Reduced CAC",
+          "Faster pipeline",
+          "More qualified leads",
+          "Higher reply rates",
+          "Saved SDR costs",
+        ]}
       />
 
       <TagInput
@@ -309,11 +370,20 @@ function StepOffer({ data, onChange }: { data: FormData; onChange: (d: Partial<F
         values={data.differentiators}
         onChange={(v) => onChange({ differentiators: v })}
         placeholder="e.g. Fully managed — no hire needed"
-        suggestions={["Fully managed", "Signal-first targeting", "Clay-powered enrichment", "Faster setup", "Performance-based", "Specialised niche"]}
+        suggestions={[
+          "Fully managed",
+          "Signal-first targeting",
+          "Clay-powered enrichment",
+          "Faster setup",
+          "Performance-based",
+          "Specialised niche",
+        ]}
       />
 
       <div>
-        <label htmlFor="pricingNote" className="label-mono mb-1 block">Pricing note</label>
+        <label htmlFor="pricingNote" className="label-mono mb-1 block">
+          Pricing note
+        </label>
         <p className="mb-2 text-xs text-ink-500">
           Not committed to prospects, but used to handle pricing objections in the Knowledge base.
         </p>
@@ -330,7 +400,13 @@ function StepOffer({ data, onChange }: { data: FormData; onChange: (d: Partial<F
   );
 }
 
-function StepCompetition({ data, onChange }: { data: FormData; onChange: (d: Partial<FormData>) => void }) {
+function StepCompetition({
+  data,
+  onChange,
+}: {
+  data: FormData;
+  onChange: (d: Partial<FormData>) => void;
+}) {
   return (
     <div className="space-y-6">
       <TagInput
@@ -357,7 +433,14 @@ function StepCompetition({ data, onChange }: { data: FormData; onChange: (d: Par
         values={data.mainCompetitors}
         onChange={(v) => onChange({ mainCompetitors: v })}
         placeholder="e.g. In-house SDR team"
-        suggestions={["In-house SDRs", "Generic outbound agencies", "DIY with Clay", "Lemlist", "Apollo", "Outreach"]}
+        suggestions={[
+          "In-house SDRs",
+          "Generic outbound agencies",
+          "DIY with Clay",
+          "Lemlist",
+          "Apollo",
+          "Outreach",
+        ]}
       />
     </div>
   );
@@ -388,7 +471,10 @@ export function SetupWizard({ existing }: { existing: SetupData | null }) {
         form.targetGeographies.length > 0 &&
         form.targetTitles.length > 0
       );
-    if (step === "offer") return !!form.whatYouSell.trim() && form.keyBenefits.length > 0 && form.differentiators.length > 0;
+    if (step === "offer")
+      return (
+        !!form.whatYouSell.trim() && form.keyBenefits.length > 0 && form.differentiators.length > 0
+      );
     return true;
   };
 
@@ -464,7 +550,9 @@ export function SetupWizard({ existing }: { existing: SetupData | null }) {
               <li key={s.id} className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => { if (passed) setStep(s.id); }}
+                  onClick={() => {
+                    if (passed) setStep(s.id);
+                  }}
                   disabled={!passed && !active}
                   className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                     active
@@ -483,7 +571,9 @@ export function SetupWizard({ existing }: { existing: SetupData | null }) {
                   <span className="sm:hidden">{i + 1}</span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <span className="text-ink-700" aria-hidden="true">›</span>
+                  <span className="text-ink-700" aria-hidden="true">
+                    ›
+                  </span>
                 )}
               </li>
             );
@@ -509,7 +599,9 @@ export function SetupWizard({ existing }: { existing: SetupData | null }) {
         {step === "competition" && <StepCompetition data={form} onChange={update} />}
 
         {error && (
-          <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>
+          <p role="alert" className="mt-4 text-sm text-red-300">
+            {error}
+          </p>
         )}
 
         {/* Navigation */}
@@ -531,9 +623,13 @@ export function SetupWizard({ existing }: { existing: SetupData | null }) {
               className="inline-flex items-center gap-2 rounded-lg bg-gold-500 px-6 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
-                <><Loader2 size={15} className="animate-spin" /> Saving…</>
+                <>
+                  <Loader2 size={15} className="animate-spin" /> Saving…
+                </>
               ) : (
-                <><CheckCircle2 size={15} /> Save & launch</>
+                <>
+                  <CheckCircle2 size={15} /> Save & launch
+                </>
               )}
             </button>
           ) : (

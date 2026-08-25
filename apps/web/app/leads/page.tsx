@@ -4,7 +4,7 @@ import { getLeads, getSegments } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Ranked Leads · GenRiver Revenue OS",
+  title: "Ranked Leads · OIE Control Plane",
 };
 
 export default async function LeadsPage({

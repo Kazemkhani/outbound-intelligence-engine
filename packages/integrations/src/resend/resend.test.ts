@@ -67,14 +67,14 @@ describe("ResendAdapter.send — live", () => {
       {
         ...baseMessage,
         listUnsubscribe: "https://oie.ai/u/abc",
-        senderIdentity: { name: "Huscribe FZ-LLC", physicalAddress: "Dubai, UAE" },
+        senderIdentity: { name: "Example Company LLC", physicalAddress: "Dubai, UAE" },
       },
       ctx,
     );
     const call = transport.calls[0]!;
     expect(call.headers?.["List-Unsubscribe"]).toBe("<https://oie.ai/u/abc>");
     const sent = JSON.parse(call.body ?? "{}") as { text: string };
-    expect(sent.text).toContain("Huscribe FZ-LLC, Dubai, UAE");
+    expect(sent.text).toContain("Example Company LLC, Dubai, UAE");
     expect(sent.text).toContain("Unsubscribe: https://oie.ai/u/abc");
   });
 

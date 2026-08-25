@@ -261,7 +261,11 @@ export function LeadsView({
       byTier[l.score.tier] += 1;
       sum += l.score.composite;
     }
-    return { total: initialLeads.length, byTier, avg: initialLeads.length ? sum / initialLeads.length : 0 };
+    return {
+      total: initialLeads.length,
+      byTier,
+      avg: initialLeads.length ? sum / initialLeads.length : 0,
+    };
   }, [initialLeads]);
 
   const columns = useMemo<ColumnDef<ScoredLead>[]>(
@@ -277,7 +281,9 @@ export function LeadsView({
             className="text-left font-medium text-ink-50"
           >
             {row.original.company.name}
-            <span className="block text-xs font-normal text-ink-500">{row.original.company.industry}</span>
+            <span className="block text-xs font-normal text-ink-500">
+              {row.original.company.industry}
+            </span>
           </button>
         ),
       },
@@ -303,27 +309,35 @@ export function LeadsView({
         enableSorting: false,
         accessorFn: (l) => l.score.tier,
         filterFn: (row, id, value) => row.getValue(id) === value,
-        cell: ({ row }) => <Badge variant={TIER_VARIANT[row.original.score.tier]}>{row.original.score.tier}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant={TIER_VARIANT[row.original.score.tier]}>{row.original.score.tier}</Badge>
+        ),
       },
       {
         id: "composite",
         header: "Composite",
         accessorFn: (l) => l.score.composite,
         cell: ({ row }) => (
-          <span className="font-mono font-semibold text-gold-300">{round1(row.original.score.composite)}</span>
+          <span className="font-mono font-semibold text-gold-300">
+            {round1(row.original.score.composite)}
+          </span>
         ),
       },
       {
         id: "fit",
         header: "Fit",
         accessorFn: (l) => l.score.fit,
-        cell: ({ row }) => <span className="font-mono text-ink-300">{round1(row.original.score.fit)}</span>,
+        cell: ({ row }) => (
+          <span className="font-mono text-ink-300">{round1(row.original.score.fit)}</span>
+        ),
       },
       {
         id: "intent",
         header: "Intent",
         accessorFn: (l) => l.score.intent,
-        cell: ({ row }) => <span className="font-mono text-ink-300">{round1(row.original.score.intent)}</span>,
+        cell: ({ row }) => (
+          <span className="font-mono text-ink-300">{round1(row.original.score.intent)}</span>
+        ),
       },
       {
         id: "signals",
@@ -339,7 +353,9 @@ export function LeadsView({
                   {signalTypeLabel(s.type)}
                 </Badge>
               ))}
-              {signals.length > 2 && <span className="text-xs text-ink-500">+{signals.length - 2}</span>}
+              {signals.length > 2 && (
+                <span className="text-xs text-ink-500">+{signals.length - 2}</span>
+              )}
             </div>
           );
         },
@@ -361,7 +377,8 @@ export function LeadsView({
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const tierFilter = (columnFilters.find((f) => f.id === "tier")?.value as Tier | undefined) ?? "all";
+  const tierFilter =
+    (columnFilters.find((f) => f.id === "tier")?.value as Tier | undefined) ?? "all";
   const setTierFilter = (t: Tier | "all") =>
     setColumnFilters(t === "all" ? [] : [{ id: "tier", value: t }]);
 
@@ -462,7 +479,9 @@ export function LeadsView({
         >
           <Layers size={13} aria-hidden="true" />
           All Leads
-          <span className="ml-auto font-mono text-[10px] text-ink-600">{/* total shown in stats */}</span>
+          <span className="ml-auto font-mono text-[10px] text-ink-600">
+            {/* total shown in stats */}
+          </span>
         </button>
 
         {segments.map((seg) => (
@@ -477,7 +496,9 @@ export function LeadsView({
             }`}
           >
             <span className="flex-1 truncate leading-tight">{seg.name}</span>
-            <span className="shrink-0 font-mono text-[10px] text-ink-600">{seg._count.contacts}</span>
+            <span className="shrink-0 font-mono text-[10px] text-ink-600">
+              {seg._count.contacts}
+            </span>
           </button>
         ))}
 
@@ -495,7 +516,9 @@ export function LeadsView({
             <div className="mb-4 flex items-center gap-3">
               <div>
                 <h2 className="font-semibold text-ink-50">{activeSegment.name}</h2>
-                <p className="text-xs text-ink-500">{activeSegment._count.contacts} leads · CRM view</p>
+                <p className="text-xs text-ink-500">
+                  {activeSegment._count.contacts} leads · CRM view
+                </p>
               </div>
             </div>
             <SegmentCrmView leads={initialLeads} onSelectLead={setSelectedLead} />
@@ -543,14 +566,14 @@ export function LeadsView({
                   </>
                 ) : (
                   <>
-                    <Upload size={15} aria-hidden="true" /> Upload CSV / XLSX
+                    <Upload size={15} aria-hidden="true" /> Upload CSV
                   </>
                 )}
               </button>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,.xlsx,.xls"
+                accept=".csv,text/csv"
                 className="hidden"
                 onChange={handleFileChange}
               />
@@ -613,7 +636,11 @@ export function LeadsView({
                           const sorted = header.column.getIsSorted();
                           const canSort = header.column.getCanSort();
                           const Icon =
-                            sorted === "desc" ? ChevronDown : sorted === "asc" ? ChevronUp : ChevronsUpDown;
+                            sorted === "desc"
+                              ? ChevronDown
+                              : sorted === "asc"
+                                ? ChevronUp
+                                : ChevronsUpDown;
                           return (
                             <th
                               key={header.id}

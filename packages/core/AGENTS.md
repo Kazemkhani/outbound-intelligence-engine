@@ -2,7 +2,7 @@
 
 Operating guide for an AI agent changing code in `packages/core`. Read this fully before editing. The
 scoring engine here is the crown jewel of OIE (Outbound Intelligence Engine, the lead-intelligence layer
-of Huscribe Revenue OS): it is pure, deterministic, explainable, and unit-tested. **The LLM never computes
+of Outbound Intelligence Engine): it is pure, deterministic, explainable, and unit-tested. **The LLM never computes
 a score. Code does, deterministically.** Violating that is a product-level failure, not a style nit.
 
 ## Purpose
@@ -20,19 +20,19 @@ It depends on nothing internal (only `zod`). It is consumed by `@oie/db`, `@oie/
 
 ## Key files & where things live
 
-| File                     | What lives here                                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `src/types.ts`           | Domain enums + Zod: `seniority`, `signalType`, `emailStatus`, `channel`, `tier` (A/B/C/D), `weight` (`[0,1]`)  |
-| `src/icp.ts`             | `icpProfile` Zod schema + `IcpProfile`, `Firmographics`, `SignalCriterion` types. The scoring config contract |
-| `src/subject.ts`         | `ScoringSubject` = `CompanyFacts` + `ContactFacts` + `SignalFact[]`. The vendor-agnostic input to the engine  |
-| `src/scoring.ts`         | Pure primitives: `clampScore`, `weightedScore`, `compositeScore`, `signalDecayFactor`, `assignTier`           |
-| `src/scoring-engine.ts`  | **The engine.** `scoreLead(subject, icp, now)`, `rankByComposite`, `SCORING_MODEL_VERSION`, fit/intent logic  |
-| `src/match.ts`           | `norm`, `fuzzyEquals`, `matchesAny`, `countMatches`, `haversineKm`, `combineDiminishing`                       |
-| `src/dedupe.ts`          | Identity normalisers + dedupe keys for company / contact / signal                                              |
-| `src/signal-windows.ts`  | `DEFAULT_SIGNAL_TTL_DAYS` per signal type + `signalExpiry`. Single source of decay-window policy              |
-| `src/index.ts`           | Barrel: re-exports everything. New public symbols must be reachable through here                               |
-| `src/__fixtures__/leads.ts` | `testIcp`, `NOW`, and the labelled lead fixtures used across tests                                          |
-| `*.test.ts`              | Vitest suites colocated next to each module                                                                    |
+| File                        | What lives here                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/types.ts`              | Domain enums + Zod: `seniority`, `signalType`, `emailStatus`, `channel`, `tier` (A/B/C/D), `weight` (`[0,1]`) |
+| `src/icp.ts`                | `icpProfile` Zod schema + `IcpProfile`, `Firmographics`, `SignalCriterion` types. The scoring config contract |
+| `src/subject.ts`            | `ScoringSubject` = `CompanyFacts` + `ContactFacts` + `SignalFact[]`. The vendor-agnostic input to the engine  |
+| `src/scoring.ts`            | Pure primitives: `clampScore`, `weightedScore`, `compositeScore`, `signalDecayFactor`, `assignTier`           |
+| `src/scoring-engine.ts`     | **The engine.** `scoreLead(subject, icp, now)`, `rankByComposite`, `SCORING_MODEL_VERSION`, fit/intent logic  |
+| `src/match.ts`              | `norm`, `fuzzyEquals`, `matchesAny`, `countMatches`, `haversineKm`, `combineDiminishing`                      |
+| `src/dedupe.ts`             | Identity normalisers + dedupe keys for company / contact / signal                                             |
+| `src/signal-windows.ts`     | `DEFAULT_SIGNAL_TTL_DAYS` per signal type + `signalExpiry`. Single source of decay-window policy              |
+| `src/index.ts`              | Barrel: re-exports everything. New public symbols must be reachable through here                              |
+| `src/__fixtures__/leads.ts` | `testIcp`, `NOW`, and the labelled lead fixtures used across tests                                            |
+| `*.test.ts`                 | Vitest suites colocated next to each module                                                                   |
 
 Anchor docs: ADR `docs/adr/0008-deterministic-scoring-engine.md` and the `scoring-conventions` skill
 (`.claude/skills/scoring-conventions`). Read the skill before changing fit/intent/composite/tier logic.
@@ -166,4 +166,4 @@ To add, say, a `fundingStage` firmographic dimension:
 - `clampScore(NaN) === 0`. Division-by-zero guards already exist (`weightedScore` returns 0 on zero total
   weight); preserve them.
 - This is TS source consumed directly (no build artifact). `pnpm --filter @oie/core build` runs `tsc
-  --noEmit`; there is no `dist` to ship. Don't add a bundling step.
+--noEmit`; there is no `dist` to ship. Don't add a bundling step.

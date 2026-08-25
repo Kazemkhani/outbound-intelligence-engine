@@ -70,7 +70,7 @@ const SECTIONS = [
     href: "/knowledge",
     label: "Knowledge",
     description:
-      "Ask the sales canon: frameworks, objection handling, the B2B outbound playbook, and the GenRiver product facts. Grounded answers, never generic AI advice.",
+      "Ask the sales canon: frameworks, objection handling, the B2B outbound playbook, and configured product facts. Grounded answers, never generic AI advice.",
     icon: BookOpen,
   },
   {
@@ -95,15 +95,14 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-8 py-12">
       <header className="mb-10">
-        <p className="label-mono mb-3">GenRiver Revenue OS</p>
+        <p className="label-mono mb-3">OIE Control Plane</p>
         <h1 className="text-3xl font-bold tracking-tight text-ink-50 sm:text-4xl">
           Spot the signal. Enrich the lead. <span className="text-gold-400">Book the meeting.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-base text-ink-400">
-          GenRiver&apos;s AI-native outbound control plane: detect buying signals, enrich decision-makers,
-          score and rank by ICP fit, then deploy hyper-personalised multi-channel sequences across
-          email, LinkedIn, and WhatsApp. Every message governed by a mandatory human approval gate —
-          nothing sends without your review.
+          Connect buying signals to explainable lead scores, reviewed drafts, and durable
+          multi-channel workflows. Models extract and explain; deterministic code ranks; a human
+          decides what can leave the system.
         </p>
       </header>
 
@@ -146,9 +145,9 @@ export default function HomePage() {
         className="mt-10 rounded-xl border border-gold-500/25 bg-gold-500/[0.06] px-5 py-4"
       >
         <p className="text-sm text-ink-200">
-          <strong className="font-semibold text-gold-300">DRY_RUN is active.</strong>{" "}
-          All sequencing and send operations produce previews only. A real send requires an operator
-          to approve each message individually in the Approval Queue, and for DRY_RUN to be explicitly
+          <strong className="font-semibold text-gold-300">DRY_RUN is active.</strong> All sequencing
+          and send operations produce previews only. A real send requires an operator to approve
+          each message individually in the Approval Queue, and for DRY_RUN to be explicitly
           disabled. The gate cannot be bypassed from this interface.
         </p>
       </aside>

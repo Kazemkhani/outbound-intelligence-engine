@@ -4,7 +4,7 @@ Operating guide for an AI agent working in this package. Read it fully before ed
 
 ## Purpose
 
-This is the anti-corruption layer for Huscribe Revenue OS / OIE. One adapter per bought vendor, each hidden behind one of five stable internal interfaces. Vendor payload shapes NEVER leak past this package: everything downstream (`@oie/core`, `@oie/orchestration`, `apps/web`) sees only the unified DTOs in `src/contracts/model.ts`.
+This is the anti-corruption layer for Outbound Intelligence Engine / OIE. One adapter per bought vendor, each hidden behind one of five stable internal interfaces. Vendor payload shapes NEVER leak past this package: everything downstream (`@oie/core`, `@oie/orchestration`, `apps/web`) sees only the unified DTOs in `src/contracts/model.ts`.
 
 What lives here: vendor auth, request building, Zod validation at the boundary, vendor to unified mapping, bounded retry, idempotency, typed errors, per-call cost accounting, and the LLM client.
 
@@ -29,13 +29,13 @@ What does NOT live here: the enrichment waterfall, provider-fallback / priority 
 
 The five interfaces (implement exactly one or more per adapter; names are canonical, do not invent variants):
 
-| Interface | Method surface | Honours `ctx.dryRun`? | Adapters |
-| --- | --- | --- | --- |
-| `EnrichmentProvider` | `isConfigured`, `enrichCompany`, `enrichContact`, optional `discoverCompanies` | no | Places, SearchApi, Apollo, Clay, Explorium |
-| `SignalProvider` | `isConfigured`, `fetchSignals` | no | TheirStack, PredictLeads, Exa |
-| `EmailSender` | `isConfigured`, `send` | YES | Smartlead, Resend |
-| `MessagingChannel` | `isConfigured`, `send`, `readonly channel` | YES | Unipile (linkedin + whatsapp) |
-| `CrmStore` | `isConfigured`, `upsertCompany`, `upsertContact` | no (find-or-create) | HubSpot |
+| Interface            | Method surface                                                                 | Honours `ctx.dryRun`? | Adapters                                   |
+| -------------------- | ------------------------------------------------------------------------------ | --------------------- | ------------------------------------------ |
+| `EnrichmentProvider` | `isConfigured`, `enrichCompany`, `enrichContact`, optional `discoverCompanies` | no                    | Places, SearchApi, Apollo, Clay, Explorium |
+| `SignalProvider`     | `isConfigured`, `fetchSignals`                                                 | no                    | TheirStack, PredictLeads, Exa              |
+| `EmailSender`        | `isConfigured`, `send`                                                         | YES                   | Smartlead, Resend                          |
+| `MessagingChannel`   | `isConfigured`, `send`, `readonly channel`                                     | YES                   | Unipile (linkedin + whatsapp)              |
+| `CrmStore`           | `isConfigured`, `upsertCompany`, `upsertContact`                               | no (find-or-create)   | HubSpot                                    |
 
 Currently exported from `src/index.ts`: `PlacesAdapter`, `SearchApiAdapter`, `ApolloAdapter`, `ClayAdapter` + `parseClayWebhook`, `ExploriumAdapter`, `TheirStackAdapter`, `PredictLeadsAdapter`, `ExaAdapter`, `HubSpotAdapter`, `SmartleadAdapter`, `ResendAdapter`, `UnipileAdapter` + `parseUnipileWebhook`, and the LLM helpers `LlmClient`, `MODEL_IDS`, `personaliseOpener`, `personaliseColdOpener`, `buildPersonalisationPrompt`, `extractCompanyFacts`. Plus everything from `base/*` and `contracts/*`.
 
@@ -44,6 +44,7 @@ The LLM client is deliberately NOT one of the five interfaces and must NEVER sit
 ## Invariants
 
 YOU MUST:
+
 - Implement one of the five canonical interfaces per adapter. Set `readonly name = "<vendor>"` (lowercase, matches the folder).
 - Take an injectable `transport?: HttpTransport` in the constructor, default to `fetchTransport`, and route every HTTP call through `httpJson(this.transport, this.name, req, ctx.signal)`. This is the fixture seam.
 - Wrap every external call in `withRetry(...)`. Pass `ctx.signal` for cancellation.
@@ -58,6 +59,7 @@ YOU MUST:
 - Use `MODEL_IDS` for any LLM call: `hard` = opus (judgement), `personalise` = sonnet (copy/rationale), `parse` = haiku (high-volume). Never hardcode a model string.
 
 NEVER:
+
 - Let a vendor type, vendor field name, or raw vendor JSON cross the adapter boundary into `@oie/core` / `@oie/orchestration` / the DB. Mappers stay internal.
 - Put the send path or any durable workflow behind MCP. Production = REST + webhooks. (Clay's MCP is read-only and CANNOT trigger the waterfall, so Clay is REST/webhook only.)
 - Implement waterfall, provider-fallback, priority ordering, the send gate, the approval queue, or quiet-hours / rate-limit pacing in an adapter. That is orchestration's job; the adapter trusts its caller.
@@ -70,6 +72,7 @@ NEVER:
 ## How to make a change safely
 
 Adding a new vendor adapter:
+
 1. Pick the interface it implements. If none of the five fits, stop and raise it; do not invent a sixth.
 2. Verify the vendor's CURRENT auth, endpoints, rate limits, and pricing against official docs. Do not trust memory or any table.
 3. Create `src/<vendor>/mapper.ts`: Zod schema(s) for the vendor payload(s) + `vendorToNormalised...()` functions that set `sources` provenance.
@@ -80,14 +83,17 @@ Adding a new vendor adapter:
 8. If the adapter needs a new env key, the key is added in `@oie/config` and `.env.example`, not here.
 
 Changing an interface or a unified DTO (`src/contracts/*`):
+
 - This is a breaking change that ripples into every adapter, `@oie/core`, and `@oie/orchestration`. Read all implementers first. Prefer adding an optional field over changing an existing one. Plan before editing.
 
 What to run (from repo root; this package is `@oie/integrations`):
+
 ```bash
 pnpm --filter @oie/integrations test        # vitest, fixture-based, offline
 pnpm --filter @oie/integrations typecheck    # tsc --noEmit
 pnpm --filter @oie/integrations lint
 ```
+
 Run `pnpm verify` at the root before claiming done. Never run a live provider call to "test"; live verification happens once a key is present, behind Human Gate 1.
 
 ## Do / Don't
@@ -102,9 +108,11 @@ Run `pnpm verify` at the root before claiming done. Never run a live provider ca
 ## Worked examples
 
 ### 1. Enrichment provider (reference: `PlacesAdapter`)
+
 `enrichCompany(query, ctx)` builds a request, calls `withRetry(() => httpJson(this.transport, this.name, req, ctx.signal))`, parses with the mapper's Zod schema, maps to `NormalisedCompany` (mapper sets `sources.<field> = "places"` for every populated field), and returns `EnrichmentResult` carrying `cost` so the waterfall records it once. `enrichContact` is a no-op (`matched:false`) because Places has no people data, the correct way to decline a capability. Test injects `stubTransport([{ body: fixture }])` and a `recordCost` sink, then asserts the normalised fields, provenance, and that a 429-then-200 sequence retries and recovers.
 
 ### 2. Email sender with the dry-run guarantee (reference: `SmartleadAdapter`)
+
 ```ts
 async send(message: OutboundEmail, ctx: AdapterContext): Promise<SendResult> {
   if (ctx.dryRun) {                       // FIRST statement: no transport, no cost
@@ -114,6 +122,7 @@ async send(message: OutboundEmail, ctx: AdapterContext): Promise<SendResult> {
   //     Zod-parse the response, recordCost on success, return { outcome: "sent", externalId, provider }.
 }
 ```
+
 The `MessagingChannel` (`UnipileAdapter`) follows the identical pattern and additionally trusts the orchestration send gate: it never re-checks whether LinkedIn/WhatsApp are enabled. Channels are OFF by default and gated upstream.
 
 ## Gotchas

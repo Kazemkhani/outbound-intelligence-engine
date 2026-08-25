@@ -7,7 +7,7 @@ import { grounding } from "@/lib/canon";
  * stream of a canon-grounded answer. Auth-gated by middleware (not in the public
  * allowlist), so only the signed-in operator reaches it. The system prompt mirrors
  * app/knowledge/actions.ts: answer only from the canon, cite a framework, emit
- * <CONFIRM> for unknown GenRiver specifics. The LLM never computes a score.
+ * <CONFIRM> for unknown product specifics. The LLM never computes a score.
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,14 +20,14 @@ const ALL_CANON = [
   "dubai",
   "discovery",
   "closing",
-  "huscribe",
+  "product",
 ];
 
 const SYSTEM = (canon: string): string =>
   [
-    "You are the Huscribe sales knowledge assistant for the operator selling GenRiver (AI-native outbound systems for B2B meetings).",
+    "You are the configured product sales knowledge assistant for the operator selling the configured product (AI-native outbound systems for B2B meetings).",
     "Answer the operator's question using ONLY the sales canon below. Ground every answer in a named framework; do not give generic LLM advice.",
-    "Never invent a GenRiver price, metric, customer name, or proof point. Where a specific is unknown, write the literal token <CONFIRM>.",
+    "Never invent a configured product price, metric, customer name, or proof point. Where a specific is unknown, write the literal token <CONFIRM>.",
     "Be concrete and skimmable. No em dashes (use a colon, comma, or period).",
     "",
     "SALES CANON (your only source):",
@@ -53,7 +53,9 @@ export async function POST(req: Request): Promise<Response> {
     return new Response("Ask a question (at least a few words).", { status: 400 });
   }
   if (question.length > 2000) {
-    return new Response("That question is too long. Trim it to under 2000 characters.", { status: 400 });
+    return new Response("That question is too long. Trim it to under 2000 characters.", {
+      status: 400,
+    });
   }
 
   try {

@@ -1,7 +1,7 @@
-# Fly.io config for the Huscribe Revenue OS control plane.
+# Fly.io config for the Outbound Intelligence Engine control plane.
 # Secrets (DATABASE_URL, AUTH_SECRET, ANTHROPIC_API_KEY, AUTH_OPERATOR_*, provider keys)
 # are set via `flyctl secrets set` and injected at runtime — never in this file or the image.
-app = "huscribe-revenue-os"
+app = "your-oie-instance"
 primary_region = "fra"
 
 [build]

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export function GET() {
   return NextResponse.json(
-    { status: "ok", service: "huscribe-revenue-os", time: new Date().toISOString() },
+    { status: "ok", service: "outbound-intelligence-engine", time: new Date().toISOString() },
     { status: 200 },
   );
 }

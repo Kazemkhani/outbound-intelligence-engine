@@ -1,120 +1,123 @@
-# Outbound Intelligence Engine (OIE)
+# Outbound Intelligence Engine
 
-> An AI-native outbound sales platform: discover companies and people that match an ICP (including local SMBs via maps data), enrich them through a best-in-class provider waterfall, detect buying signals, score and rank every lead deterministically, and enrol the best into compliant multi-channel sequences (email + LinkedIn + WhatsApp) — governed by an operator control plane with a mandatory human approval gate before anything sends.
+> A safety-first TypeScript control plane for turning fragmented company data and buying signals into explainable, human-approved outbound actions.
 
 [![CI](https://github.com/Kazemkhani/outbound-intelligence-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Kazemkhani/outbound-intelligence-engine/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-258%20passing-brightgreen)
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
-![Licence](https://img.shields.io/badge/licence-proprietary-lightgrey)
+[![Secret scan](https://github.com/Kazemkhani/outbound-intelligence-engine/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/Kazemkhani/outbound-intelligence-engine/actions/workflows/secret-scan.yml)
+[![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-6ea8fe.svg)](LICENSE)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-5FA04E.svg)](package.json)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6.svg)](tsconfig.base.json)
 
----
+OIE is an open-source reference implementation for AI-native outbound infrastructure. It discovers and enriches prospects, collects dated intent signals, ranks each lead with deterministic code, and prepares multi-channel sequences behind an explicit human approval gate.
 
-## The core idea
+The important boundary is deliberate: models may extract and explain; they never compute the score, approve an action, or bypass the send gate.
 
-OIE is a **conductor, a brain, and a cockpit** over an orchestra of specialist tools.
+## Why OIE exists
 
-- **Buy the commodity, build the differentiator.** We do not try to out-build Clay's enrichment waterfall, Smartlead's deliverability, or LinkedIn's messaging rails. We integrate them. The engineering goes into the seams, the intelligence, the control plane, and the experience.
-- **No vendor lock-in.** Every external service sits behind an adapter implementing a stable internal interface and feeding one normalised data model. Swapping a provider never touches the core.
-- **Autonomy accelerates building, never sending.** The system builds and verifies unattended, but a human approves every live send. This gate is absolute and enforced in code.
+Most outbound stacks are collections of vendor-specific automations. OIE owns the seams:
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design and [`docs/adr/`](docs/adr/) for the decision records.
+- **Explainable ranking.** Fit, time-decayed intent, composite score, tier, and rationale are deterministic and versioned.
+- **Replaceable providers.** Every external service maps into stable internal contracts and one normalised model.
+- **Default-deny execution.** A real action requires dry-run to be deliberately disabled and that exact action to be approved by a human.
+- **Durable orchestration.** Retries, idempotency, suppression, cost ceilings, and multi-day state live in the workflow layer.
+- **Operator visibility.** The Next.js control plane exposes the evidence, approval queue, ICP editor, signals, and system health.
 
-## What is built
+## System map
 
-The complete platform is implemented and green. The full programme (Phases 0–10) is delivered; the system is paused at the **live-send gate** (Human Gate 2) with `DRY_RUN` held on.
+```mermaid
+flowchart LR
+    A[Discovery] --> B[Enrichment waterfall]
+    B --> C[Normalised company and contact]
+    D[Intent providers] --> E[Signals with decay]
+    C --> F[Deterministic scoring]
+    E --> F
+    F --> G[Ranked leads]
+    G --> H[Sequence preview]
+    H --> I{Human approval gate}
+    I -->|not approved or dry-run| J[Blocked or simulated]
+    I -->|approved and enabled| K[Channel adapter]
+```
 
-| Layer                        | What it does                                                                                            | Status |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------- | ------ |
-| Deterministic scoring engine | Fit + intent-with-decay → composite → tier, fully explainable. Code computes the number, never the LLM. | ✅     |
-| Enrichment waterfall         | Google Places, Apollo, Clay, Explorium behind one interface; the cascade and cost ceiling are ours.     | ✅     |
-| Signal detection             | TheirStack, PredictLeads, Exa; dedup + central decay windows feeding intent.                            | ✅     |
-| CRM sync                     | HubSpot find-or-create, two-way mapping, no duplicates.                                                 | ✅     |
-| Control plane                | Next.js: ranked leads, ICP editor with live re-rank, signal feed, approval queue, analytics.            | ✅     |
-| Sequencing + send gate       | Durable cadences; every send routes through the DRY_RUN + approval gate.                                | ✅     |
-| Channels                     | Smartlead (email), Unipile (LinkedIn + WhatsApp), off by default, gated.                                | ✅     |
-| Personalisation + evals      | Claude turns the exact signal into a reviewed opener; eval harness with labelled cases.                 | ✅     |
+## What is implemented
 
-**Evidence:** `pnpm verify` → 24/24 tasks, 258 tests. Security + verifier audits pass on the safety posture (no committed secrets, no send-path bypasses the gate). The pilot dry-run runs the whole pipeline and prints _"anything sent? NO ✓ (all gated)."_
+| Capability      | Implementation                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Scoring         | Pure TypeScript fit and intent engine with decay, tiering, model versions, and rationale |
+| Enrichment      | Cost-bounded waterfall with fill-missing semantics and per-field provenance              |
+| Signals         | Multi-provider fan-in, deduplication, strength, timestamps, and central expiry windows   |
+| Orchestration   | Inngest workflows, idempotent sequencing, suppression, stop-on-reply, and cost caps      |
+| Safety          | Dry-run by default, action-level approval, channel enablement, audit trail, and tests    |
+| Control plane   | Next.js dashboard for leads, signals, ICP configuration, approvals, and analytics        |
+| Integrations    | Adapters for discovery, enrichment, signals, email, messaging, CRM, LLM, and voice       |
+| Agent interface | Read-only MCP server for deterministic scoring; never part of the send path              |
 
-## Build vs buy
+## Quick start
 
-| Build (owned differentiation)                 | Buy (integrated rails)                 |
-| --------------------------------------------- | -------------------------------------- |
-| Orchestration brain (Inngest)                 | Enrichment: Clay, Apollo, Explorium    |
-| Deterministic ICP scoring engine              | Local discovery: Google Places         |
-| Operator control plane                        | Signals: TheirStack, PredictLeads, Exa |
-| Unified data model + anti-corruption adapters | Email: Smartlead                       |
-| Personalisation + signal-action engine        | LinkedIn + WhatsApp: Unipile           |
-| Eval + observability layer                    | CRM: HubSpot · LLM: Anthropic Claude   |
+Prerequisites: Node.js 22+, pnpm 10, and Docker for the complete local stack.
+
+```bash
+git clone https://github.com/Kazemkhani/outbound-intelligence-engine.git
+cd outbound-intelligence-engine
+corepack enable
+pnpm install --frozen-lockfile
+pnpm verify
+```
+
+Run the complete local stack:
+
+```bash
+cp .env.example .env
+pnpm infra:up
+pnpm db:migrate
+pnpm db:seed
+pnpm --filter web dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Provider credentials are optional for builds and tests; recorded fixtures keep CI offline and reproducible.
+
+## Prove the safety rails
+
+These commands use fixtures or dry-run paths. They do not send messages:
+
+```bash
+pnpm exec tsx --env-file=.env scripts/gate1-credentials.ts
+pnpm exec tsx --env-file=.env scripts/phase4-signals-demo.ts
+pnpm exec tsx scripts/phase10-pilot-dryrun.ts
+```
+
+The central guarantee is implemented in [`evaluateSendGate`](packages/orchestration/src/send-gate.ts). A channel adapter can be invoked only after the gate returns `allowSend: true`; LinkedIn and WhatsApp require an additional explicit channel-enable condition.
 
 ## Repository layout
 
-```
-apps/
-  web/                  Next.js operator control plane (dashboard + API)
-packages/
-  config/               Env loading + validation (fail fast)
-  core/                 Domain types, Zod schemas, the scoring engine (pure)
-  db/                   Prisma schema (the unified data model), migrations, seed
-  integrations/         Anti-corruption adapters + the 5 stable interfaces
-  orchestration/        Waterfall, signal collection, send gate, sequencing, enrolment
-infra/                  docker-compose (Postgres), deploy notes
-scripts/                Evidence scripts (gate-1 credentials, signal demo, pilot)
-docs/                   Architecture, ADRs, handoff, production checklist
-.claude/                The autonomous engineering team: 12 specialists, skills, hooks
-```
-
-## Quickstart
-
-```bash
-pnpm install
-pnpm infra:up        # Postgres on Colima/Docker
-pnpm db:migrate      # apply migrations
-pnpm db:seed         # seed the ICP
-pnpm verify          # typecheck + lint + test + build (must be green)
-pnpm --filter web dev   # control plane at http://localhost:3000
+```text
+apps/web/               Next.js operator control plane and API
+packages/core/          Domain schemas and deterministic scoring
+packages/config/        Environment loading and validation
+packages/db/            Prisma model, migrations, client, and seed
+packages/integrations/  Vendor adapters and stable internal contracts
+packages/orchestration/ Durable workflows, send gate, sequencing, and cost caps
+packages/mcp/           Read-only scoring tools over MCP
+evals/                  Grounding and behaviour evaluation harness
+infra/                  Local Postgres and self-hosting notes
+scripts/                Fixture proofs and opt-in operator utilities
+docs/                   Architecture and decision records
 ```
 
-Or simply `make setup && make dev`.
+## Engineering invariants
 
-### Evidence scripts (no live calls — fixtures + local DB)
+- Scores are produced by pure code, never by an LLM.
+- Missing data stays unknown; the system does not invent facts.
+- Vendor payloads are validated and normalised at the adapter boundary.
+- Every send path passes suppression checks and the central approval gate.
+- Secrets come from the environment and are never committed or logged.
+- Tests and examples use synthetic data; do not commit prospect PII.
 
-```bash
-pnpm exec tsx --env-file=.env scripts/gate1-credentials.ts      # which provider keys are present
-pnpm exec tsx --env-file=.env scripts/phase4-signals-demo.ts    # a signal scan moves the intent score
-pnpm exec tsx scripts/phase10-pilot-dryrun.ts                   # full pilot — proves nothing sends
-```
+Read the [architecture guide](docs/ARCHITECTURE.md), [decision records](docs/adr/README.md), [operations runbook](RUNBOOK.md), and [security policy](SECURITY.md) before changing a load-bearing boundary.
 
-## Working from any device
+## Contributing
 
-This repository is built to be picked up with Claude Code from anywhere:
+Issues and pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), keep changes focused, and include `pnpm verify` evidence. Security reports belong in GitHub's private vulnerability-reporting flow, not a public issue.
 
-- The `.claude/` directory is committed — a fresh clone already has the **12 specialist agents**, skills, slash commands, and the **safety guard hook**.
-- A **devcontainer** is included, so you can open the repo in GitHub Codespaces and run Claude Code in the browser with zero local setup.
-- `CLAUDE.md` is the lean project memory loaded every session; `docs/HANDOFF.md` is the complete continuity brief.
+## License
 
-## Safety model (do not weaken)
-
-Nothing sends on any channel without **both** `DRY_RUN` disabled **and** an explicit human approval for that specific action. This is enforced in `packages/orchestration/src/send-gate.ts`, as a deny rule plus a `PreToolUse` hook in `.claude/`, never as a remembered instruction. LinkedIn and WhatsApp carry a third gate: the channel must be explicitly enabled (off by default). See [`SECURITY.md`](SECURITY.md) and [`RUNBOOK.md`](RUNBOOK.md).
-
-## Going to production
-
-The control plane deploys to Vercel, durable workers to Inngest Cloud, Postgres to Neon, errors to Sentry. The full, sequenced path — including the pre-live wiring and deliverability setup — is in [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md). Deployment runs in dry-run until the live-send gate is explicitly approved.
-
-## Documentation
-
-Start with the map: [`docs/README.md`](docs/README.md) indexes everything below, plus the Huscribe
-Revenue OS product docs ([`docs/revenue-os/`](docs/revenue-os/)) and the strategy + sales kit
-([`docs/strategy/`](docs/strategy/): pricing, the speed-to-lead proof pack, and the pilot playbook).
-
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design at depth
-- [`docs/adr/`](docs/adr/) — architecture decision records
-- [`docs/HANDOFF.md`](docs/HANDOFF.md) — complete build history + how to continue
-- [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — the path to live
-- [`RUNBOOK.md`](RUNBOOK.md) — operations + incident response
-- [`PROJECT_BRIEF.md`](PROJECT_BRIEF.md) — the original decisions-locked programme
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md)
-
-## Licence
-
-Proprietary — © 2026 Amir Kazemkhani. All rights reserved. See [`LICENSE`](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).

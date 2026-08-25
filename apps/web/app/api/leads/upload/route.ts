@@ -1,6 +1,6 @@
 /**
  * POST /api/leads/upload
- * Accepts multipart/form-data with a `file` field (CSV or XLSX).
+ * Accepts multipart/form-data with a CSV `file` field.
  *
  * Expected columns (case-insensitive, any order):
  *   first_name / last_name  OR  full_name / name
@@ -17,7 +17,6 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@oie/db";
 import Papa from "papaparse";
-import * as XLSX from "xlsx";
 
 type Row = Record<string, string>;
 
@@ -43,10 +42,19 @@ function parseRows(rows: Row[]) {
 
     const firstName = pick(row, "first_name", "firstname");
     const lastName = pick(row, "last_name", "lastname");
-    const fullName = pick(row, "full_name", "name", "contact_name") || [firstName, lastName].filter(Boolean).join(" ");
+    const fullName =
+      pick(row, "full_name", "name", "contact_name") ||
+      [firstName, lastName].filter(Boolean).join(" ");
     const email = pick(row, "email", "email_address", "work_email");
     const title = pick(row, "title", "job_title", "position", "role");
-    const companyName = pick(row, "company", "company_name", "organization", "organisation", "account");
+    const companyName = pick(
+      row,
+      "company",
+      "company_name",
+      "organization",
+      "organisation",
+      "account",
+    );
     const linkedin = pick(row, "linkedin", "linkedin_url", "linkedin_profile");
     const domain = pick(row, "domain", "website", "company_website", "company_domain");
 
@@ -68,26 +76,22 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase();
-  if (!ext || !["csv", "xlsx", "xls"].includes(ext)) {
-    return Response.json({ error: "Only .csv, .xlsx, and .xls files are supported." }, { status: 400 });
+  if (ext !== "csv") {
+    return Response.json({ error: "Only .csv files are supported." }, { status: 400 });
   }
 
   const bytes = await file.arrayBuffer();
   let rawRows: Row[] = [];
 
   try {
-    if (ext === "csv") {
-      const text = new TextDecoder().decode(bytes);
-      const result = Papa.parse<Row>(text, { header: true, skipEmptyLines: true });
-      rawRows = result.data;
-    } else {
-      const wb = XLSX.read(bytes, { type: "array" });
-      const ws = wb.Sheets[wb.SheetNames[0]!];
-      if (!ws) return Response.json({ error: "Empty workbook." }, { status: 400 });
-      rawRows = XLSX.utils.sheet_to_json<Row>(ws, { defval: "" });
-    }
+    const text = new TextDecoder().decode(bytes);
+    const result = Papa.parse<Row>(text, { header: true, skipEmptyLines: true });
+    rawRows = result.data;
   } catch (err) {
-    return Response.json({ error: `Failed to parse file: ${err instanceof Error ? err.message : String(err)}` }, { status: 400 });
+    return Response.json(
+      { error: `Failed to parse file: ${err instanceof Error ? err.message : String(err)}` },
+      { status: 400 },
+    );
   }
 
   if (rawRows.length === 0) {
@@ -100,15 +104,27 @@ export async function POST(req: Request): Promise<Response> {
   const importedContactIds: string[] = [];
 
   for (const p of parsed) {
-    if (!p.fullName && !p.email) { skipped++; continue; }
-    if (!p.email && !p.linkedin) { skipped++; continue; }
+    if (!p.fullName && !p.email) {
+      skipped++;
+      continue;
+    }
+    if (!p.email && !p.linkedin) {
+      skipped++;
+      continue;
+    }
 
     try {
       // Ensure company row exists if we have a name or domain.
       let companyId: string | null = null;
-      const domain = p.domain || (p.email ? p.email.split("@")[1] ?? null : null);
+      const domain = p.domain || (p.email ? (p.email.split("@")[1] ?? null) : null);
 
-      if (domain && domain !== "gmail.com" && domain !== "yahoo.com" && domain !== "hotmail.com" && domain !== "outlook.com") {
+      if (
+        domain &&
+        domain !== "gmail.com" &&
+        domain !== "yahoo.com" &&
+        domain !== "hotmail.com" &&
+        domain !== "outlook.com"
+      ) {
         const existing = await prisma.company.findUnique({ where: { domain } });
         if (existing) {
           companyId = existing.id;
@@ -120,7 +136,9 @@ export async function POST(req: Request): Promise<Response> {
           companyId = co.id;
         }
       } else if (p.companyName) {
-        const existing = await prisma.company.findFirst({ where: { name: p.companyName, domain: null } });
+        const existing = await prisma.company.findFirst({
+          where: { name: p.companyName, domain: null },
+        });
         if (existing) {
           companyId = existing.id;
         } else {
@@ -180,7 +198,9 @@ export async function POST(req: Request): Promise<Response> {
         skipDuplicates: true,
       });
       segmentId = seg.id;
-    } catch { /* non-fatal */ }
+    } catch {
+      /* non-fatal */
+    }
   }
 
   return Response.json({ imported, skipped, total: rawRows.length, segmentId });

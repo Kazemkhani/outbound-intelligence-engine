@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Huscribe Revenue OS — read-only MCP server (stdio).
+ * Outbound Intelligence Engine — read-only MCP server (stdio).
  *
  * Exposes the engine's deterministic scoring + reference tools to operator and
  * Claude agents over the Model Context Protocol. Read/compute only: no DB, no
@@ -12,7 +12,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerReadOnlyTools } from "./tools";
 
 async function main(): Promise<void> {
-  const server = new McpServer({ name: "huscribe-revenue-os", version: "0.1.0" });
+  const server = new McpServer({ name: "outbound-intelligence-engine", version: "0.1.0" });
   registerReadOnlyTools(server);
   const transport = new StdioServerTransport();
   await server.connect(transport);

@@ -1,6 +1,6 @@
 # OIE — Operations Runbook
 
-> Outbound Intelligence Engine. This runbook is the operator's reference for running, deploying, and recovering the system. It assumes the architecture in `PROJECT_BRIEF.md` and the conventions in `CLAUDE.md`.
+> This runbook covers local operation, deployment, and recovery. Read it with `docs/ARCHITECTURE.md` and `CLAUDE.md`.
 
 ## The golden safety rule
 

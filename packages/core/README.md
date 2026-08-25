@@ -25,16 +25,16 @@ depends on nothing internal (only `zod`) and is consumed by `db`, `integrations`
 ## Key exports
 
 | Export                                                                             | Purpose                                                                                                              |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `scoreLead(subject, icp, now)`                                                     | the deterministic score: fit, intent, composite, tier, rationale, coverage. `now` is injected, never read from clock |
-| `rankByComposite(items)`                                                           | deterministic ordering by composite score                                                                           |
-| `SCORING_MODEL_VERSION`                                                            | the model version stamped onto every `Score`                                                                        |
+| `rankByComposite(items)`                                                           | deterministic ordering by composite score                                                                            |
+| `SCORING_MODEL_VERSION`                                                            | the model version stamped onto every `Score`                                                                         |
 | `compositeScore`, `signalDecayFactor`, `assignTier`, `weightedScore`, `clampScore` | scoring primitives                                                                                                   |
-| `icpProfile` and the schema family                                                 | Zod validation for the ICP config at the boundary                                                                   |
+| `icpProfile` and the schema family                                                 | Zod validation for the ICP config at the boundary                                                                    |
 | `companyDedupeKey`, `contactDedupeKey`, `signalDedupeKey`                          | dedupe keys                                                                                                          |
-| `normaliseDomain`, `normaliseEmail`, `normaliseLinkedinUrl`                        | identity normalisers                                                                                                |
-| `haversineKm`, `combineDiminishing`, `fuzzyEquals`, `matchesAny`, `countMatches`   | matching primitives                                                                                                 |
-| `DEFAULT_SIGNAL_TTL_DAYS`, `signalExpiry`                                          | signal decay-window policy                                                                                          |
+| `normaliseDomain`, `normaliseEmail`, `normaliseLinkedinUrl`                        | identity normalisers                                                                                                 |
+| `haversineKm`, `combineDiminishing`, `fuzzyEquals`, `matchesAny`, `countMatches`   | matching primitives                                                                                                  |
+| `DEFAULT_SIGNAL_TTL_DAYS`, `signalExpiry`                                          | signal decay-window policy                                                                                           |
 
 The canonical fit / intent / composite / tier conventions live in the `scoring-conventions` skill
 (`.claude/skills/scoring-conventions`). Read it before changing the engine.
@@ -65,4 +65,4 @@ pnpm --filter @oie/core typecheck
 
 `core` is the brain. The orchestration layer feeds it normalised subjects and persists the resulting
 `Score`. Because scoring is pure and `now` is injected, editing the ICP triggers a recompute with no LLM
-cost and an instant live re-rank in the control plane (Huscribe Revenue OS).
+cost and an instant live re-rank in the control plane (Outbound Intelligence Engine).

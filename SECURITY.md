@@ -1,45 +1,29 @@
-# Security Policy
+# Security policy
 
-OIE handles third-party API credentials, prospect contact data and outbound messaging rails. Security and compliance are load-bearing, not optional. This policy describes how the system protects secrets and sends, and how to report a vulnerability.
+OIE handles API credentials, contact data, and channel adapters. Security and consent boundaries are part of the product contract.
 
-## Reporting a vulnerability
+## Report a vulnerability
 
-Report security issues **privately** to the maintainer — do not open a public issue, and do not include live secrets in the report.
+Use GitHub's **Report a vulnerability** button in the Security tab to send a private report. Do not open a public issue or include credentials, prospect data, or exploit details in a discussion.
 
-- Email: novalabshq@gmail.com
-- Include: a description, reproduction steps, affected component, and impact assessment.
-
-We aim to acknowledge within a few business days, agree a remediation timeline, and credit reporters who request it once a fix has shipped. Please give us reasonable time to remediate before any public disclosure (coordinated disclosure).
-
-## Secrets policy
-
-- Secrets live **only** in environment variables — `.env` locally (gitignored) and the platform secret stores in production (Vercel, Inngest, Neon, Sentry). Never in source, never in chat, never in logs.
-- Every key is documented — name only, no value — in `.env.example`. Adding a key means updating `.env.example`.
-- The environment is validated at startup by `@oie/config` (fail fast). `providerKeyStatus` and `scripts/gate1-credentials.ts` report present-versus-missing keys **without printing values**.
-- Provider tokens use least-privilege OAuth scopes and are rotated on the provider side. They are encrypted at rest by the platform secret stores.
-- A pre-bash guard hook (`.claude/hooks/guard.sh`) denies writes to `.env` files at authoring time, and the `security-compliance-engineer` agent reviews diffs for accidental secret exposure. An automated CI secret-scanning job (gitleaks on every push/PR plus a weekly full-history sweep) runs via `.github/workflows/secret-scan.yml`.
-
-## The send-gate guarantee
-
-OIE will not send on any channel without **both** of:
-
-1. `DRY_RUN` disabled (system-level; defaults true everywhere, and stays true in production until explicit live-send approval), and
-2. an explicit human approval for that specific action.
-
-LinkedIn and WhatsApp carry a third gate: the channel must be explicitly enabled (off by default). This is enforced in code (`packages/orchestration/src/send-gate.ts`, `evaluateSendGate`) and reinforced by a deny rule and a PreToolUse hook — never as a chat instruction, which prompt injection could defeat. The gate is pure, total and unit-tested, and is **never weakened**. See [ADR-0009](./docs/adr/0009-send-gate-and-dry-run.md).
-
-## Data protection and compliance
-
-- Email follows CAN-SPAM / GDPR / PECR: one-click unsubscribe (List-Unsubscribe headers), a legal sender identity and physical address in every message, a suppression check before the gate, and quiet hours.
-- LinkedIn and WhatsApp run within conservative, human-like limits (LinkedIn well within ~100 connects/week) and stop on reply.
-- Every send, enrolment, score change and data pull is recorded in the append-only `AuditLog`.
-
-## Dependency policy
-
-- Dependencies are kept lean and current. Dependabot opens weekly update PRs for npm dependencies and GitHub Actions.
-- Security updates are prioritised; every dependency change passes `pnpm verify` and the security review before merge.
-- Internal packages are consumed as TypeScript source within the monorepo; the external surface is minimised.
+Include the affected component, reproduction steps, expected impact, and any suggested mitigation. The maintainer will acknowledge valid reports as quickly as practical and coordinate disclosure after a fix is available.
 
 ## Supported versions
 
-OIE is a single private product with one live line of development (`main`). Security fixes are applied to `main` and deployed.
+Security fixes target the latest commit on `main`. Tagged releases follow semantic versioning once the first stable release is published.
+
+## Security boundaries
+
+- Secrets are loaded from environment variables, validated by `@oie/config`, and never committed or logged.
+- Provider payloads and LLM-shaped input are validated at their boundaries.
+- A real outbound action requires dry-run to be deliberately disabled and the exact action to have explicit human approval.
+- LinkedIn and WhatsApp require an additional channel-enable condition and are off by default.
+- Suppression checks run before the send gate; audit records capture material actions.
+- CI runs tests, type checks, builds, and a full-history secret scan.
+- Example and test data must be synthetic. Never commit real prospect PII.
+
+The safety logic is documented in [ADR-0009](docs/adr/0009-send-gate-and-dry-run.md) and implemented in [`packages/orchestration/src/send-gate.ts`](packages/orchestration/src/send-gate.ts).
+
+## Dependency handling
+
+Dependabot monitors npm and GitHub Actions dependencies. Security updates must pass the full `pnpm verify` gate before merge. If a transitive package has no maintained fix, document the exposure and remove or replace the dependency rather than suppressing the advisory indefinitely.

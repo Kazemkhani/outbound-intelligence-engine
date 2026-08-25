@@ -29,7 +29,9 @@ describe("sanitizeHistory", () => {
   });
 
   it("accepts exactly MAX_TURNS", () => {
-    const max = Array.from({ length: MAX_TURNS }, (_, i) => turn(i % 2 ? "operator" : "prospect", "x"));
+    const max = Array.from({ length: MAX_TURNS }, (_, i) =>
+      turn(i % 2 ? "operator" : "prospect", "x"),
+    );
     expect(sanitizeHistory(max)?.length).toBe(MAX_TURNS);
   });
 
@@ -53,7 +55,9 @@ describe("transcript", () => {
   it("labels speakers and joins with newlines", () => {
     expect(
       transcript([turn("prospect", "you've got two minutes"), turn("operator", "fair enough")]),
-    ).toBe("PROSPECT: you've got two minutes\nOPERATOR (selling GenRiver): fair enough");
+    ).toBe(
+      "PROSPECT: you've got two minutes\nOPERATOR (selling the configured product): fair enough",
+    );
   });
 
   it("returns an empty string for no turns", () => {

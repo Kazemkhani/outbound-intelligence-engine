@@ -18,9 +18,9 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GenRiver Revenue OS",
+  title: "OIE Control Plane",
   description:
-    "GenRiver's AI-native outbound control plane: detect buying signals, enrich decision-makers, score by ICP fit, and deploy multi-channel sequences — governed by a human approval gate.",
+    "Open-source outbound intelligence: combine buying signals, deterministic ICP scoring, and human-approved multi-channel workflows.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

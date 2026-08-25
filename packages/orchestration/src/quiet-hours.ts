@@ -1,10 +1,9 @@
 /**
  * Calling-window / quiet-hours policy (NX4). UAE TDRA telemarketing rules restrict
  * outbound voice and messaging to a daytime window on working days, with no
- * weekends or public holidays (see docs/revenue-os/COMPLIANCE.md). This module is
- * the pure, testable predicate. It is the gate the live-send path will consult for
- * gated channels (voice/whatsapp); it is NOT wired into a live send yet, because
- * live calling is owner + TDRA gated. `now` is injected so the check is
+ * weekends or public holidays. This module is the pure, testable predicate. It
+ * is one input to a compliant channel gate; public-holiday and consent screening
+ * remain deployment responsibilities. `now` is injected so the check is
  * deterministic and the engine never reads the clock inside a pure function.
  */
 
@@ -60,7 +59,10 @@ function localHourAndWeekday(now: Date, tz: string): { hour: number; weekday: nu
  * True when `now` falls inside the calling window (allowed weekday and
  * startHour <= local hour < endHour). Holidays are out of scope here.
  */
-export function isWithinCallingWindow(now: Date, window: CallingWindow = UAE_CALLING_WINDOW): boolean {
+export function isWithinCallingWindow(
+  now: Date,
+  window: CallingWindow = UAE_CALLING_WINDOW,
+): boolean {
   const { hour, weekday } = localHourAndWeekday(now, window.tz);
   if (!window.allowedWeekdays.includes(weekday)) return false;
   return hour >= window.startHour && hour < window.endHour;

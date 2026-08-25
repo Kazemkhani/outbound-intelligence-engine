@@ -47,20 +47,22 @@ export default function SignInPage() {
       <div className="relative w-full max-w-sm">
         {/* Brand mark */}
         <div className="mb-7 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500 font-display text-sm font-bold text-ink-950">
-            G
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500 font-display text-xs font-bold text-ink-950">
+            OI
           </span>
           <div className="leading-tight">
-            <div className="font-display text-base font-bold text-ink-50">GenRiver Revenue OS</div>
+            <div className="font-display text-base font-bold text-ink-50">OIE Control Plane</div>
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-500">
-              Control plane · genriverai.com
+              Open source · human gated
             </div>
           </div>
         </div>
 
         <div className="surface p-7">
           <h1 className="font-display text-xl font-bold text-ink-50">Operator sign-in</h1>
-          <p className="mt-1 text-sm text-ink-400">Your lead factory is gated. Sign in to continue.</p>
+          <p className="mt-1 text-sm text-ink-400">
+            Your lead factory is gated. Sign in to continue.
+          </p>
 
           <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
             <div>

@@ -1,14 +1,14 @@
-# AGENTS.md: apps/web (Huscribe Revenue OS control plane)
+# AGENTS.md: apps/web (Outbound Intelligence Engine control plane)
 
 Operating guide for an AI agent making changes in `apps/web`. Read this fully before editing. It is specific to this module; it does not repeat generic Next.js advice.
 
 ## Purpose
 
-`apps/web` is the Next.js 15 (App Router) operator control plane for **Huscribe Revenue OS**, the single cockpit covering end-to-end sales for Huscribe.com (voice-AI inbound lead qualification for UAE/MENA real estate). One operator (gp@humai.ae, HumAI Dubai) signs in and works the whole pipeline: ranked leads, ICP tuning, the signal feed, the human approval gate, NOVA voice calls, the Close Room (AI-assisted selling), and analytics.
+`apps/web` is the Next.js 15 App Router control plane for **Outbound Intelligence Engine**. It surfaces ranked leads, ICP tuning, the signal feed, the human approval gate, imported call evidence, grounded drafting, and analytics without embedding a customer identity or deployment URL.
 
 It is the **human-in-the-loop surface**. Its reason to exist is making the deterministic brain (`@oie/core`), the data model (`@oie/db`), and the conductor (`@oie/orchestration`) legible and controllable, and enforcing in the UI that nothing sends or dials without an explicit operator decision.
 
-LIVE in production: https://huscribe-revenue-os.fly.dev (Fly.io app `huscribe-revenue-os`, region fra).
+Local development runs at `http://localhost:3000`. This repository does not identify or document a hosted customer deployment.
 
 ## Layout: routes live in `app/`, NOT `src/`
 
@@ -16,29 +16,29 @@ This app does not use a `src/` directory. App Router routes are at the repo-rela
 
 ## Key files and where things live
 
-| Concern | File |
-| --- | --- |
-| Auth full setup (Node, bcrypt, Credentials provider) | `auth.ts` |
-| Auth edge-safe config + route gate (`authorized` callback) | `auth.config.ts` |
-| Route protection (Edge middleware) | `middleware.ts` |
-| Sign-out server action | `lib/auth-actions.ts` |
-| Sign-in page (client) | `app/signin/page.tsx` |
-| NextAuth route handler (Node runtime) | `app/api/auth/[...nextauth]/route.ts` |
-| Inngest serve endpoint (Node runtime) | `app/api/inngest/route.ts` |
-| **Server data layer (Prisma reads + fixture fallback)** | `lib/data.ts` |
-| Seed/fixture data + `scoreAndRankLeads` (the data seam) | `lib/fixtures.ts` |
-| **LLM chokepoint (single Anthropic client)** | `lib/llm.ts` |
-| **APEX sales canon + `grounding()`** | `lib/canon.ts` |
-| `cn`, `formatRelative` helpers | `lib/utils.ts` |
-| Root layout + nav shell | `app/layout.tsx`, `components/nav-sidebar.tsx` |
-| Approval queue actions (DRY_RUN stubs) | `app/approvals/actions.ts` |
-| Close Room actions (prep / outreach / coach / ROI) | `app/close/actions.ts` |
-| Close Room client UI + bespoke markdown renderer | `components/close/close-workspace.tsx` |
-| Voice (NOVA) list view | `app/voice/page.tsx`, `components/voice/voice-view.tsx` |
-| ICP editor (client-side live re-rank) | `app/icp/page.tsx`, `components/icp/icp-editor.tsx` |
-| Design-system primitives | `components/ui/{card,badge,drawer,tabs,states}.tsx` |
-| Sentry server/edge + client init | `instrumentation.ts`, `instrumentation-client.ts` |
-| Deploy config | `vercel.json`, repo-root `fly.toml` + `Dockerfile` |
+| Concern                                                    | File                                                    |
+| ---------------------------------------------------------- | ------------------------------------------------------- |
+| Auth full setup (Node, bcrypt, Credentials provider)       | `auth.ts`                                               |
+| Auth edge-safe config + route gate (`authorized` callback) | `auth.config.ts`                                        |
+| Route protection (Edge middleware)                         | `middleware.ts`                                         |
+| Sign-out server action                                     | `lib/auth-actions.ts`                                   |
+| Sign-in page (client)                                      | `app/signin/page.tsx`                                   |
+| NextAuth route handler (Node runtime)                      | `app/api/auth/[...nextauth]/route.ts`                   |
+| Inngest serve endpoint (Node runtime)                      | `app/api/inngest/route.ts`                              |
+| **Server data layer (Prisma reads + fixture fallback)**    | `lib/data.ts`                                           |
+| Seed/fixture data + `scoreAndRankLeads` (the data seam)    | `lib/fixtures.ts`                                       |
+| **LLM chokepoint (single Anthropic client)**               | `lib/llm.ts`                                            |
+| **product-neutral sales canon + `grounding()`**            | `lib/canon.ts`                                          |
+| `cn`, `formatRelative` helpers                             | `lib/utils.ts`                                          |
+| Root layout + nav shell                                    | `app/layout.tsx`, `components/nav-sidebar.tsx`          |
+| Approval queue actions (DRY_RUN stubs)                     | `app/approvals/actions.ts`                              |
+| Close Room actions (prep / outreach / coach / ROI)         | `app/close/actions.ts`                                  |
+| Close Room client UI + bespoke markdown renderer           | `components/close/close-workspace.tsx`                  |
+| Voice (NOVA) list view                                     | `app/voice/page.tsx`, `components/voice/voice-view.tsx` |
+| ICP editor (client-side live re-rank)                      | `app/icp/page.tsx`, `components/icp/icp-editor.tsx`     |
+| Design-system primitives                                   | `components/ui/{card,badge,drawer,tabs,states}.tsx`     |
+| Sentry server/edge + client init                           | `instrumentation.ts`, `instrumentation-client.ts`       |
+| Deploy config                                              | `vercel.json`, repo-root `fly.toml` + `Dockerfile`      |
 
 Routes (all under `app/`): `/` (home), `/leads`, `/icp`, `/signals`, `/approvals`, `/voice`, `/close`, `/analytics`, `/signin`.
 
@@ -50,7 +50,7 @@ These are the stable shapes. Changing them is a cross-file change; grep callers 
 - **`lib/fixtures.ts`**: `SEED_ICP`, `FIXTURE_LEADS`, `SCORED_LEADS`, `FIXTURE_APPROVALS`, `FIXTURE_SIGNAL_FEED`, `scoreAndRankLeads(icp, now)`, `getAnalyticsTiles()`, and types `FixtureLead`, `ScoredLead`, `ApprovalItem`, `SignalFeedItem`, `AnalyticsTiles`, `MessageChannel`. `lib/data.ts` re-uses these exact shapes so DB rows and fixtures are interchangeable.
 - **`app/close/actions.ts`**: `generatePrep(leadId)`, `generateOutreach(leadId)`, `coachTranscript(transcript)`, `computeRoi(input)`; all return `CloseResult { ok, title, body, error? }`. `RoiInput` is the ROI form contract.
 - **`app/approvals/actions.ts`**: `approveMessage(id)`, `rejectMessage(id)` returning `ActionResult`.
-- **`lib/canon.ts`**: `grounding(keys[])` plus the named blocks `FRAMEWORKS`, `OBJECTIONS`, `VOSS`, `PERSONALIZATION`, `DUBAI_PLAYBOOK`, `DISCOVERY`, `CLOSING`, `HUSCRIBE_FACTS`.
+- **`lib/canon.ts`**: `grounding(keys[])` plus the named blocks `FRAMEWORKS`, `OBJECTIONS`, `VOSS`, `PERSONALIZATION`, `DUBAI_PLAYBOOK`, `DISCOVERY`, `CLOSING`, `PRODUCT_FACTS`.
 - **`lib/llm.ts`**: `ask({ system, user, deep?, maxTokens? })`.
 
 Workspace deps consumed here: `@oie/core` (`scoreLead`, `rankByComposite`, `icpProfile`, types), `@oie/db` (`prisma`, generated Prisma types), `@oie/orchestration` (`inngest`, `inngestFunctions`), `@oie/integrations` (`LlmClient`, `MODEL_IDS`). `next.config.mjs` transpiles core/db/orchestration; they are consumed as TS source.
@@ -62,8 +62,8 @@ These mirror the program's hard rules. Treat them as non-negotiable.
 - **NEVER let the LLM compute a score.** Scoring is deterministic and lives in `@oie/core` (`scoreLead`). The UI calls it; `lib/llm.ts` / the Close Room only reason and write copy. Do not add a "let the model rank these" path.
 - **NEVER send or dial from this UI.** `app/approvals/actions.ts` is intentionally a DRY_RUN stub: it records intent and calls no provider. A real send requires DRY_RUN off **and** an approved state **and** an explicit provider call, enforced in `packages/orchestration/src/send-gate.ts`. Do not add an affordance that bypasses approval, and do not wire a provider send into a server action here.
 - **NEVER flip `DRY_RUN`.** It stays `true`. Do not read-and-default it to false, and do not write code or docs containing the literal disable-flag token (a content-based guard hook rejects it, even in comments). Reword.
-- **Missing data is `unknown`, never guessed.** `lib/data.ts` maps null DB fields to explicit defaults (`"unknown"`, `0`, `""`); the Close prompts say "do not invent" and use the literal token `<CONFIRM>` for any unknown Huscribe price/metric/proof. Preserve that discipline in any new prompt or mapper.
-- **NEVER invent Huscribe specifics in prompts.** Every price, metric, proof point is a `<CONFIRM>` placeholder. Never write "sounds completely human." Prove by customer type and locality, never an invented name or number.
+- **Missing data is `unknown`, never guessed.** `lib/data.ts` maps null DB fields to explicit defaults (`"unknown"`, `0`, `""`); prompts use the literal token `<CONFIRM>` for any missing product claim or proof. Preserve that discipline in any new prompt or mapper.
+- **NEVER invent the configured product specifics in prompts.** Every price, metric, proof point is a `<CONFIRM>` placeholder. Never write "sounds completely human." Prove by customer type and locality, never an invented name or number.
 - **Secrets only via env, never logged.** `lib/llm.ts` reads `ANTHROPIC_API_KEY` lazily and never includes it in error messages. `instrumentation.ts` only inits Sentry if a DSN is present. Do not hardcode any secret, do not print one, do not commit `.env*`.
 - **`lib/data.ts` and `lib/llm.ts` are server-only.** NEVER import them (or anything that imports `@oie/db` / the Anthropic client) into a `"use client"` module. Pass data down as props from a server component.
 - **bcrypt and Inngest routes need the Node runtime.** Keep `export const runtime = "nodejs"` on `app/api/auth/[...nextauth]/route.ts` and `app/api/inngest/route.ts`. The middleware uses `auth.config.ts` only (no bcrypt) so it stays Edge-safe.
@@ -86,12 +86,14 @@ These mirror the program's hard rules. Treat them as non-negotiable.
 ## Do / Don't
 
 **Do**
+
 - Add new AI features through `lib/llm.ask()` and ground them with `grounding([...])`. One Anthropic client, one set of model ids.
 - Use the design-system primitives in `components/ui/` and always render empty / loading / error states (see `components/ui/states.tsx`).
 - Keep deterministic math in the action and let the model only narrate it (the `computeRoi` pattern: `computeRoiMath` runs first, the LLM frames it).
 - Use the existing `tryDb()` wrapper for new reads so a DB outage degrades to fixtures, not a 500.
 
 **Don't**
+
 - Don't add a database adapter to Auth.js; sessions are JWT by design (`auth.config.ts`, 12h max, 1h rolling).
 - Don't widen the public auth surface: `auth.config.ts` `authorized()` allows only `/signin`, `/api/auth`, `/api/inngest` without a session. Everything else requires login.
 - Don't pull a heavy markdown library into the Close Room; it ships a deliberate dependency-free renderer in `close-workspace.tsx`.
@@ -100,12 +102,14 @@ These mirror the program's hard rules. Treat them as non-negotiable.
 ## Worked examples
 
 ### 1. Add a new read-backed page (e.g. `/deals`)
+
 1. Add a reader to `lib/data.ts` that queries Prisma inside `tryDb()`, maps rows to a UI-safe type, and returns `[]` or a fixture fallback. Define the view type next to it.
 2. Create `app/deals/page.tsx` as an async server component: `const deals = await getDeals();` then render a `"use client"` view with `deals` as props. Add `export const dynamic = "force-dynamic"` if it must always hit the DB (as `/leads`, `/close`, `/voice` do).
 3. Add the nav entry to `components/nav-sidebar.tsx` `NAV_ITEMS`.
 4. Run typecheck + lint + build.
 
 ### 2. Add a new Close Room tool grounded in the canon
+
 1. Write the system prompt as a `(canon: string) => string` builder in `app/close/actions.ts`, embedding the "answer only from the canon, never invent, use `<CONFIRM>`" rules (copy the shape of `PREP_SYSTEM`).
 2. Export an async `"use server"` action returning `CloseResult`; inside, `const canon = grounding(["FRAMEWORKS", ...])`, then `await ask({ system, user, deep?, maxTokens? })`, wrapped in try/catch that returns `{ ok:false, error }`.
 3. Wire a tab in `components/close/close-workspace.tsx` (`TABS`, `BLURBS`, a panel) reusing `ActionPanel` / `ResultArea`.
@@ -117,7 +121,7 @@ These mirror the program's hard rules. Treat them as non-negotiable.
 - **Typecheck excludes `.next`** (Next rewrites the tsconfig include on build). `noUncheckedIndexedAccess` is on, so array indexing yields `T | undefined`; guard it (see the `at()` helper in the markdown parser and the `!` assertions in `lib/__tests__/fixtures.test.ts`).
 - **The sign-in page shows a dev hint (`dev@oie.local` / `dev`).** That credential only works when `AUTH_OPERATOR_*` are unset **and** `NODE_ENV !== production` **and** `ALLOW_DEV_LOGIN=true` (a double opt-in). In production the operator login is a real bcrypt-checked password; the dev backdoor is dead. Never set `ALLOW_DEV_LOGIN` in any deployment.
 - **Two Sentry init files:** `instrumentation.ts` (server/edge, via `register()`) and `instrumentation-client.ts` (browser). Both no-op without a DSN.
-- **The Close Room markdown renderer is bespoke** (`parseBlocks` / `renderInline` in `close-workspace.tsx`). It handles the heading/list/table/code shapes the APEX prompts emit. If a prompt starts emitting a new structure, extend the parser rather than swapping in a library.
+- **The Close Room markdown renderer is bespoke** (`parseBlocks` / `renderInline` in `close-workspace.tsx`). It handles the heading/list/table/code shapes the OIE prompts emit. If a prompt starts emitting a new structure, extend the parser rather than swapping in a library.
 - **Model tiers come from `@oie/integrations` `MODEL_IDS`** (`hard` = claude-opus-4-8, `personalise` = claude-sonnet-4-6, `parse` = claude-haiku-4-5). `lib/llm.ts` uses `personalise` by default and `hard` when `deep: true` (coach uses deep). Do not hardcode model id strings here; reference `MODEL_IDS` so they stay in lockstep with the engine.
-- **NOVA voice stays in `DEMO_MODE` (no real PSTN dialing) without owner sign-off.** The `/voice` view renders a "Demo" badge from `session.demoMode`; it is a read-only mirror of NOVA call sessions persisted by `scripts/nova-call.ts`. Do not add a "place call" button here without the owner's explicit go-ahead.
+- **Voice remains read-only in the web app.** The `/voice` view renders imported `CallSession` records and a badge from `session.demoMode`. Do not add a dial action to this application; any voice provider must remain behind an independently reviewed consent and approval boundary.
 - **Inngest functions are registered, not defined, here.** `app/api/inngest/route.ts` just serves `inngestFunctions` from `@oie/orchestration`. Add or change durable functions in that package, not in the web app.

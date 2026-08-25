@@ -350,7 +350,7 @@ model ProviderCost {
   @@index([provider, at])
 }
 
-/// A single NOVA voice call (dogfooding Huscribe's own voice agent). One row per
+/// A single imported voice-provider session. One row per
 /// placed call; `novaCallId` is the provider's id and the idempotency anchor.
 /// `raw` stores the full get_call payload for provenance. demoMode mirrors the
 /// NOVA DEMO flag; only consented facts are ever persisted as findings.

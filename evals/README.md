@@ -1,7 +1,7 @@
 # Eval harness (promptfoo)
 
 Turns the canon-grounded prompt quality into measured, regression-testable numbers,
-the quality-flywheel bet from docs/architecture/TARGET-ARCHITECTURE.md.
+the repository's quality-flywheel approach.
 
 ## Run locally
 

@@ -1,33 +1,29 @@
-## Summary
+## Outcome
 
-<!-- What does this change do, and why? Reference the phase if relevant. -->
+<!-- Lead with the user-visible or architectural result. Link an issue when one exists. -->
 
 ## Changes
-
-<!-- Bullet the notable changes. Keep the diff focused. -->
 
 -
 
 ## Verification
 
-<!-- Paste the evidence — exit code, task count, test count. Do not assert without it. -->
-
-```
+```text
 pnpm verify
+pnpm format:check
+git diff --check
 ```
 
-## Checklist
+## Safety checklist
 
-- [ ] `pnpm verify` is **green** (typecheck + lint + test + build) and the evidence is pasted above
-- [ ] **No secrets** committed; any new env key is documented in `.env.example` (name only, no value)
-- [ ] **Send gate intact** — every send path routes through `evaluateSendGate`; `DRY_RUN` not auto-flipped; channels not auto-enabled; gate not moved behind MCP
-- [ ] Scores are computed by code, not the LLM (no LLM client in `packages/core`)
-- [ ] New providers sit behind an adapter implementing one of the five interfaces; no vendor shapes leak into the core
-- [ ] External and LLM input validated with Zod at the boundary; TypeScript strict (no unexplained `any`)
-- [ ] `verifier` PASS against `PLAN.md` and the phase acceptance criteria
-- [ ] `security-compliance-engineer` PASS on the diff
-- [ ] `PLAN.md` updated if a phase advanced
+- [ ] Tests, type checks, lint, build, formatting, and diff checks pass.
+- [ ] No secret, credential, customer data, prospect PII, or deployment identity is included.
+- [ ] Every send path still passes suppression and `evaluateSendGate`; dry-run and channel defaults remain restrictive.
+- [ ] Scores are computed by deterministic code, never an LLM.
+- [ ] External and model-shaped input is validated; vendor types stay inside adapters.
+- [ ] New environment variable names are documented in `.env.example` without values.
+- [ ] Migrations are forward-only and material writes remain auditable and idempotent.
 
-## Notes for reviewers
+## Reviewer notes
 
-<!-- Anything that needs a closer look, trade-offs taken, follow-ups. -->
+<!-- Call out migrations, safety-boundary changes, provider calls, or follow-up work. -->

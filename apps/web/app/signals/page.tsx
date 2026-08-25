@@ -6,7 +6,7 @@ import { formatDate, formatRelative, signalTypeLabel } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Signal Feed · GenRiver Revenue OS",
+  title: "Signal Feed · OIE Control Plane",
 };
 
 const NOW = new Date();
@@ -43,7 +43,10 @@ export default async function SignalsPage() {
           {signals.map((sig) => {
             const isExpired = sig.expiresAt < NOW;
             return (
-              <li key={sig.id} className="rounded-xl border border-ink-700 bg-ink-850 p-5 shadow-card">
+              <li
+                key={sig.id}
+                className="rounded-xl border border-ink-700 bg-ink-850 p-5 shadow-card"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Badge variant={SIGNAL_VARIANT[sig.type]}>{signalTypeLabel(sig.type)}</Badge>

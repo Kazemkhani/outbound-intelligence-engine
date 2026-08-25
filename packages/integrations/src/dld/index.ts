@@ -8,11 +8,11 @@ import { dubaiPulseRecordToSignals, dubaiPulseResponse } from "./mapper";
  * DLD / Dubai Pulse adapter: a UAE-native SignalProvider over the Dubai
  * government's open real-estate data. Emits transaction_spike + off_plan_launch
  * signals that ground the deterministic intent score on real transaction volume,
- * the differentiator no global vendor packages (see TARGET-ARCHITECTURE.md).
+ * the differentiator that general-purpose vendor packages do not provide.
  *
  * Status: this adapter is built and unit-tested, but it is NOT yet wired into
  * live ingestion. That is gated on the SignalType DB migration plus a spike test
- * (BUILD-PLAN.md), so nothing persists these signals at runtime yet.
+ * so nothing persists these signals at runtime yet.
  *
  * Anti-corruption: all Dubai-Pulse shapes are confined to ./mapper; only
  * NormalisedSignal crosses the boundary. The endpoint + key come from config,
@@ -55,7 +55,12 @@ export class DLDAdapter implements SignalProvider {
     if (this.apiKey.trim() !== "") headers["x-api-key"] = this.apiKey;
 
     const raw = await withRetry(() =>
-      httpJson(this.transport, this.name, { url: this.endpoint, method: "GET", headers }, ctx.signal),
+      httpJson(
+        this.transport,
+        this.name,
+        { url: this.endpoint, method: "GET", headers },
+        ctx.signal,
+      ),
     );
 
     const parsed = dubaiPulseResponse.parse(raw);

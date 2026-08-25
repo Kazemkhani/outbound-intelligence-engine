@@ -11,7 +11,7 @@ import {
 import { normaliseDomain } from "@oie/core";
 
 /**
- * GenRiver Agent — natural language control layer for the platform.
+ * OIE Agent — natural language control layer for the platform.
  *
  * Uses streamText's fullStream (async iterable of all events) to build a
  * custom SSE stream that exposes tool-start, tool-result, text-delta, and
@@ -32,9 +32,9 @@ function apolloHeaders(key: string) {
   return { "Content-Type": "application/json", Accept: "application/json", "X-Api-Key": key };
 }
 
-const SYSTEM = `You are the GenRiver Revenue OS Agent — a smart GTM assistant embedded in GenRiver's outbound intelligence platform.
+const SYSTEM = `You are the OIE Control Plane Agent, a GTM assistant inside an open-source outbound intelligence platform.
 
-GenRiver helps B2B companies book meetings through signal-first targeting, Clay-powered enrichment, and hyper-personalised multi-channel sequences.
+The deployment's product, market, and proof are user-configured. Treat any missing product-specific fact as unknown.
 
 You have four tools:
 - discoverLeads: search Apollo for decision-makers matching a role/industry/location and import them
@@ -91,7 +91,9 @@ async function importFromApollo(params: {
   }
 
   const searchRaw = (await searchRes.json()) as { people?: Array<{ id?: string }> };
-  const searchIds = (searchRaw.people ?? []).map((p) => p.id).filter((id): id is string => Boolean(id));
+  const searchIds = (searchRaw.people ?? [])
+    .map((p) => p.id)
+    .filter((id): id is string => Boolean(id));
   if (!searchIds.length) return { imported: 0, total: 0, message: "Apollo returned 0 results." };
 
   // Step 2: bulk reveal IDs in batches of 10 (Apollo limit)
@@ -120,7 +122,10 @@ async function importFromApollo(params: {
   for (const person of people) {
     try {
       const contact = personToContact(person);
-      if (!contact.email && !contact.linkedinUrl) { skipped++; continue; }
+      if (!contact.email && !contact.linkedinUrl) {
+        skipped++;
+        continue;
+      }
 
       const domain = contact.companyDomain ?? normaliseDomain(person.organization?.primary_domain);
       const orgName = person.organization?.name ?? null;
@@ -134,7 +139,8 @@ async function importFromApollo(params: {
           let orgData = null;
           try {
             const orgRes = await fetch(`${APOLLO_ORG_URL}?domain=${encodeURIComponent(domain)}`, {
-              method: "GET", headers: apolloHeaders(apiKey),
+              method: "GET",
+              headers: apolloHeaders(apiKey),
             });
             if (orgRes.ok) {
               const parsed = apolloOrganizationResponse.safeParse(await orgRes.json());
@@ -142,7 +148,9 @@ async function importFromApollo(params: {
                 orgData = organizationToCompany(parsed.data.organization);
               }
             }
-          } catch { /* non-fatal */ }
+          } catch {
+            /* non-fatal */
+          }
 
           const company = await prisma.company.create({
             data: {
@@ -161,15 +169,22 @@ async function importFromApollo(params: {
         const existing = await prisma.company.findFirst({ where: { name: orgName, domain: null } });
         companyId = existing
           ? existing.id
-          : (await prisma.company.create({ data: { domain: null, name: orgName, sources: { name: "apollo" } } })).id;
+          : (
+              await prisma.company.create({
+                data: { domain: null, name: orgName, sources: { name: "apollo" } },
+              })
+            ).id;
       }
 
       const seniority: Seniority | null =
         contact.seniority && Object.values(Seniority).includes(contact.seniority as Seniority)
-          ? (contact.seniority as Seniority) : null;
+          ? (contact.seniority as Seniority)
+          : null;
       const emailStatus: EmailStatus =
-        contact.emailStatus && Object.values(EmailStatus).includes(contact.emailStatus as EmailStatus)
-          ? (contact.emailStatus as EmailStatus) : EmailStatus.unknown;
+        contact.emailStatus &&
+        Object.values(EmailStatus).includes(contact.emailStatus as EmailStatus)
+          ? (contact.emailStatus as EmailStatus)
+          : EmailStatus.unknown;
 
       const data = {
         companyId,
@@ -200,7 +215,9 @@ async function importFromApollo(params: {
       }
       if (row) importedContactIds.push(row.id);
       imported++;
-    } catch { skipped++; }
+    } catch {
+      skipped++;
+    }
   }
 
   // Create a segment so imported leads appear as a named group in the Leads tab.
@@ -216,7 +233,9 @@ async function importFromApollo(params: {
         skipDuplicates: true,
       });
       segmentId = seg.id;
-    } catch { /* non-fatal */ }
+    } catch {
+      /* non-fatal */
+    }
   }
 
   return { imported, skipped, total: people.length, segmentId };
@@ -231,7 +250,9 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   let body: unknown;
-  try { body = await req.json(); } catch {
+  try {
+    body = await req.json();
+  } catch {
     return new Response("Invalid JSON.", { status: 400 });
   }
 
@@ -270,46 +291,65 @@ export async function POST(req: Request): Promise<Response> {
     messages: parsed.data.messages,
     tools: {
       discoverLeads: tool({
-        description: "Search Apollo for people matching specific job titles, industries, and locations, then import them as leads into the platform.",
+        description:
+          "Search Apollo for people matching specific job titles, industries, and locations, then import them as leads into the platform.",
         inputSchema: zodSchema(discoverLeadsParams),
         execute: async (args: DiscoverLeadsInput) =>
           importFromApollo({
             titles: args.titles,
             industries: args.industries,
-            locations: args.locations ?? ["United Kingdom", "United States", "United Arab Emirates"],
+            locations: args.locations ?? [
+              "United Kingdom",
+              "United States",
+              "United Arab Emirates",
+            ],
             perPage: args.perPage ?? 15,
-            segmentName: [args.titles[0], (args.locations ?? [])[0]].filter(Boolean).join(" · ") || "Agent Import",
+            segmentName:
+              [args.titles[0], (args.locations ?? [])[0]].filter(Boolean).join(" · ") ||
+              "Agent Import",
           }),
       }),
 
       findEventCompanies: tool({
-        description: "Find companies organising upcoming events/conferences in a given timeframe, then import their decision-makers as leads.",
+        description:
+          "Find companies organising upcoming events/conferences in a given timeframe, then import their decision-makers as leads.",
         inputSchema: zodSchema(findEventParams),
         execute: async (args: FindEventInput) => {
           const exaKey = (process.env.EXA_API_KEY ?? "").trim();
 
-          const exaRes = exaKey ? await fetch(EXA_SEARCH_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-api-key": exaKey },
-            body: JSON.stringify({
-              query: `upcoming ${args.query} ${args.timeframe} ${args.location ?? ""} organiser company host 2026`,
-              type: "neural",
-              numResults: 8,
-              contents: { text: { maxCharacters: 600 } },
-            }),
-          }) : null;
+          const exaRes = exaKey
+            ? await fetch(EXA_SEARCH_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-api-key": exaKey },
+                body: JSON.stringify({
+                  query: `upcoming ${args.query} ${args.timeframe} ${args.location ?? ""} organiser company host 2026`,
+                  type: "neural",
+                  numResults: 8,
+                  contents: { text: { maxCharacters: 600 } },
+                }),
+              })
+            : null;
 
           // Exa is optional — fall back gracefully if credits are exhausted or key missing.
           let pages: Array<{ title?: string; url?: string }> = [];
           if (exaRes?.ok) {
-            const exaData = (await exaRes.json()) as { results: Array<{ title?: string; url?: string }> };
+            const exaData = (await exaRes.json()) as {
+              results: Array<{ title?: string; url?: string }>;
+            };
             pages = exaData.results ?? [];
           }
 
           const importResult = await importFromApollo({
             titles: args.roles ?? ["Founder", "CEO", "Events Director", "Managing Director"],
-            industries: ["events services", "entertainment", "hospitality", "marketing and advertising"],
-            locations: args.location ? [args.location] : ["United Kingdom", "United States", "United Arab Emirates"],
+            industries: [
+              "events services",
+              "entertainment",
+              "hospitality",
+              "marketing and advertising",
+            ],
+            locations: args.location
+              ? [args.location]
+              : ["United Kingdom", "United States", "United Arab Emirates"],
             perPage: 10,
             keywords: [args.query, "conference", "events"],
             segmentName: [args.query, args.location, args.timeframe].filter(Boolean).join(" · "),
@@ -324,25 +364,32 @@ export async function POST(req: Request): Promise<Response> {
       }),
 
       getLeadStats: tool({
-        description: "Get current lead pipeline stats: total count, tier breakdown, and recent leads.",
+        description:
+          "Get current lead pipeline stats: total count, tier breakdown, and recent leads.",
         inputSchema: zodSchema(z.object({})),
         execute: async () => {
           try {
             const [total, tierCounts, recent] = await Promise.all([
               prisma.contact.count(),
               prisma.score.groupBy({ by: ["tier"], _count: { id: true } }).catch(() => []),
-              prisma.contact.findMany({
-                take: 3,
-                orderBy: { createdAt: "desc" },
-                select: { fullName: true, title: true, company: { select: { name: true } } },
-              }).catch(() => []),
+              prisma.contact
+                .findMany({
+                  take: 3,
+                  orderBy: { createdAt: "desc" },
+                  select: { fullName: true, title: true, company: { select: { name: true } } },
+                })
+                .catch(() => []),
             ]);
             const byTier: Record<string, number> = {};
             for (const t of tierCounts) byTier[t.tier] = t._count.id;
             return {
               total,
               byTier,
-              recentLeads: recent.map((c) => ({ name: c.fullName, title: c.title, company: c.company?.name })),
+              recentLeads: recent.map((c) => ({
+                name: c.fullName,
+                title: c.title,
+                company: c.company?.name,
+              })),
             };
           } catch {
             return { total: 0, byTier: {}, recentLeads: [], note: "Database unavailable." };
@@ -351,7 +398,8 @@ export async function POST(req: Request): Promise<Response> {
       }),
 
       searchWeb: tool({
-        description: "Run a neural Exa web search to research companies, markets, trends, or find specific information online.",
+        description:
+          "Run a neural Exa web search to research companies, markets, trends, or find specific information online.",
         inputSchema: zodSchema(searchWebParams),
         execute: async (args: SearchWebInput) => {
           const exaKey = (process.env.EXA_API_KEY ?? "").trim();
@@ -369,7 +417,9 @@ export async function POST(req: Request): Promise<Response> {
           });
 
           if (!res.ok) return { error: `Exa ${res.status}` };
-          const data = (await res.json()) as { results: Array<{ title?: string; url?: string; text?: string }> };
+          const data = (await res.json()) as {
+            results: Array<{ title?: string; url?: string; text?: string }>;
+          };
           return {
             results: (data.results ?? []).map((r) => ({
               title: r.title,
@@ -398,13 +448,25 @@ export async function POST(req: Request): Promise<Response> {
           } else if (part.type === "tool-call") {
             // AI SDK v6: field is `input`, not `args`
             const tc = part as unknown as { toolCallId: string; toolName: string; input: unknown };
-            emit({ type: "tool_start", toolCallId: tc.toolCallId, toolName: tc.toolName, args: tc.input });
+            emit({
+              type: "tool_start",
+              toolCallId: tc.toolCallId,
+              toolName: tc.toolName,
+              args: tc.input,
+            });
           } else if (part.type === "tool-result") {
             // AI SDK v6: field is `output`, not `result`
             const tr = part as unknown as { toolCallId: string; toolName: string; output: unknown };
-            emit({ type: "tool_result", toolCallId: tr.toolCallId, toolName: tr.toolName, result: tr.output });
+            emit({
+              type: "tool_result",
+              toolCallId: tr.toolCallId,
+              toolName: tr.toolName,
+              result: tr.output,
+            });
           } else if (part.type === "finish") {
-            const f = part as unknown as { usage?: { promptTokens?: number; completionTokens?: number } };
+            const f = part as unknown as {
+              usage?: { promptTokens?: number; completionTokens?: number };
+            };
             const input = f.usage?.promptTokens ?? 0;
             const output = f.usage?.completionTokens ?? 0;
             // claude-opus-4-8: $15/M input, $75/M output

@@ -1,6 +1,6 @@
-# Huscribe Revenue OS — control plane (Next.js monorepo) for Fly.io.
+# Outbound Intelligence Engine control plane (Next.js monorepo).
 # Single stage: install the pnpm workspace, generate the Prisma client, build the
-# web app, then run `next start`. Real secrets are injected by Fly at runtime
+# web app, then run `next start`. Real secrets are injected at runtime
 # (never baked into the image); the build only uses throwaway placeholders so the
 # env-validation + `next build` pass without touching a real database or key.
 FROM node:22-slim
@@ -25,7 +25,7 @@ RUN DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public" \
     NODE_ENV="production" \
     pnpm --filter web build
 
-# Runtime: production server on the Fly-provided port. Real env comes from Fly secrets.
+# Runtime server. Real environment values come from the hosting platform's secret store.
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 EXPOSE 3000
 CMD ["pnpm", "--filter", "web", "start"]
