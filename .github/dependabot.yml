@@ -5,7 +5,19 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      routine-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      breaking-upgrades:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
     labels:
       - "dependencies"
     commit-message:
@@ -16,6 +28,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
       - "ci"
