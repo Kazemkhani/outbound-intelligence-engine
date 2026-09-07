@@ -16,6 +16,6 @@
     "@oie/core": "workspace:*",
     "@oie/db": "workspace:*",
     "@oie/integrations": "workspace:*",
-    "inngest": "^3.27.0"
+    "inngest": "^4.19.0"
   }
 }
